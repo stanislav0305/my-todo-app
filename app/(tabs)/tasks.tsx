@@ -8,7 +8,7 @@ type TaskItem = {
   key: string
 }
 
-export default function TabTwoScreen() {
+export default function TasksScreen() {
 
   const items: TaskItem[] = [
     {
