@@ -81,7 +81,7 @@ export default function DictionaryScreen() {
         <DeleteWordModal
           itemKey={modeData.item.key}
           word={modeData.item.word}
-          onDelete={(key: string) => { dispatch(deleteWord(key)) changeMode() }}
+          onDelete={(key: string) => { dispatch(deleteWord(key)); changeMode() }}
           onClose={changeMode}
         />
       }
