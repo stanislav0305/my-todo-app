@@ -43,4 +43,4 @@ export const Colors = {
     colorRed: red,
     colorGreen: green
   },
-};
+}

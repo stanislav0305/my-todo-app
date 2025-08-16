@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from '@reduxjs/toolkit'
 
 const initialTasksState = {
 
@@ -12,8 +12,8 @@ reducers: {}
 })
 
 /*
-import { RootState } from "@/store/store"
-import { createSlice, PayloadAction } from "@reduxjs/toolkit"
+import { RootState } from '@/store/store'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import genUniqueId from '@/shared/uniqueIdGenerator'
 
 

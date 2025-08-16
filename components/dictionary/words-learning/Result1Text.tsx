@@ -1,10 +1,10 @@
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { StyleSheet, Text, type TextProps } from 'react-native';
+import { useThemeColor } from '@/hooks/useThemeColor'
+import { StyleSheet, Text, type TextProps } from 'react-native'
 
 
 export type Result1TextProps = TextProps & {
-  lightColor?: string;
-  darkColor?: string;
+  lightColor?: string
+  darkColor?: string
   type?: 'default' | 'defaultSemiBold'
   specialColor?: 'text' | 'colorSilver' | 'colorRed' | 'colorYellow' | 'colorGreen'
 }

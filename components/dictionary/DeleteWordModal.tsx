@@ -1,6 +1,6 @@
-import ThemedModal from "@/components/ThemedModal"
-import { ThemedText } from "@/components/ThemedText"
-import { Button } from "react-native"
+import ThemedModal from '@/components/ThemedModal'
+import { ThemedText } from '@/components/ThemedText'
+import { Button } from 'react-native'
 
 
 type DeleteProps = {

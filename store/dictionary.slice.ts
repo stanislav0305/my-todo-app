@@ -1,6 +1,6 @@
 import genUniqueId from '@/shared/uniqueIdGenerator'
-import { RootState } from "@/store/store"
-import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit"
+import { RootState } from '@/store/store'
+import { createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 
 export type Result1 = 'none' | 'IsNotRemembered' | 'IsRemembered'
@@ -146,7 +146,7 @@ export const dictionarySlice = createSlice({
                         isExcluded: c.isExcluded
                     } satisfies Learn
                 } satisfies Word
-            });
+            })
         }
     },
 })

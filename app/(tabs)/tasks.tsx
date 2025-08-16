@@ -1,7 +1,7 @@
-import { Button, FlatList, StyleSheet } from 'react-native';
+import { Button, FlatList, StyleSheet } from 'react-native'
 
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText'
+import { ThemedView } from '@/components/ThemedView'
 
 type TaskItem = {
   title: string,
@@ -39,14 +39,14 @@ export default function TasksScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Задачи</ThemedText>
+        <ThemedText type='title'>Задачи</ThemedText>
       </ThemedView>
       <ThemedText>This app includes example code to help you get started.</ThemedText>
       <Button title='Add' onPress={() => add()}></Button>
       <FlatList data={items} renderItem={(itemInfo) => _renderItem(itemInfo.item)}>
       </FlatList>
     </ThemedView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -66,4 +66,4 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-});
+})

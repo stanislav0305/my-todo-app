@@ -1,9 +1,9 @@
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { PropsWithChildren } from 'react';
-import { Modal, ModalProps, Pressable, StyleSheet } from 'react-native';
+import { ThemedText } from '@/components/ThemedText'
+import { ThemedView } from '@/components/ThemedView'
+import { useThemeColor } from '@/hooks/useThemeColor'
+import MaterialIcons from '@expo/vector-icons/MaterialIcons'
+import { PropsWithChildren } from 'react'
+import { Modal, ModalProps, Pressable, StyleSheet } from 'react-native'
 
 
 type ThemedModalProps = ModalProps & {
@@ -23,16 +23,16 @@ export default function ThemedModal({ title, isVisible, children, onClose, style
     return (
         <Modal
             visible={isVisible}
-            animationType="slide"
+            animationType='slide'
             transparent={true}
             {...otherProps}
         >
             <ThemedView style={styles.modal}>
                 <ThemedView style={[{ backgroundColor, borderColor }, styles.modalContainer]}>
                     <ThemedView style={styles.titleContainer}>
-                        <ThemedText type="title">{title}</ThemedText>
+                        <ThemedText type='title'>{title}</ThemedText>
                         <Pressable onPress={onClose}>
-                            <MaterialIcons name="close" color="#fff" size={22} />
+                            <MaterialIcons name='close' color='#fff' size={22} />
                         </Pressable>
                     </ThemedView>
                     {children}

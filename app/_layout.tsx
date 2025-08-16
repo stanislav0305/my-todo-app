@@ -23,14 +23,14 @@ export default function RootLayout() {
     <Provider store={store}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="words-learning" options={{
+          <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+          <Stack.Screen name='words-learning' options={{
             headerShown: true,
             title: 'Words learning'
           }} />
-          <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+          <Stack.Screen name='+not-found' options={{ headerShown: false }} />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style='auto' />
       </ThemeProvider>
     </Provider>
   )

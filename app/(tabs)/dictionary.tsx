@@ -40,11 +40,11 @@ export default function DictionaryScreen() {
     <>
       <ThemedView style={styles.container}>
         <ThemedView style={styles.titleContainer}>
-          <ThemedText type="title">Dictionary</ThemedText>
+          <ThemedText type='title'>Dictionary</ThemedText>
         </ThemedView>
         <ThemedText>This is word list.</ThemedText>
-        <Link href="/words-learning" style={styles.link}>
-          <ThemedText type="link">Go to learn words</ThemedText>
+        <Link href='/words-learning' style={styles.link}>
+          <ThemedText type='link'>Go to learn words</ThemedText>
         </Link>
         <Button title='Add word' onPress={() => changeMode('edit')} />
         <FlatList
@@ -70,8 +70,8 @@ export default function DictionaryScreen() {
         <EditWordModal
           item={modeData.item}
           onChangeItem={(newItem: DictionaryWord) => {
-            dispatch(newItem.key ? editWord(newItem) : addWord(newItem));
-            changeMode();
+            dispatch(newItem.key ? editWord(newItem) : addWord(newItem))
+            changeMode()
           }}
           onClose={changeMode}
         />
@@ -81,7 +81,7 @@ export default function DictionaryScreen() {
         <DeleteWordModal
           itemKey={modeData.item.key}
           word={modeData.item.word}
-          onDelete={(key: string) => { dispatch(deleteWord(key)); changeMode(); }}
+          onDelete={(key: string) => { dispatch(deleteWord(key)) changeMode() }}
           onClose={changeMode}
         />
       }

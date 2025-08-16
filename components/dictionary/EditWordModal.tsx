@@ -16,7 +16,7 @@ type Props = {
 type InputPros = {
     name: keyof DictionaryWord
     control: Control<DictionaryWord, any, DictionaryWord>
-    rules?: Omit<RegisterOptions<DictionaryWord, keyof DictionaryWord>, "valueAsNumber" | "valueAsDate" | "setValueAs" | "disabled"> | undefined
+    rules?: Omit<RegisterOptions<DictionaryWord, keyof DictionaryWord>, 'valueAsNumber' | 'valueAsDate' | 'setValueAs' | 'disabled'> | undefined
 } & ThemedTextInputProps
 
 
@@ -82,7 +82,7 @@ export default function EditWordModal({ item, onChangeItem, onClose }: Props) {
             {errors.translate?.type === 'required' && <ThemedText type='error'>This is required.</ThemedText>}
             {errors.translate?.type === 'maxLength' && <ThemedText type='error'>Problem with word length.</ThemedText>}
 
-            <Button title="Submit" onPress={handleSubmit(onChangeItem)} />
+            <Button title='Submit' onPress={handleSubmit(onChangeItem)} />
             <Button title='Cancel' onPress={onClose} />
         </ThemedModal>
     )
