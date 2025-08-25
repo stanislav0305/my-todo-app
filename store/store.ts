@@ -1,4 +1,5 @@
 import { dictionaryReducers } from '@/store/dictionary.slice'
+import { settingsReducers } from '@/store/settings.slice'
 import { configureStore, Middleware, UnknownAction } from '@reduxjs/toolkit'
 import { ThunkAction } from 'redux-thunk'
 
@@ -11,12 +12,12 @@ const loggerMiddleware: Middleware = (_store) => (next) => (action) => {
 export const store = configureStore({
     devTools: true,
     reducer: {
-        dictionary: dictionaryReducers
+        settings: settingsReducers,
+        dictionary: dictionaryReducers,
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware()
             .concat(loggerMiddleware)
-            //.concat(thunk),
 })
 
 
@@ -30,3 +31,9 @@ export type AppThunk<ReturnType = void> = ThunkAction<
     unknown,
     UnknownAction
 >
+
+
+//export const createAppSelector = createSelector.withTypes<RootState>()
+
+// create a generic type called AppSelector
+//export type AppSelector<Return> = (state: RootState) => Return

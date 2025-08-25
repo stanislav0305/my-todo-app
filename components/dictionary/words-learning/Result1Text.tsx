@@ -1,4 +1,4 @@
-import { useThemeColor } from '@/hooks/useThemeColor'
+import { useThemeOrPropsColor } from '@/hooks/useThemeOrPropsColor'
 import { StyleSheet, Text, type TextProps } from 'react-native'
 
 
@@ -18,7 +18,7 @@ export function Result1Text({
   ...rest
 }: Result1TextProps) {
 
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, specialColor)
+  const color = useThemeOrPropsColor({ light: lightColor, dark: darkColor }, specialColor)
 
   return (
     <Text

@@ -1,6 +1,6 @@
 import { ThemedText } from '@/components/ThemedText'
 import { ThemedView } from '@/components/ThemedView'
-import { useThemeColor } from '@/hooks/useThemeColor'
+import { useThemeOrPropsColor } from '@/hooks/useThemeOrPropsColor'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import { PropsWithChildren } from 'react'
 import { Modal, ModalProps, Pressable, StyleSheet } from 'react-native'
@@ -16,9 +16,10 @@ type ThemedModalProps = ModalProps & {
 
 type Props = PropsWithChildren<ThemedModalProps>
 
-export default function ThemedModal({ title, isVisible, children, onClose, style, lightColor, darkColor, ...otherProps }: Props) {
-    const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background')
-    const borderColor = useThemeColor({ light: lightColor, dark: darkColor }, 'border')
+export default function ThemedModal({ title, isVisible, children, onClose, style, lightColor,
+    darkColor, ...otherProps }: Props) {
+    const backgroundColor = useThemeOrPropsColor({ light: lightColor, dark: darkColor }, 'background')
+    const borderColor = useThemeOrPropsColor({ light: lightColor, dark: darkColor }, 'border')
 
     return (
         <Modal

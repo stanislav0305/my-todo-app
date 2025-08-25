@@ -46,6 +46,9 @@ export default function DictionaryScreen() {
         <Link href='/words-learning' style={styles.link}>
           <ThemedText type='link'>Go to learn words</ThemedText>
         </Link>
+        <Link href='/settings' style={styles.link}>
+          <ThemedText type='link'>Go to settings</ThemedText>
+        </Link>
         <Button title='Add word' onPress={() => changeMode('edit')} />
         <FlatList
           data={items}
