@@ -10,6 +10,11 @@ interface Settings {
     appThemeName: ThemeNameType, //current app theme (dark or light)
     selectedThemeName: AppThemeNameType, //selected mode: dark, automatic or light
     systemThemeName: ThemeNameType, //theme (dark or light) in system, used if selectedThemeName === automatic
+    mainSettings: MainSettings,
+}
+
+export interface MainSettings {
+    wordsLearningPartSize: number,
 }
 
 //-------------------------------------
@@ -30,12 +35,20 @@ const detectTheme = (themeName: AppThemeNameType) => {
 
 const initSystemThemeName = Appearance.getColorScheme() ?? 'light'
 const initSelectedThemeName = 'automatic'
+
 const initialState: Settings = {
     appThemeName: detectAppThemeName(initSelectedThemeName, initSystemThemeName),
     selectedThemeName: initSelectedThemeName,
     systemThemeName: initSystemThemeName,
+    mainSettings: {
+        wordsLearningPartSize: 2
+    } satisfies MainSettings
 } satisfies Settings
 
+//-------------------------------------
+
+export const selectMainSettings = (state: RootState) => state.settings.mainSettings
+export const selectSelectedThemeName =(state: RootState) => state.settings.selectedThemeName
 export const selectAppTheme = createSelector(
     (state: RootState) => state.settings.appThemeName,
     (appThemeName: ThemeNameType): AppTheme => {
@@ -43,6 +56,8 @@ export const selectAppTheme = createSelector(
         return detectTheme(appThemeName)
     }
 )
+
+//-------------------------------------
 
 export const settingsSlice = createSlice({
     name: 'settingsSlice',
@@ -58,8 +73,11 @@ export const settingsSlice = createSlice({
             draftState.appThemeName = detectAppThemeName(draftState.selectedThemeName,
                 draftState.systemThemeName)
         },
+        saveMainSettings: (draftState, action: PayloadAction<MainSettings>) => {
+            draftState.mainSettings = action.payload
+        }
     },
 })
 
-export const { changeSelectedThemeName, changeSystemThemeName } = settingsSlice.actions
+export const { changeSelectedThemeName, changeSystemThemeName, saveMainSettings } = settingsSlice.actions
 export const settingsReducers = settingsSlice.reducer

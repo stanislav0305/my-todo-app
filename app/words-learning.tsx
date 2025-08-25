@@ -2,7 +2,6 @@ import Card from '@/components/dictionary/words-learning/card'
 import CardWordResult1 from '@/components/dictionary/words-learning/CardWordResult1'
 import { ThemedText } from '@/components/ThemedText'
 import { ThemedView } from '@/components/ThemedView'
-import { LearnWordPartSize } from '@/constants/word-learning'
 import { useAppDispatch } from '@/hooks/store/useAppDispatch'
 import { useAppSelector } from '@/hooks/store/useAppSelector'
 import {
@@ -11,6 +10,7 @@ import {
     selectCardWordsByNextLearn,
     setCardWordResults
 } from '@/store/dictionary.slice'
+import { selectMainSettings } from '@/store/settings.slice'
 import React, { useState } from 'react'
 import { FlatList, StyleSheet } from 'react-native'
 
@@ -22,7 +22,10 @@ interface ScreenState {
 
 export default function WordsLearningScreen() {
     const dispatch = useAppDispatch()
-    const cardWordsCleared = useAppSelector(state => selectCardWordsByNextLearn(state, LearnWordPartSize))
+    const mainSettings = useAppSelector(selectMainSettings)
+    const cardWordsCleared = useAppSelector(state => 
+        selectCardWordsByNextLearn(state, mainSettings.wordsLearningPartSize)
+    )
 
 
     const [screenState, setState] = useState<ScreenState>({

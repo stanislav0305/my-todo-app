@@ -3,7 +3,7 @@ import { ThemedText } from '@/components/ThemedText'
 import { ThemedTextInput, ThemedTextInputProps } from '@/components/ThemedTextInput'
 import { DictionaryWord } from '@/store/dictionary.slice'
 import React from 'react'
-import { Control, RegisterOptions, useController, useForm } from 'react-hook-form'
+import { useController, UseControllerProps, useForm } from 'react-hook-form'
 import { Button } from 'react-native'
 
 
@@ -13,17 +13,24 @@ type Props = {
     onClose: () => void
 }
 
-type InputPros = {
+
+type DictionaryWordInputPros =
+ UseControllerProps<DictionaryWord,keyof DictionaryWord, DictionaryWord> 
+& ThemedTextInputProps
+
+/*
+type DictionaryWordInputPros = {
     name: keyof DictionaryWord
+    defaultValue?: string | undefined
     control: Control<DictionaryWord, any, DictionaryWord>
     rules?: Omit<RegisterOptions<DictionaryWord, keyof DictionaryWord>, 'valueAsNumber' | 'valueAsDate' | 'setValueAs' | 'disabled'> | undefined
 } & ThemedTextInputProps
+*/
 
-
-function Input({ name, control, rules, ...rest }: InputPros) {
+function Input({ name, defaultValue = '', control, rules, ...rest }: DictionaryWordInputPros) {
     const { field } = useController({
         control,
-        defaultValue: '',
+        defaultValue,
         name,
         rules
     })
@@ -63,7 +70,8 @@ export default function EditWordModal({ item, onChangeItem, onClose }: Props) {
             }
 
             <ThemedText type='link'>word:</ThemedText>
-            <Input name='word' control={control}
+            <Input name='word'
+                control={control}
                 rules={{
                     required: true,
                     maxLength: 100,
@@ -73,7 +81,8 @@ export default function EditWordModal({ item, onChangeItem, onClose }: Props) {
             {errors.word?.type === 'maxLength' && <ThemedText type='error'>Problem with word length.</ThemedText>}
 
             <ThemedText type='link'>translate:</ThemedText>
-            <Input name='translate' control={control}
+            <Input name='translate'
+                control={control}
                 rules={{
                     required: true,
                     maxLength: 100,

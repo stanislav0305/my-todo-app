@@ -31,9 +31,3 @@ export type AppThunk<ReturnType = void> = ThunkAction<
     unknown,
     UnknownAction
 >
-
-
-//export const createAppSelector = createSelector.withTypes<RootState>()
-
-// create a generic type called AppSelector
-//export type AppSelector<Return> = (state: RootState) => Return
