@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux'
 
 
 export default function TabLayout() {
-    const appTheme = useSelector(selectAppTheme)
+  const appTheme = useSelector(selectAppTheme)
 
   return (
     <Tabs
@@ -25,28 +25,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name='index'
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name='home' color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name='explore'
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name='send' color={color} />,
+          title: 'Dictionary',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name='book' color={color} />,
         }}
       />
       <Tabs.Screen
         name='tasks'
         options={{
           title: 'Tasks',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name='book' color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name='dictionary'
-        options={{
-          title: 'Dictionary',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name='book' color={color} />,
         }}
       />

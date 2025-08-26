@@ -1,17 +1,16 @@
-import { ThemedText } from '@/components/ThemedText'
-import { ThemedTextInput, ThemedTextInputProps } from '@/components/ThemedTextInput'
 import { ThemedView } from "@/components/ThemedView"
 import { useAppDispatch } from '@/hooks/store/useAppDispatch'
 import { useAppSelector } from '@/hooks/store/useAppSelector'
-import { changeSelectedThemeName, MainSettings, saveMainSettings, selectMainSettings, selectSelectedThemeName } from '@/store/settings.slice'
+import { changeSelectedThemeName, MainSettings, saveMainSettings, selectAppTheme, selectMainSettings, selectSelectedThemeName } from '@/store/settings.slice'
 import { useController, UseControllerProps, useForm } from 'react-hook-form'
 import { StyleSheet } from 'react-native'
-import { Button, SegmentedButtons } from 'react-native-paper'
+import { Button, SegmentedButtons, Text, TextInput, TextInputProps } from 'react-native-paper'
+import { useSelector } from 'react-redux'
 
 
 type InputPros =
     UseControllerProps<MainSettings, keyof MainSettings, MainSettings>
-    & ThemedTextInputProps
+    & TextInputProps
 
 function Input({ name, defaultValue = undefined, control, rules, ...rest }: InputPros) {
     const { field } = useController({
@@ -22,19 +21,24 @@ function Input({ name, defaultValue = undefined, control, rules, ...rest }: Inpu
     })
 
     return (
-        <ThemedTextInput
+        <TextInput
             value={field.value + ''}
             onChangeText={field.onChange}
-            type='default'
             {...rest}
+            mode='outlined'
+            dense={true}
         />
     )
 }
 
 export default function SettingsScreen() {
+
     const dispatch = useAppDispatch()
     const mainSettings = useAppSelector(selectMainSettings)
     const selectedThemeName = useAppSelector(selectSelectedThemeName)
+
+    const appTheme = useSelector(selectAppTheme)
+    const { error } = appTheme.colors
 
     const {
         control,
@@ -67,22 +71,33 @@ export default function SettingsScreen() {
                     },
                 ]}
             />
-            <ThemedText type='link'>Word learning</ThemedText>
-            <ThemedText type='link'>part size:</ThemedText>
+            <Text variant='bodyLarge'>Word learning</Text>
             <Input name='wordsLearningPartSize'
+                label='Part size'
                 control={control}
                 rules={{
                     required: true,
                     maxLength: 3,
                     min: 2,
-                    max: 999,
+                    max: 999
                 }}
                 autoFocus={true}
+                error={!!errors.wordsLearningPartSize}
             />
-            {errors.wordsLearningPartSize && <ThemedText type='error'>This is required.</ThemedText>}
-            {errors.wordsLearningPartSize?.type === 'maxLength' && <ThemedText type='error'>Max value length is 3</ThemedText>}
-            {errors.wordsLearningPartSize?.type === 'min' && <ThemedText type='error'>{'Value shod be > 1'}</ThemedText>}
-            {errors.wordsLearningPartSize?.type === 'max' && <ThemedText type='error'>{'Value shod be < 1000'}</ThemedText>}
+            {errors.wordsLearningPartSize &&
+                <Text variant='labelMedium' style={{ color: error }}>This is required.</Text>}
+
+            {errors.wordsLearningPartSize?.type === 'maxLength' &&
+                <Text variant='labelMedium' style={{ color: error }}>Max value length is 3</Text>}
+
+            {errors.wordsLearningPartSize?.type === 'min' &&
+                <Text variant='labelMedium' style={{ color: error }}>{'Value shod be > 1'}</Text>}
+
+            {errors.wordsLearningPartSize?.type === 'max' &&
+                <Text variant='labelMedium' style={{ color: error }}>{'Value shod be < 1000'}</Text>}
+
+            {errors.wordsLearningPartSize?.type !== 'valueAsNumber' &&
+                <Text variant='labelMedium' style={{ color: error }}>{'Value shod be number'}</Text>}
 
             <Button mode='contained' onPress={handleSubmit(val => dispatch(saveMainSettings(val)))}>Save</Button>
             <Button mode='outlined' onPress={() => reset(mainSettings)}>Reset</Button>
@@ -93,13 +108,9 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 32,
-        gap: 16,
+        padding: 15,
+        gap: 4,
         overflow: 'hidden',
         position: 'relative',
-    },
-    titleContainer: {
-        flexDirection: 'row',
-        gap: 8,
     },
 })

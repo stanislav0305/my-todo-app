@@ -1,104 +1,112 @@
-import { Platform, StyleSheet } from 'react-native'
-
+import DeleteWordModal from '@/components/dictionary/DeleteWordModal'
+import EditWordModal from '@/components/dictionary/EditWordModal'
 import { ThemedText } from '@/components/ThemedText'
 import { ThemedView } from '@/components/ThemedView'
+import { useAppDispatch } from '@/hooks/store/useAppDispatch'
+import { useAppSelector } from '@/hooks/store/useAppSelector'
+import {
+  addWord, deleteWord, DictionaryWord, editWord,
+  selectDictionaryWords
+} from '@/store/dictionary.slice'
+import { Link } from 'expo-router'
+import { useState } from 'react'
+import { Button, FlatList, ListRenderItemInfo, StyleSheet } from 'react-native'
 
-export default function HomeScreen() {
+
+type ModeType = 'edit' | 'delete' | 'none'
+interface PageState {
+  mode: ModeType,
+  item: DictionaryWord
+}
+
+export default function DictionaryScreen() {
+  const dispatch = useAppDispatch()
+  const items = useAppSelector(selectDictionaryWords)
+
+  const [modeData, setModeData] = useState<PageState>({
+    mode: 'none',
+    item: {} as DictionaryWord
+  })
+
+  const changeMode = (mode: ModeType = 'none', item: DictionaryWord = {} as DictionaryWord) => {
+    setModeData({
+      ...modeData,
+      mode: mode,
+      item: item
+    })
+  }
+
   return (
     <>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>Welcome!</ThemedText>
-        <ThemedText>12345</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type='subtitle'>Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type='defaultSemiBold'>app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type='defaultSemiBold'>
-            {Platform.select({
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type='subtitle'>Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type='subtitle'>Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type='defaultSemiBold'>npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type='defaultSemiBold'>app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type='defaultSemiBold'>app</ThemedText> to{' '}
-          <ThemedText type='defaultSemiBold'>app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type='subtitle'>Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type='defaultSemiBold'>npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type='defaultSemiBold'>app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type='defaultSemiBold'>app</ThemedText> to{' '}
-          <ThemedText type='defaultSemiBold'>app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type='subtitle'>Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type='defaultSemiBold'>npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type='defaultSemiBold'>app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type='defaultSemiBold'>app</ThemedText> to{' '}
-          <ThemedText type='defaultSemiBold'>app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type='subtitle'>Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type='defaultSemiBold'>npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type='defaultSemiBold'>app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type='defaultSemiBold'>app</ThemedText> to{' '}
-          <ThemedText type='defaultSemiBold'>app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type='subtitle'>Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type='defaultSemiBold'>npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type='defaultSemiBold'>app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type='defaultSemiBold'>app</ThemedText> to{' '}
-          <ThemedText type='defaultSemiBold'>app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
+    <ThemedText>Dictionary</ThemedText>
+      <ThemedView style={styles.container}>
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type='title'>Dictionary</ThemedText>
+        </ThemedView>
+        <ThemedText>This is word list.</ThemedText>
+        <Link href='/words-learning' style={styles.link}>
+          <ThemedText type='link'>Go to learn words</ThemedText>
+        </Link>
+        <Link href='/settings' style={styles.link}>
+          <ThemedText type='link'>Go to settings</ThemedText>
+        </Link>
+        <Button title='Add word' onPress={() => changeMode('edit')} />
+        <FlatList
+          data={items}
+          keyExtractor={((item: DictionaryWord, index: number) => item.key)}
+          renderItem={(itemInfo: ListRenderItemInfo<DictionaryWord>) => {
+            let item = itemInfo.item
+            return (
+              <ThemedView style={styles.container} >
+                <ThemedText type='defaultSemiBold'>{item.word}</ThemedText>
+                <ThemedText>{item.translate}</ThemedText>
+                <Button title='Edit word' onPress={() => changeMode('edit', item)} />
+                <Button title='Delete word' onPress={() => changeMode('delete', item)} />
+              </ThemedView>
+            )
+          }
+          }
+        />
+      </ThemedView >
+
+      {
+        modeData.mode === 'edit' &&
+        <EditWordModal
+          item={modeData.item}
+          onChangeItem={(newItem: DictionaryWord) => {
+            dispatch(newItem.key ? editWord(newItem) : addWord(newItem))
+            changeMode()
+          }}
+          onClose={changeMode}
+        />
+      }
+      {
+        modeData.mode === 'delete' &&
+        <DeleteWordModal
+          itemKey={modeData.item.key}
+          word={modeData.item.word}
+          onDelete={(key: string) => { dispatch(deleteWord(key)); changeMode() }}
+          onClose={changeMode}
+        />
+      }
     </>
   )
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 32,
+    gap: 16,
+    overflow: 'hidden',
+    position: 'relative',
+  },
   titleContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  link: {
+    marginTop: 15,
+    paddingVertical: 15,
   },
 })
