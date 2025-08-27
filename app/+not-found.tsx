@@ -1,32 +1,19 @@
-import { Link, Stack } from 'expo-router'
-import { StyleSheet } from 'react-native'
+import ScreenLayout from '@/app/_screen-layout'
+import { Stack, useRouter } from 'expo-router'
+import { Button, Text } from 'react-native-paper'
 
-import { ThemedText } from '@/components/ThemedText'
-import { ThemedView } from '@/components/ThemedView'
 
 export default function NotFoundScreen() {
+  const router = useRouter()
+
   return (
-    <>
+    <ScreenLayout style={{ 'justifyContent': 'center' }}>
       <Stack.Screen options={{ title: 'Oops!' }} />
-      <ThemedView style={styles.container}>
-        <ThemedText type='title'>This screen does not exist.</ThemedText>
-        <Link href='/' style={styles.link}>
-          <ThemedText type='link'>Go to home screen!</ThemedText>
-        </Link>
-      </ThemedView>
-    </>
+      <Text variant='headlineLarge'>This screen does not exist.</Text>
+      <Button onPress={() => router.navigate('/')}
+        mode='contained'>
+        Go to home screen!
+      </Button>
+    </ScreenLayout>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-})

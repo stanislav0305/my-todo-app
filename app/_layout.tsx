@@ -1,12 +1,12 @@
-import RootRouting from '@/components/RootRouting'
+import MainLayout from '@/app/_main-layout'
 import { store } from '@/store/store'
 import { Provider } from 'react-redux'
 
 
-export default function RootLayout() {
+export default function Layout() {
   return (
     <Provider store={store}>
-      <RootRouting />
+      <MainLayout />
     </Provider>
   )
 }

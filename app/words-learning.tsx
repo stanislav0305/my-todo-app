@@ -1,7 +1,6 @@
-import Card from '@/components/dictionary/words-learning/card'
+import ScreenLayout from '@/app/_screen-layout'
+import Card from '@/components/dictionary/words-learning/Card'
 import CardWordResult1 from '@/components/dictionary/words-learning/CardWordResult1'
-import { ThemedText } from '@/components/ThemedText'
-import { ThemedView } from '@/components/ThemedView'
 import { useAppDispatch } from '@/hooks/store/useAppDispatch'
 import { useAppSelector } from '@/hooks/store/useAppSelector'
 import {
@@ -11,22 +10,24 @@ import {
     setCardWordResults
 } from '@/store/dictionary.slice'
 import { selectMainSettings } from '@/store/settings.slice'
+import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
-import { FlatList, StyleSheet } from 'react-native'
+import { FlatList } from 'react-native'
+import { Button, Text } from 'react-native-paper'
+
 
 interface ScreenState {
     num: number
     cardWords: CardWord[]
 }
 
-
 export default function WordsLearningScreen() {
     const dispatch = useAppDispatch()
     const mainSettings = useAppSelector(selectMainSettings)
-    const cardWordsCleared = useAppSelector(state => 
+    const cardWordsCleared = useAppSelector(state =>
         selectCardWordsByNextLearn(state, mainSettings.wordsLearningPartSize)
     )
-
+    const router = useRouter()
 
     const [screenState, setState] = useState<ScreenState>({
         num: 0,
@@ -56,11 +57,12 @@ export default function WordsLearningScreen() {
     const { num, cardWords } = screenState
 
     return (
-        <ThemedView style={styles.container}>
-            <ThemedText>{num}/{cardWords.length}</ThemedText>
+        <ScreenLayout>
+            <Text variant='headlineLarge'>Learning</Text>
+            <Text variant='bodyMedium'>{num}/{cardWords.length}</Text>
             {(num < cardWords.length) &&
                 <>
-                    <ThemedText>Do you know this word?</ThemedText>
+                    <Text variant='bodyMedium'>Do you know this word?</Text>
                     <Card
                         item={cardWords[num]}
                         onExclude={key => updateCardWord(key, 'none', true)}
@@ -72,7 +74,7 @@ export default function WordsLearningScreen() {
 
             {num === cardWords.length &&
                 <>
-                    <ThemedText>Results:</ThemedText>
+                    <Text variant='titleMedium'>Results:</Text>
                     <FlatList
                         data={cardWords}
                         renderItem={(i) => {
@@ -81,18 +83,12 @@ export default function WordsLearningScreen() {
                             )
                         }}>
                     </FlatList>
+                    <Button onPress={() => router.navigate('/')}
+                        mode='contained'>
+                        Ok
+                    </Button>
                 </>
             }
-        </ThemedView>
+        </ScreenLayout>
     )
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 32,
-        gap: 16,
-        overflow: 'hidden',
-        position: 'relative',
-    }
-})

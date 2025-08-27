@@ -14,7 +14,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: appTheme.colors.tint,
+        tabBarActiveTintColor: appTheme.colors.background,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
@@ -25,6 +25,13 @@ export default function TabLayout() {
       <Tabs.Screen
         name='index'
         options={{
+          title: 'Learning',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name='book' color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name='dictionary'
+        options={{
           title: 'Dictionary',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name='book' color={color} />,
         }}
@@ -33,6 +40,13 @@ export default function TabLayout() {
         name='tasks'
         options={{
           title: 'Tasks',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name='book' color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name='settings'
+        options={{
+          title: 'Settings',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name='book' color={color} />,
         }}
       />

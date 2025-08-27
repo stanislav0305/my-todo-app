@@ -1,7 +1,7 @@
-import { ThemedText } from '@/components/ThemedText'
-import { ThemedView } from '@/components/ThemedView'
 import { CardWord } from '@/store/dictionary.slice'
-import { Button, StyleSheet } from 'react-native'
+import { StyleSheet, View } from 'react-native'
+import { Button, Text } from 'react-native-paper'
+
 
 type Props = {
     item: CardWord
@@ -12,16 +12,31 @@ type Props = {
 
 export default function Card({ item, onExclude, onRemember, onNotRemember }: Props) {
     return (
-        <ThemedView>
-            <ThemedText type='defaultSemiBold'>{item.word}</ThemedText>
-            <ThemedText type='default'>-</ThemedText>
-            <ThemedText type='default'>{item.translate}</ThemedText>
-            <ThemedView style={styles.btnRow}>
-                <Button title='Exclude word from learning' onPress={() => onExclude(item.key)} />
-                <Button title='I remember' onPress={() => onRemember(item.key)} />
-                <Button title="I don't remember" onPress={() => onNotRemember(item.key)} />
-            </ThemedView>
-        </ThemedView>
+        <View>
+            <Text variant='bodyLarge'>{item.word}</Text>
+            <Text variant='bodyLarge'>-</Text>
+            <Text variant='bodyMedium'>{item.translate}</Text>
+            <View style={styles.btnRow}>
+                <Button
+                    onPress={() => onExclude(item.key)}
+                    mode='outlined'
+                >
+                    Exclude word from learning
+                </Button>
+                <Button
+                    onPress={() => onRemember(item.key)}
+                    mode='contained'
+                >
+                    I remember
+                </Button>
+                <Button
+                    onPress={() => onNotRemember(item.key)}
+                    mode='contained'
+                >
+                    I don't remember
+                </Button>
+            </View>
+        </View>
     )
 }
 

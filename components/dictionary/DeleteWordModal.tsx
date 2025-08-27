@@ -1,6 +1,5 @@
 import ThemedModal from '@/components/ThemedModal'
-import { ThemedText } from '@/components/ThemedText'
-import { Button } from 'react-native'
+import { Button, Text } from 'react-native-paper'
 
 
 type DeleteProps = {
@@ -17,9 +16,19 @@ export default function DeleteWordModal({ itemKey, word, onDelete, onClose }: De
             isVisible={true}
             onClose={onClose}
         >
-            <ThemedText>Do you really want to delete word '{word}' by key '{itemKey}'?</ThemedText>
-            <Button title='Delete' onPress={() => onDelete(itemKey)} />
-            <Button title='Cancel' onPress={() => onClose()} />
+            <Text variant='bodyMedium'>Do you really want to delete word '{word}' by key '{itemKey}'?</Text>
+            <Button
+                onPress={() => onDelete(itemKey)}
+                mode='contained'
+            >
+                Delete
+            </Button>
+            <Button
+                onPress={() => onClose()}
+                mode='outlined'
+            >
+                Cancel
+            </Button>
         </ThemedModal>
     )
 }

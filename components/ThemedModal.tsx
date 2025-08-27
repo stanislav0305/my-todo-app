@@ -1,14 +1,11 @@
-import { ThemedText } from '@/components/ThemedText'
-import { ThemedView } from '@/components/ThemedView'
-import { useThemeOrPropsColor } from '@/hooks/useThemeOrPropsColor'
-import MaterialIcons from '@expo/vector-icons/MaterialIcons'
+import { selectAppTheme } from '@/store/settings.slice'
 import { PropsWithChildren } from 'react'
-import { Modal, ModalProps, Pressable, StyleSheet } from 'react-native'
+import { Modal, ModalProps, StyleSheet, View } from 'react-native'
+import { IconButton, Text } from 'react-native-paper'
+import { useSelector } from 'react-redux'
 
 
 type ThemedModalProps = ModalProps & {
-    lightColor?: string
-    darkColor?: string
     title?: string
     isVisible: boolean
     onClose: () => void
@@ -16,10 +13,9 @@ type ThemedModalProps = ModalProps & {
 
 type Props = PropsWithChildren<ThemedModalProps>
 
-export default function ThemedModal({ title, isVisible, children, onClose, style, lightColor,
-    darkColor, ...otherProps }: Props) {
-    const backgroundColor = useThemeOrPropsColor({ light: lightColor, dark: darkColor }, 'background')
-    const borderColor = useThemeOrPropsColor({ light: lightColor, dark: darkColor }, 'border')
+export default function ThemedModal({ title, isVisible, children, onClose, style, ...otherProps }: Props) {
+    const appTheme = useSelector(selectAppTheme)
+    const { background, border } = appTheme.colors
 
     return (
         <Modal
@@ -28,17 +24,19 @@ export default function ThemedModal({ title, isVisible, children, onClose, style
             transparent={true}
             {...otherProps}
         >
-            <ThemedView style={styles.modal}>
-                <ThemedView style={[{ backgroundColor, borderColor }, styles.modalContainer]}>
-                    <ThemedView style={styles.titleContainer}>
-                        <ThemedText type='title'>{title}</ThemedText>
-                        <Pressable onPress={onClose}>
-                            <MaterialIcons name='close' color='#fff' size={22} />
-                        </Pressable>
-                    </ThemedView>
+            <View style={styles.modal}>
+                <View style={[{ backgroundColor: background }, { borderColor: border }, styles.modalContainer]}>
+                    <View style={styles.titleContainer}>
+                        <Text variant='headlineSmall'>{title}</Text>
+                        <IconButton
+                            icon="close-outline"
+                            size={30}
+                            onPress={onClose}
+                        />
+                    </View>
                     {children}
-                </ThemedView>
-            </ThemedView>
+                </View>
+            </View>
         </Modal>
     )
 }
@@ -50,6 +48,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#bbbbbbe3'
     },
     modalContainer: {
+        margin: 10,
         padding: 10,
         top: 50,
         borderWidth: 2,
@@ -57,5 +56,7 @@ const styles = StyleSheet.create({
     },
     titleContainer: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
 })

@@ -1,9 +1,8 @@
-import { ThemedView } from "@/components/ThemedView"
+import ScreenLayout from '@/app/_screen-layout'
 import { useAppDispatch } from '@/hooks/store/useAppDispatch'
 import { useAppSelector } from '@/hooks/store/useAppSelector'
 import { changeSelectedThemeName, MainSettings, saveMainSettings, selectAppTheme, selectMainSettings, selectSelectedThemeName } from '@/store/settings.slice'
 import { useController, UseControllerProps, useForm } from 'react-hook-form'
-import { StyleSheet } from 'react-native'
 import { Button, SegmentedButtons, Text, TextInput, TextInputProps } from 'react-native-paper'
 import { useSelector } from 'react-redux'
 
@@ -52,7 +51,8 @@ export default function SettingsScreen() {
     })
 
     return (
-        <ThemedView style={styles.container}>
+        <ScreenLayout>
+            <Text variant='headlineLarge'>Dictionary</Text>
             <SegmentedButtons
                 value={selectedThemeName}
                 onValueChange={value => dispatch(changeSelectedThemeName(value))}
@@ -96,21 +96,19 @@ export default function SettingsScreen() {
             {errors.wordsLearningPartSize?.type === 'max' &&
                 <Text variant='labelMedium' style={{ color: error }}>{'Value shod be < 1000'}</Text>}
 
-            {errors.wordsLearningPartSize?.type !== 'valueAsNumber' &&
+            {errors.wordsLearningPartSize?.type === 'valueAsNumber' &&
                 <Text variant='labelMedium' style={{ color: error }}>{'Value shod be number'}</Text>}
 
-            <Button mode='contained' onPress={handleSubmit(val => dispatch(saveMainSettings(val)))}>Save</Button>
-            <Button mode='outlined' onPress={() => reset(mainSettings)}>Reset</Button>
-        </ThemedView>
+            <Button mode='contained'
+                onPress={handleSubmit(val => dispatch(saveMainSettings(val)))}
+            >
+                Save
+            </Button>
+            <Button mode='outlined'
+                onPress={() => reset(mainSettings)}
+            >
+                Reset
+            </Button>
+        </ScreenLayout>
     )
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 15,
-        gap: 4,
-        overflow: 'hidden',
-        position: 'relative',
-    },
-})

@@ -1,10 +1,10 @@
 import ThemedModal from '@/components/ThemedModal'
-import { ThemedText } from '@/components/ThemedText'
-import { ThemedTextInput, ThemedTextInputProps } from '@/components/ThemedTextInput'
 import { DictionaryWord } from '@/store/dictionary.slice'
+import { selectAppTheme } from '@/store/settings.slice'
 import React from 'react'
 import { useController, UseControllerProps, useForm } from 'react-hook-form'
-import { Button } from 'react-native'
+import { Button, Text, TextInput, TextInputProps } from 'react-native-paper'
+import { useSelector } from 'react-redux'
 
 
 type Props = {
@@ -14,20 +14,21 @@ type Props = {
 }
 
 
-type DictionaryWordInputPros =
- UseControllerProps<DictionaryWord,keyof DictionaryWord, DictionaryWord> 
-& ThemedTextInputProps
+type InputPros =
+    UseControllerProps<DictionaryWord, keyof DictionaryWord, DictionaryWord>
+    & TextInputProps
+
 
 /*
-type DictionaryWordInputPros = {
+type InputPros = {
     name: keyof DictionaryWord
     defaultValue?: string | undefined
     control: Control<DictionaryWord, any, DictionaryWord>
     rules?: Omit<RegisterOptions<DictionaryWord, keyof DictionaryWord>, 'valueAsNumber' | 'valueAsDate' | 'setValueAs' | 'disabled'> | undefined
-} & ThemedTextInputProps
+} & TextInputProps
 */
 
-function Input({ name, defaultValue = '', control, rules, ...rest }: DictionaryWordInputPros) {
+function Input({ name, defaultValue = '', control, rules, ...rest }: InputPros) {
     const { field } = useController({
         control,
         defaultValue,
@@ -36,16 +37,20 @@ function Input({ name, defaultValue = '', control, rules, ...rest }: DictionaryW
     })
 
     return (
-        <ThemedTextInput
-            value={field.value}
+        <TextInput
+            value={field.value + ''}
             onChangeText={field.onChange}
-            type='default'
             {...rest}
+            mode='outlined'
+            dense={true}
         />
     )
 }
 
 export default function EditWordModal({ item, onChangeItem, onClose }: Props) {
+    const appTheme = useSelector(selectAppTheme)
+    const { error } = appTheme.colors
+
     const {
         control,
         handleSubmit,
@@ -56,6 +61,7 @@ export default function EditWordModal({ item, onChangeItem, onClose }: Props) {
         }
     })
 
+
     return (
         <ThemedModal
             title={item.key ? 'Update word' : 'Add word'}
@@ -64,35 +70,49 @@ export default function EditWordModal({ item, onChangeItem, onClose }: Props) {
         >
             {item.key &&
                 <>
-                    <ThemedText type='link'>key:</ThemedText>
-                    <ThemedText type='link'>{item.key}</ThemedText>
+                    <Text variant='labelMedium'>key:</Text>
+                    <Text variant='bodyMedium'>{item.key}</Text>
                 </>
             }
 
-            <ThemedText type='link'>word:</ThemedText>
             <Input name='word'
+                label='word'
                 control={control}
                 rules={{
                     required: true,
                     maxLength: 100,
                 }}
             />
-            {errors.word && <ThemedText type='error'>This is required.</ThemedText>}
-            {errors.word?.type === 'maxLength' && <ThemedText type='error'>Problem with word length.</ThemedText>}
+            {errors.word &&
+                <Text variant='labelMedium' style={{ color: error }}>This is required.</Text>}
+            {errors.word?.type === 'maxLength' &&
+                <Text variant='labelMedium' style={{ color: error }}>Problem with word length.</Text>}
 
-            <ThemedText type='link'>translate:</ThemedText>
             <Input name='translate'
+                label='Translate'
                 control={control}
                 rules={{
                     required: true,
                     maxLength: 100,
                 }}
             />
-            {errors.translate?.type === 'required' && <ThemedText type='error'>This is required.</ThemedText>}
-            {errors.translate?.type === 'maxLength' && <ThemedText type='error'>Problem with word length.</ThemedText>}
+            {errors.translate?.type === 'required' &&
+                <Text variant='labelMedium' style={{ color: error }}>This is required.</Text>}
+            {errors.translate?.type === 'maxLength' &&
+                <Text variant='labelMedium' style={{ color: error }}>Problem with word length.</Text>}
 
-            <Button title='Submit' onPress={handleSubmit(onChangeItem)} />
-            <Button title='Cancel' onPress={onClose} />
+            <Button
+                onPress={handleSubmit(onChangeItem)}
+                mode='contained'
+            >
+                Submit
+            </Button>
+            <Button
+                onPress={onClose}
+                mode='outlined'
+            >
+                Cancel
+            </Button>
         </ThemedModal>
     )
 }

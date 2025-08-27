@@ -1,27 +1,36 @@
 import { CardWord } from '@/store/dictionary.slice'
-import { Result1Text } from './Result1Text'
+import { selectAppTheme } from '@/store/settings.slice'
+import { Text } from 'react-native-paper'
+import { useSelector } from 'react-redux'
 
 
 type CardWordResult1Props = {
-    item:CardWord
+    item: CardWord
 }
 
 export default function CardWordResult1({ item }: CardWordResult1Props) {
+    const appTheme = useSelector(selectAppTheme)
+    const { danger, success, surface } = appTheme.colors
+
     return (
         <>
-            <Result1Text type='defaultSemiBold'>{item.word} Result:</Result1Text>
-            {item.isExcluded &&
-                <Result1Text type='default' specialColor='colorSilver'>is excluded from learning</Result1Text>
-            }
-            {(!item.isExcluded && item.result1 === 'none') &&
-                <Result1Text type='default' specialColor='colorRed'>none</Result1Text>
-            }
-            {(!item.isExcluded && item.result1 === 'IsRemembered') &&
-                <Result1Text type='default' specialColor='colorGreen'>is remembered</Result1Text>
-            }
-            {(!item.isExcluded && item.result1 === 'IsNotRemembered') &&
-                <Result1Text type='default' specialColor='colorRed'>is not remembered</Result1Text>
-            }
+            <Text variant='bodyLarge'>{item.word + ' '}
+                <Text variant='bodySmall'>{'Result: '}</Text>
+                {item.isExcluded &&
+                    <Text variant='bodySmall' style={{ 'color': surface }}>
+                        is excluded from learning
+                    </Text>
+                }
+                {(!item.isExcluded && item.result1 === 'none') &&
+                    <Text variant='bodySmall' style={{ 'color': danger }}>none</Text>
+                }
+                {(!item.isExcluded && item.result1 === 'IsRemembered') &&
+                    <Text variant='bodySmall' style={{ 'color': success }}>is remembered</Text>
+                }
+                {(!item.isExcluded && item.result1 === 'IsNotRemembered') &&
+                    <Text variant='bodySmall' style={{ 'color': danger }}>is not remembered</Text>
+                }
+            </Text>
         </>
     )
 }
