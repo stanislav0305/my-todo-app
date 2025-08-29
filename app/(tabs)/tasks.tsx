@@ -1,6 +1,6 @@
 import ScreenLayout from '@/app/_screen-layout'
 import { FlatList } from 'react-native'
-import { Button, Text } from 'react-native-paper'
+import { Button } from 'react-native-paper'
 
 
 type TaskItem = {
@@ -40,7 +40,6 @@ export default function TasksScreen() {
 
   return (
     <ScreenLayout>
-      <Text variant='headlineLarge'>Tasks</Text>
       <Button onPress={() => add()}>Add</Button>
       <FlatList data={items}
         renderItem={(itemInfo) => _renderItem(itemInfo.item)}>

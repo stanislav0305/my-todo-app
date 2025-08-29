@@ -1,5 +1,6 @@
+import { sharedStyles } from '@/shared/sharedStyles'
 import { CardWord } from '@/store/dictionary.slice'
-import { StyleSheet, View } from 'react-native'
+import { View } from 'react-native'
 import { Button, Text } from 'react-native-paper'
 
 
@@ -16,7 +17,7 @@ export default function Card({ item, onExclude, onRemember, onNotRemember }: Pro
             <Text variant='bodyLarge'>{item.word}</Text>
             <Text variant='bodyLarge'>-</Text>
             <Text variant='bodyMedium'>{item.translate}</Text>
-            <View style={styles.btnRow}>
+            <View style={sharedStyles.btnRow}>
                 <Button
                     onPress={() => onExclude(item.key)}
                     mode='outlined'
@@ -39,10 +40,3 @@ export default function Card({ item, onExclude, onRemember, onNotRemember }: Pro
         </View>
     )
 }
-
-const styles = StyleSheet.create({
-    btnRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between'
-    }
-})

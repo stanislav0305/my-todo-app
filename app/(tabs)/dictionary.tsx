@@ -37,8 +37,9 @@ export default function DictionaryScreen() {
 
   return (
     <ScreenLayout>
-      <Text variant='headlineLarge'>Dictionary</Text>
-      <Button onPress={() => changeMode('edit')}
+      <Button
+        onPress={() => changeMode('edit')}
+        icon={{ source: 'plus-thick', direction: 'ltr' }}
         mode='contained'
       >
         Add word
@@ -52,11 +53,15 @@ export default function DictionaryScreen() {
             <View>
               <Text variant='bodyLarge'>{item.word}</Text>
               <Text variant='bodyMedium'>{item.translate}</Text>
-              <Button onPress={() => changeMode('edit', item)}
+              <Button
+                onPress={() => changeMode('edit', item)}
+                icon={{ source: 'pencil', direction: 'ltr' }}
                 mode='contained'>
                 Edit word
               </Button>
-              <Button onPress={() => changeMode('delete', item)}
+              <Button
+                onPress={() => changeMode('delete', item)}
+                icon={{ source: 'trash-can', direction: 'ltr' }}
                 mode='outlined'
               >
                 Delete word

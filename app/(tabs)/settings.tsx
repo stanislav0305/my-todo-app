@@ -1,8 +1,10 @@
 import ScreenLayout from '@/app/_screen-layout'
 import { useAppDispatch } from '@/hooks/store/useAppDispatch'
 import { useAppSelector } from '@/hooks/store/useAppSelector'
+import { sharedStyles } from '@/shared/sharedStyles'
 import { changeSelectedThemeName, MainSettings, saveMainSettings, selectAppTheme, selectMainSettings, selectSelectedThemeName } from '@/store/settings.slice'
 import { useController, UseControllerProps, useForm } from 'react-hook-form'
+import { View } from 'react-native'
 import { Button, SegmentedButtons, Text, TextInput, TextInputProps } from 'react-native-paper'
 import { useSelector } from 'react-redux'
 
@@ -52,7 +54,7 @@ export default function SettingsScreen() {
 
     return (
         <ScreenLayout>
-            <Text variant='headlineLarge'>Dictionary</Text>
+            <Text variant='bodyLarge'>Mode</Text>
             <SegmentedButtons
                 value={selectedThemeName}
                 onValueChange={value => dispatch(changeSelectedThemeName(value))}
@@ -81,7 +83,6 @@ export default function SettingsScreen() {
                     min: 2,
                     max: 999
                 }}
-                autoFocus={true}
                 error={!!errors.wordsLearningPartSize}
             />
             {errors.wordsLearningPartSize &&
@@ -98,17 +99,20 @@ export default function SettingsScreen() {
 
             {errors.wordsLearningPartSize?.type === 'valueAsNumber' &&
                 <Text variant='labelMedium' style={{ color: error }}>{'Value shod be number'}</Text>}
-
-            <Button mode='contained'
-                onPress={handleSubmit(val => dispatch(saveMainSettings(val)))}
-            >
-                Save
-            </Button>
-            <Button mode='outlined'
-                onPress={() => reset(mainSettings)}
-            >
-                Reset
-            </Button>
+            <View style={sharedStyles.btnRow}>
+                <Button
+                    onPress={handleSubmit(val => dispatch(saveMainSettings(val)))}
+                    mode='contained'
+                >
+                    Save
+                </Button>
+                <Button
+                    onPress={() => reset(mainSettings)}
+                    mode='outlined'
+                >
+                    Reset
+                </Button>
+            </View>
         </ScreenLayout>
     )
 }

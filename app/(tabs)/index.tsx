@@ -1,7 +1,7 @@
 import ScreenLayout from '@/app/_screen-layout';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Button, Text } from 'react-native-paper';
+import { Button } from 'react-native-paper';
 
 
 export default function LearningScreen() {
@@ -9,7 +9,6 @@ export default function LearningScreen() {
 
     return (
         <ScreenLayout>
-            <Text variant='headlineLarge'>Learning</Text>
             <Button onPress={() => router.navigate('/words-learning')}
                 mode='contained'>
                 Learn new words

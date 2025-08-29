@@ -1,8 +1,10 @@
 import ThemedModal from '@/components/ThemedModal'
+import { sharedStyles } from '@/shared/sharedStyles'
 import { DictionaryWord } from '@/store/dictionary.slice'
 import { selectAppTheme } from '@/store/settings.slice'
 import React from 'react'
 import { useController, UseControllerProps, useForm } from 'react-hook-form'
+import { View } from 'react-native'
 import { Button, Text, TextInput, TextInputProps } from 'react-native-paper'
 import { useSelector } from 'react-redux'
 
@@ -100,19 +102,21 @@ export default function EditWordModal({ item, onChangeItem, onClose }: Props) {
                 <Text variant='labelMedium' style={{ color: error }}>This is required.</Text>}
             {errors.translate?.type === 'maxLength' &&
                 <Text variant='labelMedium' style={{ color: error }}>Problem with word length.</Text>}
-
-            <Button
-                onPress={handleSubmit(onChangeItem)}
-                mode='contained'
-            >
-                Submit
-            </Button>
-            <Button
-                onPress={onClose}
-                mode='outlined'
-            >
-                Cancel
-            </Button>
+            <View style={sharedStyles.btnRow}>
+                <Button
+                    onPress={handleSubmit(onChangeItem)}
+                    icon={{ source: item.key ? 'pencil' : 'plus-thick', direction: 'ltr' }}
+                    mode='contained'
+                >
+                    Submit
+                </Button>
+                <Button
+                    onPress={onClose}
+                    mode='outlined'
+                >
+                    Cancel
+                </Button>
+            </View>
         </ThemedModal>
     )
 }
