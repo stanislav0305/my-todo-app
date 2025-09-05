@@ -14,7 +14,7 @@ reducers: {}
 /*
 import { RootState } from '@/store/store'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import genUniqueId from '@/shared/uniqueIdGenerator'
+import {genUniqueId} from '@/shared/randomHelper'
 
 
 export type Word = {
@@ -22,8 +22,6 @@ export type Word = {
     word: string,
     translate: string
 }
-
-
 
 const initialDictionaryState = {
    
@@ -51,10 +49,8 @@ const initialDictionaryState = {
     ]
 }
 
-
 type z = typeof initialDictionaryState.words
 type keys = keyof z
-
 
 export const dictionarySlice = createSlice({
     name: 'dictionarySlice',
@@ -92,4 +88,4 @@ export const selectWords = (state: RootState) => {
 
     return result
 }
-    */
+*/

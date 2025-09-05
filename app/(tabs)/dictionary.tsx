@@ -3,8 +3,9 @@ import DeleteWordModal from '@/components/dictionary/DeleteWordModal'
 import EditWordModal from '@/components/dictionary/EditWordModal'
 import { useAppDispatch } from '@/hooks/store/useAppDispatch'
 import { useAppSelector } from '@/hooks/store/useAppSelector'
+import { DictionaryWord } from '@/store/dictionary.entities'
 import {
-  addWord, deleteWord, DictionaryWord, editWord,
+  addWord, deleteWord, editWord,
   selectDictionaryWords
 } from '@/store/dictionary.slice'
 import { useState } from 'react'
@@ -68,10 +69,8 @@ export default function DictionaryScreen() {
               </Button>
             </View>
           )
-        }
-        }
+        }}
       />
-
       {
         modeData.mode === 'edit' &&
         <EditWordModal

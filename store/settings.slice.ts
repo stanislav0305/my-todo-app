@@ -5,6 +5,7 @@ import { RootState } from './store'
 
 export type ThemeNameType = 'light' | 'dark'
 export type AppThemeNameType = 'automatic' | ThemeNameType
+const WORDS_LEARNING_PART_SIZE_DEFAULT = 10
 
 interface Settings {
     appThemeName: ThemeNameType, //current app theme (dark or light)
@@ -41,7 +42,7 @@ const initialState: Settings = {
     selectedThemeName: initSelectedThemeName,
     systemThemeName: initSystemThemeName,
     mainSettings: {
-        wordsLearningPartSize: 2
+        wordsLearningPartSize: WORDS_LEARNING_PART_SIZE_DEFAULT
     } satisfies MainSettings
 } satisfies Settings
 
@@ -61,7 +62,7 @@ export const selectAppTheme = createSelector(
 
 export const settingsSlice = createSlice({
     name: 'settingsSlice',
-    initialState: initialState,
+    initialState,
     reducers: {
         changeSelectedThemeName: (draftState, action: PayloadAction<AppThemeNameType>) => {
             draftState.selectedThemeName = action.payload
