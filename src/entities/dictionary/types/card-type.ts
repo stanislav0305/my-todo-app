@@ -1,0 +1,1 @@
+export type CardType = 'Readable' | 'Selectable' | 'Writable' //| 'Listenable'

@@ -1,0 +1,1 @@
+export const selectSelectedThemeName = (state: RootState) => state.theme.selectedThemeName

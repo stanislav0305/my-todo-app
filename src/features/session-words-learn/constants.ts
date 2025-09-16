@@ -1,0 +1,1 @@
+export const CARD_DELAY_BEFORE_GO_TO_NEXT_IN_SECONDS = 3

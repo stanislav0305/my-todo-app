@@ -1,0 +1,1 @@
+export type ModificationType = 'edit' | 'remove' | 'none'

@@ -1,0 +1,1 @@
+export const selectMainSettings = (state: RootState) => state.settings.mainSettings

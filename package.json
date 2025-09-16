@@ -7,7 +7,8 @@
     "android": "expo start --android",
     "android2": "npx expo start --tunnel",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "steiger": "npx steiger ./src --watch"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -44,10 +45,13 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@feature-sliced/steiger-plugin": "^0.5.7",
     "@types/react": "~19.0.10",
     "@types/react-redux": "^7.1.34",
+    "babel-plugin-module-resolver": "^5.0.2",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
+    "steiger": "^0.5.11",
     "typescript": "~5.8.3"
   },
   "private": true

@@ -1,0 +1,1 @@
+export type SessionResultType = 'Excellent' | 'VeryGood' | 'Good' | 'YouCanDoBetter' | 'NeverGiveUp'
