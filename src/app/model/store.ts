@@ -1,7 +1,7 @@
 import { dictionaryReducers } from '@entities/dictionary'
 import { settingsReducers } from '@entities/settings'
 import { configureStore, Middleware } from '@reduxjs/toolkit'
-import { themeReducers } from '../theme-slice/theme.slice'
+import { themeReducers } from '@shared/theme-model'
 
 
 const loggerMiddleware: Middleware = (_store) => (next) => (action) => {

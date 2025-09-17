@@ -1,6 +1,7 @@
-import { changeSelectedThemeName, selectSelectedThemeName } from '@app/theme-slice'
 import { useAppDispatch, useAppSelector } from '@shared/lib/hooks'
 import { SegmentedButtons, Text } from 'react-native-paper'
+import { selectSelectedThemeName } from '../model/select-selected-theme-name'
+import { changeSelectedThemeName } from '../model/theme.slice'
 
 
 export const ThemeSwitcher = () => {

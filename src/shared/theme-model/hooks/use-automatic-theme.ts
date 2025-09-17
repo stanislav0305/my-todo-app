@@ -1,7 +1,7 @@
-import { changeSystemThemeName } from '@app/theme-slice'
 import { useAppDispatch } from '@shared/lib/hooks'
 import { useEffect } from 'react'
 import { Appearance } from 'react-native'
+import { changeSystemThemeName } from '../model/theme.slice'
 
 
 export const useAutomaticTheme = () => {
