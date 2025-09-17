@@ -1,4 +1,4 @@
-import { useAppTheme } from '@shared/theme-model'
+import { useAppTheme } from '@shared/theme/hooks'
 import { Tabs } from 'expo-router'
 import React from 'react'
 import { Platform } from 'react-native'

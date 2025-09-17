@@ -1,4 +1,4 @@
-import { useAppTheme } from '@shared/theme-model'
+import { useAppTheme } from '@shared/theme/hooks'
 import { PropsWithChildren } from 'react'
 import { Modal, ModalProps, StyleSheet, View } from 'react-native'
 import { IconButton, Text } from 'react-native-paper'

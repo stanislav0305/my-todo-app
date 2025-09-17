@@ -1,5 +1,5 @@
+import { useAppTheme } from '@shared/theme/hooks'
 import { sessionResultHelper, WordLastLearnResult } from '@entities/dictionary'
-import { useAppTheme } from '@shared/theme-model'
 import { useRouter } from 'expo-router'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { Button, Text } from 'react-native-paper'

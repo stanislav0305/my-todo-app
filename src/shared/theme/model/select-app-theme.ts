@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit'
-import { AppTheme, themeHelper, ThemeNameType } from '@shared/theme-lib'
+import { AppTheme, themeHelper, ThemeNameType } from '@shared/theme/lib'
 
 
 export const selectAppTheme = createSelector(

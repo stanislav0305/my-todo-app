@@ -31,10 +31,11 @@ export default defineConfig([
     }
   },
   {
-    files: ['./src/shared/theme-model/**'],
+    files: ['./src/shared/**'],
     rules: {
-      'fsd/forbidden-imports': 'off',//Forbidden import from higher layer "app".
-      'fsd/no-reserved-folder-names': 'off',//Having a folder with the name "ui" inside a segment could be confusing because that name is commonly used for segments. Consider renaming it.
-    },
+      'fsd/public-api': 'off', //This segment is missing a public API.
+      'fsd/no-reserved-folder-names': 'off', //Having a folder with the name "lib" inside a segment could be confusing because that name is commonly used for segments. Consider renaming it.
+      'fsd/no-public-api-sidestep': 'off', //Forbidden sidestep of public API when importing from "@/src/shared/theme/model"
+    }
   },
 ])

@@ -1,6 +1,6 @@
+import { useAppTheme } from '@shared/theme/hooks'
 import { WordCardSelectable } from '@entities/dictionary'
 import { stringHelper } from '@shared/lib/helpers'
-import { useAppTheme } from '@shared/theme-model'
 import { useCallback, useEffect, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Button, Text } from 'react-native-paper'

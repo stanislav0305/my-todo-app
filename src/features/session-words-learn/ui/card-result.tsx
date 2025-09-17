@@ -1,6 +1,6 @@
 
+import { useAppTheme } from '@shared/theme/hooks'
 import { WordLastLearnResult } from '@entities/dictionary'
-import { useAppTheme } from '@shared/theme-model'
 import { StyleSheet, View } from 'react-native'
 import { Text } from 'react-native-paper'
 

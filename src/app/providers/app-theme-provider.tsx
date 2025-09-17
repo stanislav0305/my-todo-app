@@ -1,5 +1,5 @@
-import { appDarkTheme, AppTheme } from '@shared/theme-lib'
-import { useAppTheme, useAutomaticTheme } from '@shared/theme-model'
+import { useAppTheme, useAutomaticTheme } from '@shared/theme/hooks'
+import { appDarkTheme, AppTheme } from '@shared/theme/lib'
 import React, { createContext, PropsWithChildren, useContext } from 'react'
 
 

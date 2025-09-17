@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { AppThemeNameType, INITIAL_THEME_STATE, themeHelper, ThemeNameType } from '@shared/theme-lib'
+import { AppThemeNameType, INITIAL_THEME_STATE, themeHelper, ThemeNameType } from '@shared/theme/lib'
 
 
 export const themeSlice = createSlice({

@@ -1,4 +1,4 @@
-import { AppThemeColors } from '@shared/theme-lib'
+import { AppThemeColors } from '@shared/theme/lib'
 import { SessionResultType } from './session-result-type'
 
 

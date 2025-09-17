@@ -1,4 +1,4 @@
-import { useAppTheme } from '@shared/theme-model'
+import { useAppTheme } from '@shared/theme/hooks'
 import { PropsWithChildren } from 'react'
 import { FieldError } from 'react-hook-form'
 import { Text } from 'react-native-paper'
