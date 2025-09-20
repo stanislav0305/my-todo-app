@@ -1,7 +1,7 @@
 import { ModificationType } from '@/src/shared/lib/types'
 import { WordShort } from '@entities/dictionary'
-import { View } from 'react-native'
-import { Button, Text } from 'react-native-paper'
+import { StyleSheet, View } from 'react-native'
+import { IconButton, Text } from 'react-native-paper'
 
 
 type Props = {
@@ -11,22 +11,38 @@ type Props = {
 
 export const WordListItem = ({ item, onChange }: Props) => {
     return (
-        <View>
-            <Text variant='bodyLarge'>{item.word}</Text>
-            <Text variant='bodyMedium'>{item.translate}</Text>
-            <Button
-                onPress={() => onChange('edit', item)}
-                icon={{ source: 'pencil', direction: 'ltr' }}
-                mode='contained'>
-                Edit word
-            </Button>
-            <Button
-                onPress={() => onChange('remove', item)}
-                icon={{ source: 'trash-can', direction: 'ltr' }}
-                mode='outlined'
-            >
-                Delete word
-            </Button>
+        <View style={styles.container}>
+            <Text variant='bodyLarge' style={styles.columnBig}>{item.word}</Text>
+            <Text variant='bodyMedium' style={styles.columnBig}>{item.translate}</Text>
+            <View style={styles.columnSmall}>
+                <IconButton
+                    mode='contained'
+                    icon='pencil'
+                    size={22}
+                    onPress={() => onChange('edit', item)}
+                />
+                <IconButton
+                    mode='outlined'
+                    icon='trash-can'
+                    size={22}
+                    onPress={() => onChange('remove', item)}
+                />
+            </View>
         </View>
     )
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        flexDirection: 'row',
+    },
+    columnBig: {
+        width: '100%',
+    },
+    columnSmall: {
+        width: 100,
+        flexDirection: 'row',
+        alignContent: 'flex-start',
+    }
+})
