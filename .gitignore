@@ -36,5 +36,5 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-app-example
-TODO.txt
+#exclude generated apk 
+android

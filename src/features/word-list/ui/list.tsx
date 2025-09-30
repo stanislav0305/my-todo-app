@@ -1,7 +1,7 @@
 import { ModificationType } from '@/src/shared/lib/types'
 import { WordShort, selectDictionaryWords } from '@entities/dictionary'
 import { useAppSelector } from '@shared/lib/hooks'
-import { FlatList, ListRenderItemInfo } from 'react-native'
+import { FlatList, ListRenderItemInfo, StyleSheet } from 'react-native'
 import { WordListItem } from './list-item'
 
 
@@ -25,3 +25,10 @@ export const WordList = ({ onChange }: Props) => {
         />
     )
 }
+
+const styles = StyleSheet.create({
+    list: {
+        margin: 0,
+        padding: 0,
+    }
+})

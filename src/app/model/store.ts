@@ -1,7 +1,6 @@
-import { themeReducers } from '@/src/shared/theme/model'
-import { dictionaryReducers } from '@entities/dictionary'
-import { settingsReducers } from '@entities/settings'
 import { configureStore, Middleware } from '@reduxjs/toolkit'
+import { Persistor, persistStore } from 'redux-persist'
+import { persistedReducer } from './configure-store'
 
 
 const loggerMiddleware: Middleware = (_store) => (next) => (action) => {
@@ -11,12 +10,12 @@ const loggerMiddleware: Middleware = (_store) => (next) => (action) => {
 
 export const store = configureStore({
     devTools: true,
-    reducer: {
-        theme: themeReducers,
-        settings: settingsReducers,
-        dictionary: dictionaryReducers,
-    },
+    reducer: persistedReducer,
     middleware: getDefaultMiddleware =>
-        getDefaultMiddleware()
+        getDefaultMiddleware({
+            serializableCheck: false, // or configure specific checks
+        })
             .concat(loggerMiddleware)
 })
+
+export const persistor = persistStore(store) as Persistor

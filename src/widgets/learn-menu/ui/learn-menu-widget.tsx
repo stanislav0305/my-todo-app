@@ -1,5 +1,6 @@
 import { resetSession } from '@entities/dictionary'
 import { selectMainSettings } from '@entities/settings'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAppDispatch, useAppSelector } from '@shared/lib/hooks'
 import { useRouter } from 'expo-router'
 import React from 'react'
@@ -13,12 +14,14 @@ export const LearnMenuWidget = () => {
     const { wordsLearningPartSize } = mainSettings
 
     return (
-        <Button onPress={() => {
-            dispatch(resetSession(wordsLearningPartSize))
-            router.navigate('/words-learning')
-        }}
-            mode='contained'>
-            Learn words
-        </Button>
+        <>
+            <Button onPress={() => {
+                dispatch(resetSession(wordsLearningPartSize))
+                router.navigate('/words-learning')
+            }}
+                mode='contained'>
+                Learn words
+            </Button>
+        </>
     )
 }

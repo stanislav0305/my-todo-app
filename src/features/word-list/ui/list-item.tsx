@@ -36,12 +36,16 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         flexDirection: 'row',
+        alignContent: 'flex-end',
+        padding: 0,
+        margin: 0,
+        marginRight: 35,
     },
     columnBig: {
-        width: '100%',
+        flex: 5,
     },
     columnSmall: {
-        width: 100,
+        flex: 1,
         flexDirection: 'row',
         alignContent: 'flex-start',
     }
