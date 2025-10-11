@@ -1,4 +1,4 @@
-import { WordShort } from '@entities/dictionary'
+import { Task } from '@/src/entities/tasks-management'
 import { sharedStyles } from '@shared/styles'
 import {
     FormErrorMaxLength, FormErrorRequired, ThemedModal
@@ -7,64 +7,53 @@ import React from 'react'
 import { useForm } from 'react-hook-form'
 import { View } from 'react-native'
 import { Button, Text } from 'react-native-paper'
-import { WordEditFormInput } from './input'
+import { TaskEditFormInput } from './input'
 
 
 type Props = {
-    item: WordShort
-    onChangeItem: (word: WordShort) => void
+    item: Task
+    onChangeItem: (word: Task) => void
     onClose: () => void
 }
 
-export function WordEditFormModal({ item, onChangeItem, onClose }: Props) {
+export function TaskEditFormModal({ item, onChangeItem, onClose }: Props) {
     const {
         control,
         handleSubmit,
         formState: { errors },
-    } = useForm<WordShort>({
+    } = useForm<Task>({
         defaultValues: {
             ...item
         }
     })
 
-    const { word, translate } = errors
+    const { title } = errors
 
     return (
         <ThemedModal
-            title={item.key ? 'Update word' : 'Add word'}
+            title={item.key ? 'Update task' : 'Add task'}
             isVisible={true}
             onClose={onClose}
         >
             {item.key &&
                 <>
                     <Text variant='labelMedium'>key:</Text>
-                    <Text variant='bodyMedium'>{item.key}</Text>
+                    <Text variant='bodyMedium'>{item.title}</Text>
                 </>
             }
 
-            <WordEditFormInput name='word'
-                label='word'
+            <TaskEditFormInput name='title'
+                label='title'
                 control={control}
                 rules={{
                     required: true,
-                    maxLength: 100,
+                    maxLength: 300,
                 }}
-                error={!!word}
+                error={!!title}
             />
-            <FormErrorRequired errorField={word}>This is required.</FormErrorRequired>
-            <FormErrorMaxLength errorField={word}>Max value length is 100</FormErrorMaxLength>
+            <FormErrorRequired errorField={title}>This is required.</FormErrorRequired>
+            <FormErrorMaxLength errorField={title}>Max value length is 300</FormErrorMaxLength>
 
-            <WordEditFormInput name='translate'
-                label='Translate'
-                control={control}
-                rules={{
-                    required: true,
-                    maxLength: 100,
-                }}
-                error={!!translate}
-            />
-            <FormErrorRequired errorField={translate}>This is required.</FormErrorRequired>
-            <FormErrorMaxLength errorField={translate}>Max value length is 100</FormErrorMaxLength>
 
             <View style={sharedStyles.btnRow}>
                 <Button

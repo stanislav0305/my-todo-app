@@ -1,6 +1,5 @@
 import { resetSession } from '@entities/dictionary'
 import { selectMainSettings } from '@entities/settings'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAppDispatch, useAppSelector } from '@shared/lib/hooks'
 import { useRouter } from 'expo-router'
 import React from 'react'

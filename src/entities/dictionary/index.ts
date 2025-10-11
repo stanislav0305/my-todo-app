@@ -9,6 +9,7 @@ export * from './model/word-card-helper'
 //types
 export * from './types/answer-selectable'
 export * from './types/card-type'
+export * from './types/dictionary-state'
 export * from './types/readable-mode'
 export * from './types/selectable-mode'
 export * from './types/session'

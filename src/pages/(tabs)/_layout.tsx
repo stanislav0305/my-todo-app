@@ -32,7 +32,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name='tasks'
+        name='tasks-management'
         options={{
           title: 'Tasks',
           tabBarIcon: ({ color }) => <Icon size={34} source='target' color={color} />,
