@@ -7,6 +7,9 @@ import React from 'react'
 import { useForm } from 'react-hook-form'
 import { View } from 'react-native'
 import { Button, Text } from 'react-native-paper'
+import { CalendarDate } from 'react-native-paper-dates/lib/typescript/Date/Calendar'
+import { AppDatePickerSingleModal } from './app-date-picker-single-modal'
+import { AppTimePickerModal } from './app-time-picker-modal'
 import { TaskEditFormInput } from './input'
 
 
@@ -17,6 +20,15 @@ type Props = {
 }
 
 export function TaskEditFormModal({ item, onChangeItem, onClose }: Props) {
+
+    const onConfirmTimePicker = (hoursAndMinutes: { hours: number, minutes: number }) => {
+        console.log('selected time in form:', hoursAndMinutes)
+    }
+
+    const onConfirmDatePicker = (params: { date: CalendarDate }) => {
+        console.log('selected date  in form:', params.date?.toString())
+    }
+
     const {
         control,
         handleSubmit,
@@ -36,11 +48,28 @@ export function TaskEditFormModal({ item, onChangeItem, onClose }: Props) {
             onClose={onClose}
         >
             {item.key &&
+            
                 <>
                     <Text variant='labelMedium'>key:</Text>
-                    <Text variant='bodyMedium'>{item.title}</Text>
+                    <Text variant='bodyMedium'>{item.key}</Text>
                 </>
             }
+
+            <AppTimePickerModal
+                name='time'
+                control={control}
+                use24HourClock={true}
+                onConfirm={onConfirmTimePicker}
+                locale='ru'
+            />
+
+            <AppDatePickerSingleModal
+                name='date'
+                control={control}
+                onConfirm={onConfirmDatePicker}
+                locale='ru'
+                mode='single'
+            />
 
             <TaskEditFormInput name='title'
                 label='title'

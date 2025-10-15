@@ -3,7 +3,11 @@ import { ThemeProvider } from '@react-navigation/native'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'react-native'
 import { PaperProvider } from 'react-native-paper'
+import { enGB, registerTranslation, ru } from 'react-native-paper-dates'
 
+
+registerTranslation('en-GB', enGB)
+registerTranslation('ru', ru)
 
 export default function Layout() {
   return (
