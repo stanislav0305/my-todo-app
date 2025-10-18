@@ -6,22 +6,24 @@ import { Button, Text } from 'react-native-paper'
 
 type Props = {
     itemKey: string
-    word: string
+    questionText: string
+    deleteBtnText?: string
+    closeBtnText?: string
     onDelete: (key: string) => void
     onClose: () => void
 }
 
-export function WordRemoveFormModal({ itemKey, word, onDelete, onClose }: Props) {
+export function RemoveFormModal({ itemKey, questionText, deleteBtnText, closeBtnText, onDelete, onClose }: Props) {
     return (
         <ThemedModal
-            title='Delete word'
+            title='Delete task'
             isVisible={true}
             onClose={onClose}
         >
             <Text variant='bodyMedium'
                 style={{ textAlign: 'center' }}
             >
-                Do you really want to delete word &apos;{word}&apos; by key &apos;{itemKey}&apos;?
+                {questionText}
             </Text>
             <View style={sharedStyles.btnRow}>
                 <Button
@@ -29,13 +31,13 @@ export function WordRemoveFormModal({ itemKey, word, onDelete, onClose }: Props)
                     icon={{ source: 'trash-can', direction: 'ltr' }}
                     mode='outlined'
                 >
-                    Delete
+                    {deleteBtnText ?? 'Delete'}
                 </Button>
                 <Button
                     onPress={() => onClose()}
                     mode='outlined'
                 >
-                    Cancel
+                    {closeBtnText ?? 'Cancel'}
                 </Button>
             </View>
         </ThemedModal>

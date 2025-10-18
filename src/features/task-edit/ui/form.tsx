@@ -1,17 +1,22 @@
-import { Task } from '@/src/entities/tasks-management'
+import { Task } from '@entities/tasks-management'
+import { calendarDateHelper, timeHelper } from '@shared/lib/helpers'
 import { sharedStyles } from '@shared/styles'
-import {
-    FormErrorMaxLength, FormErrorRequired, ThemedModal
-} from '@shared/ui'
-import React from 'react'
-import { useForm } from 'react-hook-form'
+import { FormErrorText, ThemedModal } from '@shared/ui'
+import { useFormik } from 'formik'
 import { View } from 'react-native'
-import { Button, Text } from 'react-native-paper'
+import { Button, Text, TextInput } from 'react-native-paper'
 import { CalendarDate } from 'react-native-paper-dates/lib/typescript/Date/Calendar'
+import * as Yup from 'yup'
 import { AppDatePickerSingleModal } from './app-date-picker-single-modal'
 import { AppTimePickerModal } from './app-time-picker-modal'
-import { TaskEditFormInput } from './input'
 
+
+const taskEditSchema = Yup.object().shape({
+    title: Yup.string()
+        .min(1, 'Min value length is 1')
+        .max(300, 'Max value length is 300')
+        .required('This is required'),
+})
 
 type Props = {
     item: Task
@@ -21,25 +26,24 @@ type Props = {
 
 export function TaskEditFormModal({ item, onChangeItem, onClose }: Props) {
 
-    const onConfirmTimePicker = (hoursAndMinutes: { hours: number, minutes: number }) => {
+    const onConfirmTimePicker = (hoursAndMinutes: { hours: number | undefined, minutes: number | undefined }) => {
         console.log('selected time in form:', hoursAndMinutes)
+        formik.setFieldValue('time', timeHelper.toFormattedStringOrEmpty(hoursAndMinutes))
     }
 
     const onConfirmDatePicker = (params: { date: CalendarDate }) => {
         console.log('selected date  in form:', params.date?.toString())
+        formik.setFieldValue('date', calendarDateHelper.isUndefined(params.date) ? '' : params.date!.toDateString())
     }
 
-    const {
-        control,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<Task>({
-        defaultValues: {
-            ...item
+    const formik = useFormik({
+        initialValues: item,
+        validationSchema: taskEditSchema,
+        onSubmit: (values: Task) => {
+            console.log('Form submit:', values)
+            onChangeItem(values)
         }
     })
-
-    const { title } = errors
 
     return (
         <ThemedModal
@@ -48,7 +52,7 @@ export function TaskEditFormModal({ item, onChangeItem, onClose }: Props) {
             onClose={onClose}
         >
             {item.key &&
-            
+
                 <>
                     <Text variant='labelMedium'>key:</Text>
                     <Text variant='bodyMedium'>{item.key}</Text>
@@ -56,37 +60,38 @@ export function TaskEditFormModal({ item, onChangeItem, onClose }: Props) {
             }
 
             <AppTimePickerModal
-                name='time'
-                control={control}
                 use24HourClock={true}
-                onConfirm={onConfirmTimePicker}
+                hours={timeHelper.getHoursFromStringOrUndefined(item.time)}
+                minutes={timeHelper.getMinutesFromStringOrUndefined(item.time)}
+                onConfirm={(hoursAndMinutes) => onConfirmTimePicker(hoursAndMinutes)}
                 locale='ru'
             />
 
             <AppDatePickerSingleModal
-                name='date'
-                control={control}
-                onConfirm={onConfirmDatePicker}
+                date={calendarDateHelper.toCalendarDate(item.date)}
+                onConfirm={(params: { date: CalendarDate }) => {
+                    onConfirmDatePicker(params)
+                }}
                 locale='ru'
                 mode='single'
             />
 
-            <TaskEditFormInput name='title'
-                label='title'
-                control={control}
-                rules={{
-                    required: true,
-                    maxLength: 300,
-                }}
-                error={!!title}
+            <Text variant='labelMedium'>title:</Text>
+            <TextInput
+                onChangeText={formik.handleChange('title')}
+                onBlur={formik.handleBlur('title')}
+                value={formik.values.title + ''}
+                placeholder='title'
+                mode='outlined'
+                dense={true}
             />
-            <FormErrorRequired errorField={title}>This is required.</FormErrorRequired>
-            <FormErrorMaxLength errorField={title}>Max value length is 300</FormErrorMaxLength>
+            {formik.errors.title && <FormErrorText>{formik.errors.title}</FormErrorText>}
 
 
             <View style={sharedStyles.btnRow}>
                 <Button
-                    onPress={handleSubmit(onChangeItem)}
+                    onPress={() => formik.handleSubmit()}
+                    disabled={!formik.isValid}
                     icon={{ source: item.key ? 'pencil' : 'plus-thick', direction: 'ltr' }}
                     mode='contained'
                 >

@@ -1,3 +1,5 @@
+
+
 export const dateHelper = {
     getDateNowUTC: () => {
         return new Date(Date.now())
@@ -9,11 +11,16 @@ export const dateHelper = {
         return result
     },
 
-    toUTCString: (date: Date) => {
+    toUTCString: (date: Date): string => {
         return date.toUTCString()
+    },
+
+    toDate: (uTCDateStr: string) => {
+        return new Date(dateHelper.DateStrParse(uTCDateStr))
     },
 
     DateStrParse: (value: string): number => {
         return (value && value.length > 0) ? Date.parse(value) : 0
-    }
+    },
+
 }

@@ -6,8 +6,8 @@ import {
 } from '@entities/dictionary'
 import { WordEditFormModal } from '@features/word-edit'
 import { WordList } from '@features/word-list'
-import { WordRemoveFormModal } from '@features/word-remove'
 import { useAppDispatch } from '@shared/lib/hooks'
+import { RemoveFormModal } from '@shared/ui/remove-form-modal'
 import { useState } from 'react'
 import { Button } from 'react-native-paper'
 
@@ -54,9 +54,10 @@ export const WordListWidget = () => {
                 />
             }
             {modeData.mode === 'remove' &&
-                <WordRemoveFormModal
+                <RemoveFormModal
                     itemKey={modeData.item.key}
-                    word={modeData.item.word}
+                    questionText={`Do you really want to delete '${modeData.item.word}' 
+                                        by key '${modeData.item.key}'?`}
                     onDelete={(key: string) => {
                         dispatch(deleteWord(key))
                         changeMode()

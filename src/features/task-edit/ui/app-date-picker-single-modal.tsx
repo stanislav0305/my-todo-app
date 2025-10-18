@@ -1,8 +1,6 @@
-import { Task } from '@/src/entities/tasks-management'
-import { stringHelper } from '@shared/lib/helpers'
+import { calendarDateHelper } from '@shared/lib/helpers'
 import { useAppTheme } from '@shared/theme/hooks'
 import React from 'react'
-import { useController, UseControllerProps } from 'react-hook-form'
 import { StyleSheet, View } from 'react-native'
 import { IconButton, Text } from 'react-native-paper'
 import { DatePickerModal } from 'react-native-paper-dates'
@@ -11,7 +9,6 @@ import { HeaderPickProps } from 'react-native-paper-dates/lib/typescript/Date/Da
 
 
 type AppDatePickerModalPros =
-    UseControllerProps<Task, keyof Task, Task>
     //& DatePickerModalSingleProps it is modified DatePickerModalContentBaseProps
     & HeaderPickProps
     & BaseCalendarProps
@@ -47,37 +44,46 @@ type AppDatePickerModalPros =
         presentationStyle?: 'pageSheet' | 'overFullScreen'
     }
 
+type State = {
+    visible: boolean,
+    date: CalendarDate
+}
 
-
-export function AppDatePickerSingleModal({ name, defaultValue = undefined, control, rules, onConfirm, onDismiss, ...rest }: AppDatePickerModalPros) {
+export function AppDatePickerSingleModal({ onConfirm, onDismiss, ...rest }: AppDatePickerModalPros) {
     const appTheme = useAppTheme()
     const { primary } = appTheme.colors
-    const [visible, setVisible] = React.useState<boolean>(false)
+    const [state, setSate] = React.useState<State>({
+        visible: false,
+        date: rest.date
+    } as State)
 
-    const { field } = useController({
-        control,
-        defaultValue,
-        name,
-        rules,
-    })
+    const setStateData = (visible: boolean, date: CalendarDate) => {
+        setSate(prev => {
+            return {
+                ...prev,
+                visible,
+                date: date
+            }
+        })
+    }
 
     const onConfirmDatePicker = React.useCallback(
         (params: { date: CalendarDate }) => {
-            field.onChange(params.date?.toString())
-            console.log('selected date:', params.date)
+            rest.date = params.date
+            console.log('selected date:', rest.date)
 
-            setVisible(false)
+            setStateData(false, params.date)
             onConfirm && onConfirm(params)
         },
-        [setVisible, onConfirm, field]
+        [setSate, onConfirm]
     )
 
     const onDismissDatePicker = React.useCallback(
         () => {
-            setVisible(false)
+            setStateData(false, state.date)
             onDismiss && onDismiss()
         },
-        [setVisible, onDismiss, field]
+        [setSate, onDismiss]
     )
 
     return (
@@ -86,29 +92,29 @@ export function AppDatePickerSingleModal({ name, defaultValue = undefined, contr
                 <Text
                     style={[{ 'color': primary }, styles.date]}
                     variant='bodyMedium'
-                    onPress={() => setVisible(true)}
+                    onPress={() => setStateData(true, state.date)}
                 >
-                    {stringHelper.isEmpty(field.value) ? '__/__/____' : field.value}
+                    {calendarDateHelper.isUndefined(state.date) ? '__/__/____' : state.date!.toDateString()}
                 </Text>
                 <IconButton
                     style={styles.dateBtn}
                     mode='contained'
                     icon='calendar-month'
                     size={22}
-                    onPress={() => setVisible(true)}
+                    onPress={() => setStateData(true, state.date)}
                 />
                 <IconButton
                     style={styles.dateRemoveBtn}
                     mode='contained'
                     icon='calendar-remove'
                     size={22}
-                    onPress={() => field.onChange('')}
+                    onPress={() => onConfirmDatePicker({ date: undefined })}
                 />
             </View>
             <DatePickerModal
                 {...rest}
-                visible={visible}
-                date={stringHelper.isEmpty(field.value) ? undefined : new Date(field.value)}
+                visible={state.visible}
+                date={state.date}
                 onConfirm={onConfirmDatePicker}
                 onDismiss={onDismissDatePicker}
             />

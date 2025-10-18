@@ -1,69 +1,60 @@
 import { MainSettings, saveMainSettings, selectMainSettings } from '@entities/settings'
 import { useAppDispatch, useAppSelector } from '@shared/lib/hooks'
-import {
-    sharedStyles
-} from '@shared/styles'
-import {
-    FormErrorMax, FormErrorMaxLength,
-    FormErrorMin,
-    FormErrorRequired, FormErrorValueAsNumber
-} from '@shared/ui'
+import { sharedStyles } from '@shared/styles'
+import { FormErrorText } from '@shared/ui'
+import { useFormik } from 'formik'
 import React from 'react'
-import { useForm } from 'react-hook-form'
 import { View } from 'react-native'
-import { Button, Text } from 'react-native-paper'
-import { MainSettingsFormInput } from './input'
+import { Button, Text, TextInput } from 'react-native-paper'
+import * as Yup from 'yup'
 
+
+const mainSettingsSchema = Yup.object().shape({
+    wordsLearningPartSize: Yup
+        .string()
+        .matches(/^[0-9]{1,3}$/, 'Must be exactly digits')
+        .min(1, 'Min value is 1')
+        .max(100, 'Max value is 100')
+        .required('This is required'),
+})
 
 export const MainSettingsForm = () => {
     const dispatch = useAppDispatch()
     const mainSettings = useAppSelector(selectMainSettings)
 
-    const {
-        control,
-        handleSubmit,
-        reset,
-        formState: { errors },
-    } = useForm<MainSettings>({
-        mode: 'onChange',
-        defaultValues: {
-            ...mainSettings
+    const formik = useFormik({
+        initialValues: mainSettings,
+        validationSchema: mainSettingsSchema,
+        onSubmit: (values: MainSettings) => {
+            console.log('Form submit:', values)
+            dispatch(saveMainSettings(values))
         }
     })
-
-    const { wordsLearningPartSize } = errors
 
     return (
         <>
             <Text variant='bodyLarge'>Word learning</Text>
-            <MainSettingsFormInput name='wordsLearningPartSize'
-                label='Part size'
-                control={control}
-                rules={{
-                    maxLength: 3,
-                    min: 2,
-                    max: 999,
-                    //pattern:test'/i',
-                    required: true,
-                }}
-                error={!!wordsLearningPartSize}
+            <TextInput
+                onChangeText={formik.handleChange('wordsLearningPartSize')}
+                onBlur={formik.handleBlur('wordsLearningPartSize')}
+                value={formik.values.wordsLearningPartSize + ''}
+                placeholder='Word learning'
                 keyboardType='numeric'
+                mode='outlined'
+                dense={true}
             />
-            <FormErrorRequired errorField={wordsLearningPartSize}>This is required.</FormErrorRequired>
-            <FormErrorMaxLength errorField={wordsLearningPartSize}>Max value length is 3</FormErrorMaxLength>
-            <FormErrorMin errorField={wordsLearningPartSize}>{'Value shod be > 1'}</FormErrorMin>
-            <FormErrorMax errorField={wordsLearningPartSize}>{'Value shod be < 1000'}</FormErrorMax>
-            <FormErrorValueAsNumber errorField={wordsLearningPartSize}>Value shod be number</FormErrorValueAsNumber>
+            {formik.errors.wordsLearningPartSize && <FormErrorText>{formik.errors.wordsLearningPartSize}</FormErrorText>}
 
             <View style={sharedStyles.btnRow}>
                 <Button
-                    onPress={handleSubmit((val) => dispatch(saveMainSettings(val)))}
+                    onPress={() => formik.handleSubmit()}
+                    disabled={!formik.isValid}
                     mode='contained'
                 >
                     Save
                 </Button>
                 <Button
-                    onPress={() => reset(mainSettings)}
+                    onPress={() => formik.resetForm()}
                     mode='outlined'
                 >
                     Reset

@@ -1,14 +1,23 @@
 import { WordShort } from '@entities/dictionary'
 import { sharedStyles } from '@shared/styles'
-import {
-    FormErrorMaxLength, FormErrorRequired, ThemedModal
-} from '@shared/ui'
+import { FormErrorText, ThemedModal } from '@shared/ui'
+import { useFormik } from 'formik'
 import React from 'react'
-import { useForm } from 'react-hook-form'
 import { View } from 'react-native'
-import { Button, Text } from 'react-native-paper'
-import { WordEditFormInput } from './input'
+import { Button, Text, TextInput } from 'react-native-paper'
+import * as Yup from 'yup'
 
+
+const wordEditSchema = Yup.object().shape({
+    word: Yup.string()
+        .min(1, 'Min value length is 1')
+        .max(100, 'Max value length is 100')
+        .required('This is required'),
+    translate: Yup.string()
+        .min(1, 'Min value length is 1')
+        .max(100, 'Max value length is 100')
+        .required('This is required'),
+})
 
 type Props = {
     item: WordShort
@@ -17,17 +26,14 @@ type Props = {
 }
 
 export function WordEditFormModal({ item, onChangeItem, onClose }: Props) {
-    const {
-        control,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<WordShort>({
-        defaultValues: {
-            ...item
+    const formik = useFormik({
+        initialValues: item,
+        validationSchema: wordEditSchema,
+        onSubmit: (values: WordShort) => {
+            console.log('Form submit:', values)
+            onChangeItem(values)
         }
     })
-
-    const { word, translate } = errors
 
     return (
         <ThemedModal
@@ -42,33 +48,33 @@ export function WordEditFormModal({ item, onChangeItem, onClose }: Props) {
                 </>
             }
 
-            <WordEditFormInput name='word'
-                label='word'
-                control={control}
-                rules={{
-                    required: true,
-                    maxLength: 100,
-                }}
-                error={!!word}
+            <Text variant='labelMedium'>word:</Text>
+            <TextInput
+                onChangeText={formik.handleChange('word')}
+                onBlur={formik.handleBlur('word')}
+                value={formik.values.word + ''}
+                placeholder='word'
+                mode='outlined'
+                dense={true}
             />
-            <FormErrorRequired errorField={word}>This is required.</FormErrorRequired>
-            <FormErrorMaxLength errorField={word}>Max value length is 100</FormErrorMaxLength>
+            {formik.errors.word && <FormErrorText>{formik.errors.word}</FormErrorText>}
 
-            <WordEditFormInput name='translate'
-                label='Translate'
-                control={control}
-                rules={{
-                    required: true,
-                    maxLength: 100,
-                }}
-                error={!!translate}
+
+            <Text variant='labelMedium'>translate:</Text>
+            <TextInput
+                onChangeText={formik.handleChange('translate')}
+                onBlur={formik.handleBlur('translate')}
+                value={formik.values.translate + ''}
+                placeholder='translate'
+                mode='outlined'
+                dense={true}
             />
-            <FormErrorRequired errorField={translate}>This is required.</FormErrorRequired>
-            <FormErrorMaxLength errorField={translate}>Max value length is 100</FormErrorMaxLength>
+            {formik.errors.translate && <FormErrorText>{formik.errors.translate}</FormErrorText>}
 
             <View style={sharedStyles.btnRow}>
                 <Button
-                    onPress={handleSubmit(onChangeItem)}
+                    onPress={() => formik.handleSubmit()}
+                    disabled={!formik.isValid}
                     icon={{ source: item.key ? 'pencil' : 'plus-thick', direction: 'ltr' }}
                     mode='contained'
                 >

@@ -12,7 +12,9 @@ type Props = {
 export const TaskListItem = ({ item, onChange }: Props) => {
     return (
         <View style={styles.container}>
-            <Text variant='bodyLarge' style={styles.columnBig}>{item.title}</Text>
+            <Text variant='bodySmall' style={styles.columnBig}>{item.time}</Text>
+            <Text variant='bodySmall' style={styles.columnBig}>{item.date}</Text>
+            <Text variant='bodySmall' style={styles.columnBig}>{item.title}</Text>
             <View style={styles.columnSmall}>
                 <IconButton
                     mode='contained'
@@ -41,7 +43,8 @@ const styles = StyleSheet.create({
         marginRight: 35,
     },
     columnBig: {
-        flex: 5,
+        flex: 2,
+        margin: 2,
     },
     columnSmall: {
         flex: 1,
