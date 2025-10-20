@@ -1,10 +1,10 @@
-import { Task } from '@entities/tasks-management'
+import { Task, taskStatusIconNames } from '@entities/tasks-management'
 import { calendarDateHelper, timeHelper } from '@shared/lib/helpers'
 import { sharedStyles } from '@shared/styles'
 import { FormErrorText, ThemedModal } from '@shared/ui'
 import { useFormik } from 'formik'
 import { View } from 'react-native'
-import { Button, Text, TextInput } from 'react-native-paper'
+import { Button, SegmentedButtons, Text, TextInput } from 'react-native-paper'
 import { CalendarDate } from 'react-native-paper-dates/lib/typescript/Date/Calendar'
 import * as Yup from 'yup'
 import { AppDatePickerSingleModal } from './app-date-picker-single-modal'
@@ -87,6 +87,29 @@ export function TaskEditFormModal({ item, onChangeItem, onClose }: Props) {
             />
             {formik.errors.title && <FormErrorText>{formik.errors.title}</FormErrorText>}
 
+            <SegmentedButtons
+                value={formik.values.status}
+                onValueChange={formik.handleChange('status')}
+                buttons={[
+                    {
+
+                        value: 'todo',
+                        icon: taskStatusIconNames['todo'],
+                        label: 'Todo',
+                    },
+                    {
+                        value: 'doing',
+                        icon: taskStatusIconNames['doing'],
+                        label: 'Doing',
+                    },
+                    {
+                        value: 'done',
+                        icon: taskStatusIconNames['done'],
+                        label: 'Done',
+                    },
+                ]}
+            />
+            {formik.errors.status && <FormErrorText>{formik.errors.status}</FormErrorText>}
 
             <View style={sharedStyles.btnRow}>
                 <Button

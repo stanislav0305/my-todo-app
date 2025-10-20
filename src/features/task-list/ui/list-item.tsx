@@ -1,7 +1,7 @@
-import { Task } from '@/src/entities/tasks-management'
+import { Task, taskStatusIconNames } from '@/src/entities/tasks-management'
 import { ModificationType } from '@/src/shared/lib/types'
 import { StyleSheet, View } from 'react-native'
-import { IconButton, Text } from 'react-native-paper'
+import { Icon, IconButton, Text } from 'react-native-paper'
 
 
 type Props = {
@@ -14,6 +14,7 @@ export const TaskListItem = ({ item, onChange }: Props) => {
         <View style={styles.container}>
             <Text variant='bodySmall' style={styles.columnBig}>{item.time}</Text>
             <Text variant='bodySmall' style={styles.columnBig}>{item.date}</Text>
+            <Icon size={30} source={taskStatusIconNames[item.status]} />
             <Text variant='bodySmall' style={styles.columnBig}>{item.title}</Text>
             <View style={styles.columnSmall}>
                 <IconButton
