@@ -1,5 +1,5 @@
 import { sharedStyles } from '@shared/styles'
-import { ThemedModal } from '@shared/ui'
+import { ThemedModal } from '@shared/ui/themed-modal'
 import { View } from 'react-native'
 import { Button, Text } from 'react-native-paper'
 

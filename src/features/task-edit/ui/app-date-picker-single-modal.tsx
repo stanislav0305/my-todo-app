@@ -75,7 +75,7 @@ export function AppDatePickerSingleModal({ onConfirm, onDismiss, ...rest }: AppD
             setStateData(false, params.date)
             onConfirm && onConfirm(params)
         },
-        [setSate, onConfirm]
+        [rest, onConfirm]
     )
 
     const onDismissDatePicker = React.useCallback(
@@ -83,7 +83,7 @@ export function AppDatePickerSingleModal({ onConfirm, onDismiss, ...rest }: AppD
             setStateData(false, state.date)
             onDismiss && onDismiss()
         },
-        [setSate, onDismiss]
+        [state.date, onDismiss]
     )
 
     return (

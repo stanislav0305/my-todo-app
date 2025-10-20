@@ -42,16 +42,18 @@ export function AppTimePickerModal({ onConfirm, onDismiss, ...rest }: AppTimePic
         minutes: rest.minutes,
     } as State)
 
-    const setStateData = (visible: boolean, hours?: number, minutes?: number) => {
-        setSate(prev => {
-            return {
-                ...prev,
-                visible,
-                hours,
-                minutes,
-            }
-        })
-    }
+    const setStateData = React.useCallback(
+        (visible: boolean, hours?: number, minutes?: number) => {
+            setSate(prev => {
+                return {
+                    ...prev,
+                    visible,
+                    hours,
+                    minutes,
+                }
+            })
+        },
+        [])
 
 
     const onConfirmTimePicker = React.useCallback(
