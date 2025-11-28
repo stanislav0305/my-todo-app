@@ -20,7 +20,7 @@ const taskEditSchema = Yup.object().shape({
 
 type Props = {
     item: Task
-    onChangeItem: (word: Task) => void
+    onChangeItem: (task: Task) => void
     onClose: () => void
 }
 
@@ -109,7 +109,7 @@ export function TaskEditFormModal({ item, onChangeItem, onClose }: Props) {
                     },
                 ]}
             />
-            {formik.errors.status && <FormErrorText>{formik.errors.status}</FormErrorText>}
+            {!!formik.errors.status && <FormErrorText>{formik.errors.status}</FormErrorText>}
 
             <View style={sharedStyles.btnRow}>
                 <Button

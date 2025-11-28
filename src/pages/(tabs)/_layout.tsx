@@ -20,20 +20,6 @@ export default function TabLayout() {
       <Tabs.Screen
         name='index'
         options={{
-          title: 'Learning',
-          tabBarIcon: ({ color }) => <Icon size={34} source='head-plus' color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name='dictionary'
-        options={{
-          title: 'Dictionary',
-          tabBarIcon: ({ color }) => <Icon size={30} source='book' color={color} />
-        }}
-      />
-      <Tabs.Screen
-        name='tasks-management'
-        options={{
           title: 'Tasks',
           tabBarIcon: ({ color }) => <Icon size={34} source='target' color={color} />,
         }}

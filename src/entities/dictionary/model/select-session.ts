@@ -1,1 +1,0 @@
-export const selectSession = (state: RootState) => state.dictionary.session

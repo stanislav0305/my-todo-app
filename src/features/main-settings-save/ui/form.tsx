@@ -1,7 +1,10 @@
+import { SQLITE_DB_NAME } from '@/src/app/model/sqlite-config'
+import SQLiteManager from '@/src/app/model/sqlite-manager'
 import { MainSettings, saveMainSettings, selectMainSettings } from '@entities/settings'
 import { useAppDispatch, useAppSelector } from '@shared/lib/hooks'
 import { sharedStyles } from '@shared/styles'
 import { FormErrorText } from '@shared/ui'
+import * as SQLite from 'expo-sqlite'
 import { useFormik } from 'formik'
 import React from 'react'
 import { View } from 'react-native'
@@ -43,7 +46,7 @@ export const MainSettingsForm = () => {
                 mode='outlined'
                 dense={true}
             />
-            {formik.errors.wordsLearningPartSize && <FormErrorText>{formik.errors.wordsLearningPartSize}</FormErrorText>}
+            {!!formik.errors.wordsLearningPartSize && <FormErrorText>{formik.errors.wordsLearningPartSize}</FormErrorText>}
 
             <View style={sharedStyles.btnRow}>
                 <Button
@@ -58,6 +61,31 @@ export const MainSettingsForm = () => {
                     mode='outlined'
                 >
                     Reset
+                </Button>
+            </View>
+            <View style={sharedStyles.btnRow}>
+                <Button
+                    onPress={() => { console.log('Clear') }}
+                    mode='outlined'
+                >
+                    Clear
+                </Button>
+                <Button
+                    onPress={() => { console.log('Import') }}
+                    mode='outlined'
+                >
+                    Import
+                </Button>
+                <Button
+                    onPress={async () => {
+                        console.log('Export')
+                        const db = SQLite.openDatabaseSync(SQLITE_DB_NAME)
+                        const m = new SQLiteManager(db)
+                        await m.backup('backup.db')
+                    }}
+                    mode='outlined'
+                >
+                    Export
                 </Button>
             </View>
         </>

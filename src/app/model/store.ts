@@ -4,7 +4,13 @@ import { persistedReducer } from './configure-store'
 
 
 const loggerMiddleware: Middleware = (_store) => (next) => (action) => {
-    console.log('Dispatching action:', action)
+    if (typeof action === 'object'
+        && (typeof action != undefined)
+        && !!(action as any).error)
+        console.error('Dispatching action error:', action)
+    else
+        console.log('Dispatching action:', action)
+
     return next(action)
 }
 
@@ -13,9 +19,14 @@ export const store = configureStore({
     reducer: persistedReducer,
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({
+            thunk: true,
             serializableCheck: false, // or configure specific checks
+            /* serializableCheck: {
+                 ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+             },*/
         })
             .concat(loggerMiddleware)
 })
 
-export const persistor = persistStore(store) as Persistor
+
+export const persistor = persistStore(store, null, () => { console.log('Created persistStore.') }) as Persistor

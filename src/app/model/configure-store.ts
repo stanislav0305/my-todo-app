@@ -1,39 +1,41 @@
-import { dictionaryReducers, DictionaryState } from '@entities/dictionary'
 import { settingsReducers, SettingsState } from '@entities/settings'
 import { tasksReducers, TasksState } from '@entities/tasks-management'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import AsyncStorage, { AsyncStorageStatic } from '@react-native-async-storage/async-storage'
 import { combineReducers, Reducer, UnknownAction } from '@reduxjs/toolkit'
 import { ThemeState } from '@shared/theme/lib/types/theme-state'
 import { themeReducers } from '@shared/theme/model'
-import { PersistConfig, persistReducer } from 'redux-persist'
+import { createMigrate, PersistConfig, persistReducer } from 'redux-persist'
+import { migration, PERSIST_MIGRATION_NEW_VERSION } from './persist-migration-manifest'
 
+
+export let storageEngine: AsyncStorageStatic = AsyncStorage
 
 type RootPersistStorage = {
     theme: ThemeState
     settings: SettingsState
-    dictionary: DictionaryState
     tasksManagement: TasksState
 }
 
 type RootPersistStoragePartial = Partial<{
     theme: ThemeState | undefined
     settings: SettingsState | undefined
-    dictionary: DictionaryState | undefined
     tasksManagement: TasksState | undefined
 }>
 
 const rootReducer = combineReducers({
     theme: themeReducers,
     settings: settingsReducers,
-    dictionary: dictionaryReducers,
     tasksManagement: tasksReducers,
 }) as Reducer<RootPersistStorage, UnknownAction, RootPersistStoragePartial>
 
-const persistConfig = {
-    key: "root",
-    storage: AsyncStorage, // Use AsyncStorage for local storage
-    //whitelist: ["theme", "settings", "dictionary"], // Optional: Persist only this slices of the state
-    //blacklist: ["sliceName"] // Optional: Prevent certain slices from being persisted
+const persistConfig: PersistConfig<RootPersistStorage, any, any, any> = {
+    key: 'root',
+    version: PERSIST_MIGRATION_NEW_VERSION,
+    storage: storageEngine,
+    whitelist: ['theme', 'settings'], // Optional: Persist only this slices of the state
+    blacklist: ['tasksManagement'], // Optional: Prevent certain slices from being persisted
+    migrate: createMigrate(migration, { debug: __DEV__ }),
+    timeout: 100
 } as PersistConfig<RootPersistStorage, any, any, any>
 
 export const persistedReducer = persistReducer(persistConfig, rootReducer)
