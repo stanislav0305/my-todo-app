@@ -5,7 +5,7 @@ import { combineReducers, Reducer, UnknownAction } from '@reduxjs/toolkit'
 import { ThemeState } from '@shared/theme/lib/types/theme-state'
 import { themeReducers } from '@shared/theme/model'
 import { createMigrate, PersistConfig, persistReducer } from 'redux-persist'
-import { migration, PERSIST_MIGRATION_NEW_VERSION } from './persist-migration-manifest'
+import { PERSIST_MIGRATION_NEW_VERSION, persistMigrations } from './persist-migration-manifest'
 
 
 export let storageEngine: AsyncStorageStatic = AsyncStorage
@@ -34,7 +34,7 @@ const persistConfig: PersistConfig<RootPersistStorage, any, any, any> = {
     storage: storageEngine,
     whitelist: ['theme', 'settings'], // Optional: Persist only this slices of the state
     blacklist: ['tasksManagement'], // Optional: Prevent certain slices from being persisted
-    migrate: createMigrate(migration, { debug: __DEV__ }),
+    migrate: createMigrate(persistMigrations, { debug: __DEV__ }),
     timeout: 100
 } as PersistConfig<RootPersistStorage, any, any, any>
 

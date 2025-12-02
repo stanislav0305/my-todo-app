@@ -5,7 +5,7 @@ import { MigrationManifest } from 'redux-persist'
 
 
 export const PERSIST_MIGRATION_NEW_VERSION = 0 //need to be updated
-export const migration = {
+export const persistMigrations = {
     [0]: (state: any): any => {
         return {
             ...state,

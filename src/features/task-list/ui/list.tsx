@@ -15,7 +15,7 @@ export const TaskList = ({ onChange }: Props) => {
     return (
         <FlatList
             data={items}
-            keyExtractor={((item: Task, index: number) => item.key)}
+            keyExtractor={((item: Task, index: number) => `task-${item.id}`)}
             renderItem={(itemInfo: ListRenderItemInfo<Task>) =>
                 <TaskListItem
                     item={itemInfo.item}

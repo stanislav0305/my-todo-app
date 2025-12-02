@@ -1,3 +1,4 @@
+export * from './app-data-provider'
 export * from './app-persist-gate'
 export * from './app-sqlite-provider'
 export * from './app-theme-provider'

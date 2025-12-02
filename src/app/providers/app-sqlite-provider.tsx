@@ -1,11 +1,8 @@
-
-import { SQLITE_DB_NAME } from '@app/model/sqlite-config'
-import { migrateDbIfNeeded } from '@app/model/sqlite-migration'
 import { SQLiteProvider } from 'expo-sqlite'
 import { PropsWithChildren, Suspense } from 'react'
 import { Platform, StyleSheet } from 'react-native'
 import { Text } from 'react-native-paper'
-
+import { initializeTypeORM, SQLITE_DB_NAME } from '../type-orm-database/data-source'
 
 
 export function AppSqliteProvider({ children }: PropsWithChildren) {
@@ -28,7 +25,9 @@ export function AppSqliteProvider({ children }: PropsWithChildren) {
                     <SQLiteProvider
                         databaseName={SQLITE_DB_NAME}
                         useSuspense={true}
-                        onInit={migrateDbIfNeeded}
+                        onInit={async (db) => {
+                            await initializeTypeORM()
+                        }}
                     >
                         {children}
                     </SQLiteProvider>

@@ -5,15 +5,15 @@ import { Button, Text } from 'react-native-paper'
 
 
 type Props = {
-    itemKey: string
+    itemId: number
     questionText: string
     deleteBtnText?: string
     closeBtnText?: string
-    onDelete: (key: string) => void
+    onDelete: (id: number) => void
     onClose: () => void
 }
 
-export function RemoveFormModal({ itemKey, questionText, deleteBtnText, closeBtnText, onDelete, onClose }: Props) {
+export function RemoveFormModal({ itemId, questionText, deleteBtnText, closeBtnText, onDelete, onClose }: Props) {
     return (
         <ThemedModal
             title='Delete task'
@@ -27,7 +27,7 @@ export function RemoveFormModal({ itemKey, questionText, deleteBtnText, closeBtn
             </Text>
             <View style={sharedStyles.btnRow}>
                 <Button
-                    onPress={() => onDelete(itemKey)}
+                    onPress={() => onDelete(itemId)}
                     icon={{ source: 'trash-can', direction: 'ltr' }}
                     mode='outlined'
                 >

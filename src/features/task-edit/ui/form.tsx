@@ -1,6 +1,6 @@
+import { sharedStyles } from '@/src/shared/styles'
 import { Task, taskStatusIconNames } from '@entities/tasks-management'
 import { calendarDateHelper, timeHelper } from '@shared/lib/helpers'
-import { sharedStyles } from '@shared/styles'
 import { FormErrorText, ThemedModal } from '@shared/ui'
 import { useFormik } from 'formik'
 import { View } from 'react-native'
@@ -47,18 +47,18 @@ export function TaskEditFormModal({ item, onChangeItem, onClose }: Props) {
 
     return (
         <ThemedModal
-            title={item.key ? 'Update task' : 'Add task'}
+            title={!!item.id ? 'Update task' : 'Add task'}
             isVisible={true}
             onClose={onClose}
         >
-            {item.key &&
+            <Text variant='labelMedium'>id:{item.id}</Text>
+            {!!item.id &&
 
                 <>
-                    <Text variant='labelMedium'>key:</Text>
-                    <Text variant='bodyMedium'>{item.key}</Text>
+                    <Text variant='labelMedium'>id:</Text>
+                    <Text variant='bodyMedium'>{item.id}</Text>
                 </>
             }
-
             <AppTimePickerModal
                 use24HourClock={true}
                 hours={timeHelper.getHoursFromStringOrUndefined(item.time)}
@@ -85,7 +85,7 @@ export function TaskEditFormModal({ item, onChangeItem, onClose }: Props) {
                 mode='outlined'
                 dense={true}
             />
-            {formik.errors.title && <FormErrorText>{formik.errors.title}</FormErrorText>}
+            {!!formik.errors.title && <FormErrorText>{formik.errors.title}</FormErrorText>}
 
             <SegmentedButtons
                 value={formik.values.status}
@@ -111,11 +111,12 @@ export function TaskEditFormModal({ item, onChangeItem, onClose }: Props) {
             />
             {!!formik.errors.status && <FormErrorText>{formik.errors.status}</FormErrorText>}
 
+
             <View style={sharedStyles.btnRow}>
                 <Button
                     onPress={() => formik.handleSubmit()}
                     disabled={!formik.isValid}
-                    icon={{ source: item.key ? 'pencil' : 'plus-thick', direction: 'ltr' }}
+                    icon={{ source: item.id ? 'pencil' : 'plus-thick', direction: 'ltr' }}
                     mode='contained'
                 >
                     Save

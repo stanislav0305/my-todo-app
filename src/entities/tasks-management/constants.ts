@@ -1,10 +1,9 @@
 import { Task } from './types/task'
-import { Tasks } from './types/tasks'
 import { TasksState } from './types/tasks-state'
 
 
 export const DEFAULT_TASK = {
-    key: '',
+    id: 0,
     title: '',
     time: '',
     date: '',
@@ -12,7 +11,7 @@ export const DEFAULT_TASK = {
 } satisfies Task
 
 export const INITIAL_TASKS_STATE = {
-    tasks: {} satisfies Tasks
+    tasks: [] as Task[],
 } satisfies TasksState as TasksState
 
 export const taskStatusIconNames = {

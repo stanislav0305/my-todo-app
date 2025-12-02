@@ -1,6 +1,6 @@
-import { Tasks } from "./tasks";
+import { Task } from "./task";
 
 
 export interface TasksState {
-    tasks: Tasks,
+    tasks: Task[],
 }

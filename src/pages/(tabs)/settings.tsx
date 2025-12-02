@@ -1,13 +1,13 @@
-import { MainSettingsForm } from '@features/main-settings-save'
 import ScreenLayout from '@pages/_screen-layout'
 import { ThemeSwitcher } from '@shared/theme/ui'
+import { MainSettingsWidget } from '@widgets/main-settings'
 
 
 export default function SettingsScreen() {
     return (
         <ScreenLayout>
-            <ThemeSwitcher/>
-            <MainSettingsForm />
+            <ThemeSwitcher />
+            <MainSettingsWidget />
         </ScreenLayout>
     )
 }

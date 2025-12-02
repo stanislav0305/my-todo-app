@@ -2,18 +2,24 @@ import * as DocumentPicker from 'expo-document-picker'
 import * as FileSystem from 'expo-file-system'
 import * as Sharing from 'expo-sharing'
 import { openDatabaseAsync, SQLiteDatabase } from 'expo-sqlite'
-import { storageEngine } from './configure-store'
-import { SQLITE_DB_NAME } from './sqlite-config'
+import { storageEngine } from '../model/configure-store'
+import { SQLITE_DB_NAME } from './data-source'
 
 
 export default class SQLiteManager {
     constructor(private db: SQLiteDatabase) { }
 
     async clear(): Promise<void> {
-        storageEngine.clear()
-        //await this.db.execAsync(`DELETE FROM task`)
+        await storageEngine.clear()
+        await this.db.execAsync(`
+                PRAGMA writable_schema = 1;
+                DELETE FROM sqlite_master;
+                PRAGMA writable_schema = 0;
+                VACUUM;
+                PRAGMA integrity_check;
+        `)
     }
-    async backup(backupName: string): Promise<void> {
+    async backup(backupName: string = `${SQLITE_DB_NAME}-backup.db`): Promise<void> {
         await backupDatabase(this.db, backupName)
     }
     async restore(): Promise<void> {

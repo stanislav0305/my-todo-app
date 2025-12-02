@@ -5,7 +5,7 @@ import { persistedReducer } from './configure-store'
 
 const loggerMiddleware: Middleware = (_store) => (next) => (action) => {
     if (typeof action === 'object'
-        && (typeof action != undefined)
+        && (action != null)
         && !!(action as any).error)
         console.error('Dispatching action error:', action)
     else
@@ -27,6 +27,5 @@ export const store = configureStore({
         })
             .concat(loggerMiddleware)
 })
-
 
 export const persistor = persistStore(store, null, () => { console.log('Created persistStore.') }) as Persistor

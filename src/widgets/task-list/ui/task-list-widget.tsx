@@ -1,8 +1,9 @@
-import { ModificationType } from '@/src/shared/lib/types'
-import { addTask, DEFAULT_TASK, deleteTask, editTask, Task } from '@entities/tasks-management'
+import { useAppData } from '@/src/app/providers/app-data-provider'
+import { createTask, DEFAULT_TASK, removeTask, Task, updateTask } from '@entities/tasks-management'
 import { TaskEditFormModal } from '@features/task-edit'
 import { TaskList } from '@features/task-list'
 import { useAppDispatch } from '@shared/lib/hooks'
+import { ModificationType } from '@shared/lib/types'
 import { RemoveFormModal } from '@shared/ui/remove-form-modal'
 import { useState } from 'react'
 import { Button } from 'react-native-paper'
@@ -14,6 +15,7 @@ interface PageState {
 }
 
 export const TaskListWidget = () => {
+    const appData = useAppData()
     const dispatch = useAppDispatch()
 
     const [modeData, setModeData] = useState<PageState>({
@@ -42,8 +44,8 @@ export const TaskListWidget = () => {
             {modeData.mode === 'edit' &&
                 <TaskEditFormModal
                     item={modeData.item}
-                    onChangeItem={(newItem: Task) => {
-                        dispatch(newItem.key ? editTask(newItem) : addTask(newItem))
+                    onChangeItem={(item: Task) => {
+                        dispatch(item.id ? updateTask({ taskRep: appData.taskRep, item }) : createTask({ taskRep: appData.taskRep, item }))
                         changeMode()
                     }}
                     onClose={changeMode}
@@ -51,11 +53,11 @@ export const TaskListWidget = () => {
             }
             {modeData.mode === 'remove' &&
                 <RemoveFormModal
-                    itemKey={modeData.item.key}
+                    itemId={modeData.item.id}
                     questionText={`Do you really want to delete task '${modeData.item.title}' 
-                    by key '${modeData.item.key}'?`}
-                    onDelete={(key: string) => {
-                        dispatch(deleteTask(key))
+                    by id '${modeData.item.id}'?`}
+                    onDelete={(id: number) => {
+                        dispatch(removeTask({ taskRep: appData.taskRep, id }))
                         changeMode()
                     }}
                     onClose={changeMode}
