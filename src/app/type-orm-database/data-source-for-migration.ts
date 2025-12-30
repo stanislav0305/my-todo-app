@@ -6,7 +6,7 @@ import { DataSource } from 'typeorm'
 import { Task } from '../../entities/tasks-management/types/task'
 
 export const AppDataSource = new DataSource({
-    database: 'my-todo-migration-test.db', //only for migration generation and check
+    database: 'my-todo-migration-test.db',//"C:/Users/Stas/Downloads/my-todo.db-backup (3).db", //only for migration generation and check
     type: "sqlite",
     entities: [Task],
     logging: true,

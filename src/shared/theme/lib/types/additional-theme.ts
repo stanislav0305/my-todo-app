@@ -16,5 +16,6 @@ export type AdditionalTheme = {
         onBlue: string,
         blueContainer: string,
         onBlueContainer: string,
+        outlineVariant: string,
     }
 }

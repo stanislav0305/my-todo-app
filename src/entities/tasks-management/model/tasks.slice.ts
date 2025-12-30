@@ -1,9 +1,9 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { revertAll } from '@shared/lib/actions'
-import { Repository } from 'typeorm'
-import { DEFAULT_TASK, INITIAL_TASKS_STATE } from '../constants'
+import { Paging } from '@shared/lib/types'
+import { FindManyOptions, Repository } from 'typeorm'
+import { INITIAL_TASKS_STATE, TASK_TAKE_ITEMS_COUNT } from '../constants'
 import { Task } from '../types/task'
-import { TasksState } from '../types/tasks-state'
 
 
 export const tasksSlice = createSlice({
@@ -11,20 +11,29 @@ export const tasksSlice = createSlice({
     initialState: INITIAL_TASKS_STATE,
     extraReducers: (builder) => builder.addCase(revertAll, () => INITIAL_TASKS_STATE),
     reducers: {
-        initialize: (draftState, action: PayloadAction<TasksState>) => {
-            return action.payload
-        },
-        create: (draftState, action: PayloadAction<Task>) => {
-            let item = {
-                ...DEFAULT_TASK,
-                ...action.payload,
-            } satisfies Task
+        setTasks: (draftState, action: PayloadAction<{ tasks: Task[], paging: Paging<Task> }>) => {
+            const { tasks, paging } = action.payload
 
-            if (!draftState.tasks)
-                draftState.tasks = []
-
-            draftState.tasks.push(item)
+            draftState.tasks = [...tasks]
+            draftState.paging = paging
         },
+        appendTasks: (draftState, action: PayloadAction<{ tasks: Task[], paging: Paging<Task> }>) => {
+            const { tasks, paging } = action.payload
+
+            draftState.tasks = [...draftState.tasks, ...tasks]
+            draftState.paging = paging
+        },
+        /*  create: (draftState, action: PayloadAction<Task>) => {
+              let item = {
+                  ...DEFAULT_TASK,
+                  ...action.payload,
+              } satisfies Task
+  
+              if (!draftState.tasks)
+                  draftState.tasks = []
+  
+              draftState.tasks.push(item)
+          }, */
         update: (draftState, action: PayloadAction<Task>) => {
             const item = { ...action.payload }
             const index = draftState.tasks.findIndex(i => i.id === item.id)
@@ -39,24 +48,68 @@ export const tasksSlice = createSlice({
         remove: (draftState, action: PayloadAction<number>) => {
             const id = action.payload
 
-            const tasks = draftState.tasks.filter(i => i.id !== id)
-            draftState.tasks = tasks
+            const itemExist = draftState.tasks.findIndex(i => i.id === id) >= 0
+            if (itemExist) {
+                draftState.tasks = draftState.tasks.filter(i => i.id !== id)
+                draftState.paging.skip--
+                draftState.paging.itemCount--
+            }
         },
     },
 })
 
-const { initialize, create, update, remove } = tasksSlice.actions
+const { appendTasks, setTasks, update, remove } = tasksSlice.actions
 export const tasksReducers = tasksSlice.reducer
+export type FetchTasksTypes = 'fetchFromBegin' | 'fetchFromBeginToSkipped' | 'fetchNext'
 
+const fetchTasks = createAsyncThunk(
+    'tasks/fetch',
+    async ({ taskRep, paging, fetchType }: { taskRep: Repository<Task>, paging: Paging<Task>, fetchType: FetchTasksTypes }, thunkApi) => {
+        console.log('tasks/fetch...')
 
-const initializeTasks = createAsyncThunk(
-    'tasks/initialize',
-    async (taskRep: Repository<Task>, thunkApi) => {
-        const items = await taskRep.find()
+        if (fetchType === 'fetchFromBegin') {
+            paging.skip = 0
+            paging.hasNext = true
+            paging.hasPrevious = false
+        }
+        else if (fetchType === 'fetchNext') {
+            paging.skip = paging.skip + paging.take
+        } else if (fetchType === 'fetchFromBeginToSkipped') {
+            const oldSkip = paging.skip
+            paging.skip = 0
+            paging.take = oldSkip
+            //paging.hasNext = true
+            //paging.hasPrevious = false
 
-        thunkApi.dispatch(initialize({
-            tasks: items,
-        } satisfies TasksState as TasksState))
+        }
+
+        if (!paging.hasNext) {
+            console.log(`tasks/fetch stopped (paging.hasNext:${paging.hasNext})`)
+            return
+        }
+
+        console.log('tasks/fetch begin')
+        const [items, itemCount] = await taskRep.findAndCount({
+            skip: paging.skip,
+            take: paging.take,
+            where: paging.where,
+            order: paging.order,
+        } as FindManyOptions<Task>)
+
+        if (fetchType === 'fetchFromBeginToSkipped') {
+            paging.skip = paging.take
+            paging.take = TASK_TAKE_ITEMS_COUNT
+        }
+
+        paging.itemCount = itemCount
+        paging.hasPrevious = paging.skip > 0
+        paging.hasNext = paging.skip < paging.itemCount
+
+        if (fetchType === 'fetchFromBegin' || fetchType === 'fetchFromBeginToSkipped')
+            thunkApi.dispatch(setTasks({ tasks: items, paging }))
+        else if (fetchType === 'fetchNext')
+            thunkApi.dispatch(appendTasks({ tasks: items, paging }))
+
     })
 
 const createTask = createAsyncThunk(
@@ -70,7 +123,13 @@ const createTask = createAsyncThunk(
         }
 
         const i = await taskRep.save(t)
-        thunkApi.dispatch(create(i))
+        // thunkApi.dispatch(create(i))
+
+        //need reload, because maybe in list not loaded all existed tasks 
+        // => can't insert new created tasks to sorted task list, because it maybe is'nt full loaded
+        const state = thunkApi.getState() as RootState
+        const paging = JSON.parse(JSON.stringify(state.tasksManagement.paging)) as Paging<Task>
+        thunkApi.dispatch(await fetchTasks({ taskRep, paging, fetchType: 'fetchFromBeginToSkipped' }))
     })
 
 const updateTask = createAsyncThunk(
@@ -96,5 +155,5 @@ const removeTask = createAsyncThunk(
         }
     })
 
-export { createTask, initializeTasks, removeTask, updateTask }
+export { createTask, fetchTasks, removeTask, updateTask }
 

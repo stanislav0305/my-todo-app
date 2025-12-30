@@ -28,28 +28,22 @@ type AppTimePickerModalPros = {
 
 type State = {
     visible: boolean,
-    hours?: number,
-    minutes?: number,
 }
 
 
-export function AppTimePickerModal({ onConfirm, onDismiss, ...rest }: AppTimePickerModalPros) {
+export function AppTimePickerModal({ onConfirm, onDismiss, locale, ...rest }: AppTimePickerModalPros) {
     const appTheme = useAppTheme()
     const { primary } = appTheme.colors
     const [state, setSate] = React.useState<State>({
         visible: false,
-        hours: rest.hours,
-        minutes: rest.minutes,
     } as State)
 
     const setStateData = React.useCallback(
-        (visible: boolean, hours?: number, minutes?: number) => {
+        (visible: boolean) => {
             setSate(prev => {
                 return {
                     ...prev,
                     visible,
-                    hours,
-                    minutes,
                 }
             })
         },
@@ -58,20 +52,20 @@ export function AppTimePickerModal({ onConfirm, onDismiss, ...rest }: AppTimePic
 
     const onConfirmTimePicker = React.useCallback(
         (hoursAndMinutes: { hours: number | undefined, minutes: number | undefined }) => {
-            console.log('selected time:', timeHelper.toFormattedStringOrEmpty({ hours: state.hours, minutes: state.minutes }))
+            console.log('selected time:', timeHelper.toFormattedStringOrEmpty({ hours: rest.hours, minutes: rest.minutes }, 'hh:mm'))
 
-            setStateData(false, hoursAndMinutes.hours, hoursAndMinutes.minutes)
+            setStateData(false)
             onConfirm && onConfirm(hoursAndMinutes)
         },
-        [state.hours, state.minutes, setStateData, onConfirm]
+        [rest.hours, rest.minutes, setStateData, onConfirm]
     )
 
     const onDismissTimePicker = React.useCallback(
         () => {
-            setStateData(false, state.hours, state.minutes)
+            setStateData(false)
             onDismiss && onDismiss()
         },
-        [state.hours, state.minutes, setStateData, onDismiss]
+        [setStateData, onDismiss]
     )
 
     return (
@@ -80,11 +74,11 @@ export function AppTimePickerModal({ onConfirm, onDismiss, ...rest }: AppTimePic
                 <Text
                     style={[{ 'color': primary }, styles.time]}
                     variant='bodyMedium'
-                    onPress={() => setStateData(true, state.hours, state.minutes)}
+                    onPress={() => setStateData(true)}
                 >
-                    {timeHelper.isUndefined(state.hours, state.minutes)
-                        ? '__:__'
-                        : timeHelper.toFormattedStringOrEmpty({ hours: state.hours, minutes: state.minutes })
+                    {timeHelper.isUndefined(rest.hours, rest.minutes)
+                        ? timeHelper.getTemplate('hh:mm')
+                        : timeHelper.toFormattedStringOrEmpty({ hours: rest.hours, minutes: rest.minutes }, 'hh:mm')
                     }
                 </Text>
                 <IconButton
@@ -92,7 +86,7 @@ export function AppTimePickerModal({ onConfirm, onDismiss, ...rest }: AppTimePic
                     mode='contained'
                     icon='clock'
                     size={22}
-                    onPress={() => setStateData(true, state.hours, state.minutes)}
+                    onPress={() => setStateData(true)}
                 />
                 <IconButton
                     style={styles.timeRemoveBtn}
@@ -104,11 +98,15 @@ export function AppTimePickerModal({ onConfirm, onDismiss, ...rest }: AppTimePic
             </View>
             <TimePickerModal
                 {...rest}
-                hours={state.hours}
-                minutes={state.minutes}
+                hours={rest.hours}
+                minutes={rest.minutes}
                 onConfirm={onConfirmTimePicker}
                 onDismiss={onDismissTimePicker}
                 visible={state.visible}
+                locale={locale}
+                label='## Выберите время'
+                confirmLabel='## Ок'
+                cancelLabel='## Закрыть'
             />
         </>
     )

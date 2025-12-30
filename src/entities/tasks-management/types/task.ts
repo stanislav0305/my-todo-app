@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
 
 
 export type TaskStatus = 'todo' | 'doing' | 'done'
@@ -19,4 +19,19 @@ export class Task {
 
     @Column('text')
     status: TaskStatus
+
+    @Column('boolean', { nullable: false, default: false })
+    isImportant: boolean
+
+    @Column('boolean', { nullable: false, default: false })
+    isUrgent: boolean
+
+    @CreateDateColumn()
+    createdAt: Date
+
+    @UpdateDateColumn()
+    updateAt: Date
+
+    @DeleteDateColumn()
+    deletedAt: Date | null
 }

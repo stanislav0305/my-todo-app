@@ -3,6 +3,7 @@ import * as SQLite from 'expo-sqlite'
 import "reflect-metadata"
 import { DataSource, DataSourceOptions } from 'typeorm'
 import { TasksTableCreate1764668295103 } from './migrations/1764668295103-tasks-table-create'
+import { NextMigration1765049101409 } from './migrations/1765049101409-next-migration'
 
 
 export const SQLITE_DB_NAME = 'my-todo.db'
@@ -17,7 +18,7 @@ export const AppDataSource = new DataSource({
     synchronize: false,
     migrationsTableName: 'db_migrations',
     migrationsTransactionMode: 'each',
-    migrations: [TasksTableCreate1764668295103],//['migrations/*{.js,.ts}'],
+    migrations: [TasksTableCreate1764668295103, NextMigration1765049101409],//['migrations/*{.js,.ts}'],
     migrationsRun: true,
 } as DataSourceOptions)
 

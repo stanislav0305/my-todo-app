@@ -38,6 +38,7 @@ export const DefaultAdditionalTheme = {
         onBlue: '#ffffffff',
         blueContainer: '#97f0ffff',
         onBlueContainer: '#001f24ff',
+        outlineVariant: '#000000ff',
     },
 } satisfies AdditionalTheme
 
@@ -59,6 +60,7 @@ export const DarkAdditionalTheme = {
         onBlue: '#00363dff',
         blueContainer: '#004f58ff',
         onBlueContainer: '#97f0ffff',
+        outlineVariant: '#ffffffff',
     },
 } satisfies AdditionalTheme
 

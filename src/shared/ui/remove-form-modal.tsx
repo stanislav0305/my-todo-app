@@ -25,7 +25,7 @@ export function RemoveFormModal({ itemId, questionText, deleteBtnText, closeBtnT
             >
                 {questionText}
             </Text>
-            <View style={sharedStyles.btnRow}>
+            <View style={sharedStyles.row}>
                 <Button
                     onPress={() => onDelete(itemId)}
                     icon={{ source: 'trash-can', direction: 'ltr' }}

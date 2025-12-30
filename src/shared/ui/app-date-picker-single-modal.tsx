@@ -1,6 +1,6 @@
-import { calendarDateHelper } from '@shared/lib/helpers'
+import { calendarDateHelper, dateHelper } from '@shared/lib/helpers'
 import { useAppTheme } from '@shared/theme/hooks'
-import React from 'react'
+import React, { useCallback, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { IconButton, Text } from 'react-native-paper'
 import { DatePickerModal } from 'react-native-paper-dates'
@@ -45,45 +45,42 @@ type AppDatePickerModalPros =
     }
 
 type State = {
-    visible: boolean,
-    date: CalendarDate
+    visible: boolean
 }
 
-export function AppDatePickerSingleModal({ onConfirm, onDismiss, ...rest }: AppDatePickerModalPros) {
+export function AppDatePickerSingleModal({ onConfirm, onDismiss, locale, ...rest }: AppDatePickerModalPros) {
     const appTheme = useAppTheme()
     const { primary } = appTheme.colors
-    const [state, setSate] = React.useState<State>({
-        visible: false,
-        date: rest.date
+    const [state, setSate] = useState<State>({
+        visible: false
     } as State)
 
-    const setStateData = (visible: boolean, date: CalendarDate) => {
+    const setStateData = (visible: boolean) => {
         setSate(prev => {
             return {
                 ...prev,
-                visible,
-                date: date
+                visible
             }
         })
     }
 
-    const onConfirmDatePicker = React.useCallback(
+    const onConfirmDatePicker = useCallback(
         (params: { date: CalendarDate }) => {
             rest.date = params.date
             console.log('selected date:', rest.date)
 
-            setStateData(false, params.date)
+            setStateData(false)
             onConfirm && onConfirm(params)
         },
         [rest, onConfirm]
     )
 
-    const onDismissDatePicker = React.useCallback(
+    const onDismissDatePicker = useCallback(
         () => {
-            setStateData(false, state.date)
+            setStateData(false)
             onDismiss && onDismiss()
         },
-        [state.date, onDismiss]
+        [rest.date, onDismiss]
     )
 
     return (
@@ -92,16 +89,20 @@ export function AppDatePickerSingleModal({ onConfirm, onDismiss, ...rest }: AppD
                 <Text
                     style={[{ 'color': primary }, styles.date]}
                     variant='bodyMedium'
-                    onPress={() => setStateData(true, state.date)}
+                    onPress={() => setStateData(true)}
                 >
-                    {calendarDateHelper.isUndefined(state.date) ? '__/__/____' : state.date!.toDateString()}
+                    {calendarDateHelper.isUndefined(rest.date)
+                        ? dateHelper.getTemplate('DD/MM/YYYY')
+                        : calendarDateHelper.toFormattedStringOrEmpty(rest.date, 'DD/MM/YYYY')
+                    }
                 </Text>
                 <IconButton
                     style={styles.dateBtn}
                     mode='contained'
                     icon='calendar-month'
                     size={22}
-                    onPress={() => setStateData(true, state.date)}
+                    onPress={() => setStateData(true)
+                    }
                 />
                 <IconButton
                     style={styles.dateRemoveBtn}
@@ -114,9 +115,10 @@ export function AppDatePickerSingleModal({ onConfirm, onDismiss, ...rest }: AppD
             <DatePickerModal
                 {...rest}
                 visible={state.visible}
-                date={state.date}
+                date={rest.date}
                 onConfirm={onConfirmDatePicker}
                 onDismiss={onDismissDatePicker}
+                locale={locale}
             />
         </>
     )

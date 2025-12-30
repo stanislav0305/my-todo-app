@@ -16,7 +16,7 @@ export default function ScreenLayout({ children, style }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 32,
+        padding: 2,
         gap: 16,
         alignContent: 'flex-start',
         overflow: 'hidden',
