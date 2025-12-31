@@ -4,10 +4,5 @@
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
   },
-  "cSpell.words": [
-    "paperplane",
-    "persistor",
-    "segmentless",
-    "steiger"
-  ]
+  "cSpell.words": ["paperplane", "persistor", "segmentless", "Stas", "steiger"]
 }

@@ -4,5 +4,5 @@ import { Task } from './task';
 
 export interface TasksState {
     paging: Paging<Task>,
-    tasks: Task[],
+    items: Task[],
 }

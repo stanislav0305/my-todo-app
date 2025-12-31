@@ -5,7 +5,7 @@ import { Task } from "../types/task"
 
 export const getCopyOfPaging = createSelector(
     [
-        (state: RootState) => state.tasksManagement.paging
+        (state: RootState) => state.tasks.paging
     ],
     (paging: Paging<Task>) => {
         return JSON.parse(JSON.stringify(paging)) as Paging<Task>

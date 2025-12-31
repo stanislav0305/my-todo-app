@@ -14,13 +14,13 @@ export const tasksSlice = createSlice({
         setTasks: (draftState, action: PayloadAction<{ tasks: Task[], paging: Paging<Task> }>) => {
             const { tasks, paging } = action.payload
 
-            draftState.tasks = [...tasks]
+            draftState.items = [...tasks]
             draftState.paging = paging
         },
         appendTasks: (draftState, action: PayloadAction<{ tasks: Task[], paging: Paging<Task> }>) => {
             const { tasks, paging } = action.payload
 
-            draftState.tasks = [...draftState.tasks, ...tasks]
+            draftState.items = [...draftState.items, ...tasks]
             draftState.paging = paging
         },
         /*  create: (draftState, action: PayloadAction<Task>) => {
@@ -29,18 +29,18 @@ export const tasksSlice = createSlice({
                   ...action.payload,
               } satisfies Task
   
-              if (!draftState.tasks)
-                  draftState.tasks = []
+              if (!draftState.items)
+                  draftState.items = []
   
-              draftState.tasks.push(item)
+              draftState.items.push(item)
           }, */
         update: (draftState, action: PayloadAction<Task>) => {
             const item = { ...action.payload }
-            const index = draftState.tasks.findIndex(i => i.id === item.id)
+            const index = draftState.items.findIndex(i => i.id === item.id)
 
             if (index >= 0) {
-                draftState.tasks[index] = {
-                    ...draftState.tasks[index],
+                draftState.items[index] = {
+                    ...draftState.items[index],
                     ...item
                 } satisfies Task
             }
@@ -48,9 +48,9 @@ export const tasksSlice = createSlice({
         remove: (draftState, action: PayloadAction<number>) => {
             const id = action.payload
 
-            const itemExist = draftState.tasks.findIndex(i => i.id === id) >= 0
+            const itemExist = draftState.items.findIndex(i => i.id === id) >= 0
             if (itemExist) {
-                draftState.tasks = draftState.tasks.filter(i => i.id !== id)
+                draftState.items = draftState.items.filter(i => i.id !== id)
                 draftState.paging.skip--
                 draftState.paging.itemCount--
             }
@@ -60,21 +60,23 @@ export const tasksSlice = createSlice({
 
 const { appendTasks, setTasks, update, remove } = tasksSlice.actions
 export const tasksReducers = tasksSlice.reducer
-export type FetchTasksTypes = 'fetchFromBegin' | 'fetchFromBeginToSkipped' | 'fetchNext'
+
 
 const fetchTasks = createAsyncThunk(
     'tasks/fetch',
-    async ({ taskRep, paging, fetchType }: { taskRep: Repository<Task>, paging: Paging<Task>, fetchType: FetchTasksTypes }, thunkApi) => {
+    async ({ taskRep, paging }:
+        { taskRep: Repository<Task>, paging: Paging<Task> }, thunkApi) => {
         console.log('tasks/fetch...')
 
-        if (fetchType === 'fetchFromBegin') {
+        if (paging.fetchType === 'fetchFromBegin') {
             paging.skip = 0
             paging.hasNext = true
             paging.hasPrevious = false
         }
-        else if (fetchType === 'fetchNext') {
+        else if (paging.fetchType === 'fetchNext') {
             paging.skip = paging.skip + paging.take
-        } else if (fetchType === 'fetchFromBeginToSkipped') {
+        }
+        else if (paging.fetchType === 'fetchFromBeginToSkipped') {
             const oldSkip = paging.skip
             paging.skip = 0
             paging.take = oldSkip
@@ -96,7 +98,8 @@ const fetchTasks = createAsyncThunk(
             order: paging.order,
         } as FindManyOptions<Task>)
 
-        if (fetchType === 'fetchFromBeginToSkipped') {
+
+        if (paging.fetchType === 'fetchFromBeginToSkipped') {
             paging.skip = paging.take
             paging.take = TASK_TAKE_ITEMS_COUNT
         }
@@ -105,9 +108,9 @@ const fetchTasks = createAsyncThunk(
         paging.hasPrevious = paging.skip > 0
         paging.hasNext = paging.skip < paging.itemCount
 
-        if (fetchType === 'fetchFromBegin' || fetchType === 'fetchFromBeginToSkipped')
+        if (paging.fetchType === 'fetchFromBegin' || paging.fetchType === 'fetchFromBeginToSkipped')
             thunkApi.dispatch(setTasks({ tasks: items, paging }))
-        else if (fetchType === 'fetchNext')
+        else if (paging.fetchType === 'fetchNext')
             thunkApi.dispatch(appendTasks({ tasks: items, paging }))
 
     })
@@ -122,14 +125,18 @@ const createTask = createAsyncThunk(
             id: t.id
         }
 
-        const i = await taskRep.save(t)
+        await taskRep.save(t)
+        //const i = await taskRep.save(t)
         // thunkApi.dispatch(create(i))
 
         //need reload, because maybe in list not loaded all existed tasks 
         // => can't insert new created tasks to sorted task list, because it maybe is'nt full loaded
         const state = thunkApi.getState() as RootState
-        const paging = JSON.parse(JSON.stringify(state.tasksManagement.paging)) as Paging<Task>
-        thunkApi.dispatch(await fetchTasks({ taskRep, paging, fetchType: 'fetchFromBeginToSkipped' }))
+        const paging = JSON.parse(JSON.stringify(state.tasks.paging)) as Paging<Task>
+        paging.hasNext = true
+        paging.fetchType = 'fetchFromBeginToSkipped'
+
+        thunkApi.dispatch(await fetchTasks({ taskRep, paging }))
     })
 
 const updateTask = createAsyncThunk(

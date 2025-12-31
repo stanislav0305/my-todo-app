@@ -1,4 +1,4 @@
-import { Task } from '@entities/tasks-management'
+import { Task } from '@entities/tasks'
 import * as SQLite from 'expo-sqlite'
 import "reflect-metadata"
 import { DataSource, DataSourceOptions } from 'typeorm'

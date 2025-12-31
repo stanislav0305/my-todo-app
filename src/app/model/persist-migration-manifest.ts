@@ -1,5 +1,5 @@
 import { INITIAL_SETTINGS_STATE } from '@entities/settings'
-import { INITIAL_TASKS_STATE } from '@entities/tasks-management'
+import { INITIAL_TASKS_STATE } from '@entities/tasks'
 import { INITIAL_THEME_STATE } from '@shared/theme/lib'
 import { MigrationManifest } from 'redux-persist'
 
@@ -11,7 +11,7 @@ export const persistMigrations = {
             ...state,
             theme: INITIAL_THEME_STATE,
             settings: INITIAL_SETTINGS_STATE,
-            tasksManagement: INITIAL_TASKS_STATE,
+            tasks: INITIAL_TASKS_STATE,
         }
     }
 } as MigrationManifest

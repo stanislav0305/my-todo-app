@@ -7,9 +7,9 @@ export default defineConfig([
     files: ["./src/app/type-orm-database/data-source-for-migration.ts"],
     rules: {
       "fsd/no-public-api-sidestep":
-        "off" /* Forbidden sidestep of public API when importing from "../../entities/tasks-management/types/task". 
+        "off" /* Forbidden sidestep of public API when importing from "../../entities/tasks/types/task". 
       In src\app\type-orm-database\data-source-for-migration.ts
-      TypeORM migration can work only with that paths formats ("../../entities/tasks-management/types/task")
+      TypeORM migration can work only with that paths formats ("../../entities/tasks/types/task")
       */,
     },
   },
@@ -31,6 +31,7 @@ export default defineConfig([
   {
     files: ["./src/features/**"],
     rules: {
+      "fsd/forbidden-imports": "off", //Forbidden import from higher layer "app".
       "fsd/insignificant-slice": "off", //This slice has only one reference in slice "widgets\word-list". Consider merging them.
       "fsd/segments-by-purpose": "off", //This segment's name should describe the purpose of its contents, not what the contents are.
     },

@@ -27,7 +27,7 @@ const DEFAULT_TASK_PAGING = {
 
 export const INITIAL_TASKS_STATE = {
     paging: DEFAULT_TASK_PAGING,
-    tasks: [] as Task[],
+    items: [] as Task[],
 } satisfies TasksState as TasksState
 
 export const taskStatusIconNames = {

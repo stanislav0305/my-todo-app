@@ -80,7 +80,7 @@ export function AppDatePickerSingleModal({ onConfirm, onDismiss, locale, ...rest
             setStateData(false)
             onDismiss && onDismiss()
         },
-        [rest.date, onDismiss]
+        [onDismiss]
     )
 
     return (

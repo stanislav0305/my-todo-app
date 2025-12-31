@@ -4,7 +4,6 @@ import { saveMainSettings, selectMainSettings } from '@/src/entities/settings'
 import { EditableField, FieldType } from '@/src/shared/ui'
 import { revertAll } from '@shared/lib/actions'
 import { useAppDispatch, useAppSelector } from '@shared/lib/hooks'
-import { StyleSheet } from 'react-native'
 import { Button, Card } from 'react-native-paper'
 import * as Yup from 'yup'
 
@@ -85,23 +84,3 @@ export const MainSettingsWidget = () => {
         </Card>
     )
 }
-
-const styles = StyleSheet.create({
-    card: {
-        marginTop: 2,
-    },
-    inputFocused: {
-        borderWidth: 1,
-    },
-    inputUnFocused: {
-        borderWidth: 0,
-    },
-    container: {
-        flex: 1,
-        padding: 2,
-        gap: 16,
-        alignContent: 'flex-start',
-        overflow: 'hidden',
-        position: 'relative',
-    },
-})

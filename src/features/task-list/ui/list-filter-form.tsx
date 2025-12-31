@@ -1,4 +1,4 @@
-import { Task, taskStatusIconNames } from '@/src/entities/tasks-management'
+import { Task, taskStatusIconNames } from '@/src/entities/tasks'
 import { calendarDateHelper, stringHelper, timeHelper } from '@/src/shared/lib/helpers'
 import { sharedStyles } from '@/src/shared/styles'
 import { useAppTheme } from '@/src/shared/theme/hooks'

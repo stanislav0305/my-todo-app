@@ -1,6 +1,6 @@
 import { sharedStyles } from '@/src/shared/styles'
 import { useAppTheme } from '@/src/shared/theme/hooks'
-import { Task, taskStatusIconNames } from '@entities/tasks-management'
+import { Task, taskStatusIconNames } from '@entities/tasks'
 import { calendarDateHelper, dateHelper, timeHelper } from '@shared/lib/helpers'
 import { AppDatePickerSingleModal, AppTimePickerModal, CustomCheckbox, FormErrorText, ThemedModal } from '@shared/ui'
 import { useFormik } from 'formik'

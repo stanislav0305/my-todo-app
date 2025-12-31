@@ -1,4 +1,4 @@
-import { Task, TaskStatus, taskStatusIconNames } from '@/src/entities/tasks-management'
+import { Task, TaskStatus, taskStatusIconNames } from '@/src/entities/tasks'
 import { ModificationType } from '@/src/shared/lib/types'
 import { sharedStyles } from '@/src/shared/styles'
 import { useAppTheme } from '@/src/shared/theme/hooks'
@@ -15,7 +15,7 @@ type Props = {
 
 export const TaskListItem = ({ item, onChange, onChangeStatus }: Props) => {
     const appTheme = useAppTheme()
-    const { success, danger, blue, primary, secondary } = appTheme.colors
+    const { success, danger, primary } = appTheme.colors
 
     const [visible, setVisible] = useState(false)
     const openMenu = () => setVisible(true)

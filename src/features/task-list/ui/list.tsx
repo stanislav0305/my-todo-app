@@ -2,7 +2,7 @@ import { useAppData } from '@/src/app/providers'
 import { dateHelper, stringHelper } from '@/src/shared/lib/helpers'
 import { useAppDispatch, useAppSelector } from '@/src/shared/lib/hooks'
 import { ModificationType, Paging } from '@/src/shared/lib/types'
-import { createTask, DEFAULT_TASK, fetchTasks, FetchTasksTypes, getCopyOfPaging, removeTask, selectTasks, Task, TaskStatus, updateTask } from '@entities/tasks-management'
+import { createTask, DEFAULT_TASK, fetchTasks, getCopyOfPaging, removeTask, selectTasks, Task, TaskStatus, updateTask } from '@entities/tasks'
 import { TaskEditFormModal } from '@features/task-edit'
 import { useAppTheme } from '@shared/theme/hooks'
 import { RemoveFormModal } from '@shared/ui/remove-form-modal'
@@ -17,7 +17,6 @@ import { TaskListItem } from './list-item'
 interface PageState {
     mode: ModificationType
     item: Task
-    isLoading: boolean
 }
 
 const isSameDate = (currentItem: Task, prevItem: Task) => {
@@ -29,7 +28,7 @@ const isSameDate = (currentItem: Task, prevItem: Task) => {
 
 export const TaskList = () => {
     const appTheme = useAppTheme()
-    const { primary, secondary } = appTheme.colors
+    const { primary } = appTheme.colors
 
     const dispatch = useAppDispatch()
     const appData = useAppData()
@@ -37,13 +36,14 @@ export const TaskList = () => {
     const [state, setState] = useState<PageState>({
         mode: 'none',
         item: { ...DEFAULT_TASK } as Task,
-        isLoading: false,
     })
+
+    const [isLoading, setIsLoading] = useState(false)
 
     const paging = useAppSelector(getCopyOfPaging)
     const items = useAppSelector(selectTasks)
 
-    const changeMode = (mode: ModificationType = 'none', itemId: number = 0) => {
+    const changeMode = useCallback((mode: ModificationType = 'none', itemId: number = 0) => {
         const item = itemId === 0 ? { ...DEFAULT_TASK } as Task : items.find(item => item.id === itemId)!
 
         setState({
@@ -51,28 +51,20 @@ export const TaskList = () => {
             mode: mode,
             item
         })
-    }
+    }, [items, state])
 
-    const changeItemStatus = (itemId: number, status: TaskStatus) => {
+    const changeItemStatus = useCallback((itemId: number, status: TaskStatus) => {
         const item = { ...(items.find(item => item.id === itemId)!) }
         item.status = status
         dispatch(updateTask({ taskRep: appData.taskRep, item }))
-    }
+    }, [appData.taskRep, dispatch, items])
 
-    const setIsLoading = (isLoading: boolean) => {
-        setState({
-            ...state,
-            isLoading,
-            //if begin loading then close all modals
-            mode: isLoading ? 'none' : state.mode,
-        })
-    }
-
-    const fetchMore = useCallback((paging: Paging<Task>, fetchType: FetchTasksTypes) => {
+    const fetchMore = useCallback((paging: Paging<Task>) => {
         console.log("fetchMore...")
+        paging = { ...paging }
 
-        if (state.isLoading || !paging.hasNext) {
-            console.log(`fetchMore stopped (isLoading:${state.isLoading}, paging.hasNext:${paging.hasNext})`)
+        if (isLoading || !paging.hasNext) {
+            console.log(`fetchMore stopped (isLoading:${isLoading}, paging.hasNext:${paging.hasNext})`)
             return
         }
 
@@ -80,7 +72,7 @@ export const TaskList = () => {
         setIsLoading(true)
 
         const timeout = window.setTimeout(async () => {
-            dispatch(await fetchTasks({ taskRep: appData.taskRep, paging, fetchType }))
+            dispatch(await fetchTasks({ taskRep: appData.taskRep, paging: paging }))
                 .then(() => {
                     setIsLoading(false)
                     window.clearTimeout(timeout)
@@ -88,19 +80,21 @@ export const TaskList = () => {
                 })
         }, 1000)
     },
-        [appData, paging, state.isLoading])
+        [appData.taskRep, isLoading, setIsLoading, dispatch])
 
 
 
     const onChangeFilter = useCallback((filter: FindOptionsWhere<Task> | undefined) => {
         console.log("onChangeFilter...")
+        paging.fetchType = 'fetchFromBegin'
         paging.where = filter
         paging.hasNext = true
         console.log('paging', paging)
 
-        fetchMore(paging, 'fetchFromBegin')
+        fetchMore(paging)
+        changeMode()
     },
-        [appData, state.isLoading])
+        [fetchMore, paging])
 
     return (
         <>
@@ -140,7 +134,8 @@ export const TaskList = () => {
                 onEndReachedThreshold={0.1}
                 onEndReached={() => {
                     console.log("onEndReached...")
-                    fetchMore(paging, 'fetchNext')
+                    paging.fetchType = 'fetchNext'
+                    fetchMore(paging)
                 }}
 
                 renderItem={(itemInfo: ListRenderItemInfo<Task>) => {
@@ -166,7 +161,7 @@ export const TaskList = () => {
                 ListEmptyComponent={<Text variant='labelMedium'>No data</Text>}
                 ListFooterComponent={() =>
                     <>
-                        {state.isLoading &&
+                        {isLoading &&
                             <ActivityIndicator style={{ marginVertical: 10 }} animating={true} color={primary} />
                         }
                         <Divider style={styles.divider} />
@@ -179,14 +174,17 @@ export const TaskList = () => {
                     onChangeItem={(item: Task) => {
                         if (!!item.id) {
                             dispatch(updateTask({ taskRep: appData.taskRep, item }))
+                                .then(() => {
+                                    changeMode()
+                                })
                         } else {
                             dispatch(createTask({ taskRep: appData.taskRep, item }))
                                 .then(() => {
-                                    fetchMore(paging, 'fetchFromBegin')
+                                    paging.fetchType = 'fetchFromBegin'
+                                    fetchMore(paging)
+                                    changeMode()
                                 })
                         }
-
-                        changeMode()
                     }}
                     onClose={changeMode}
                 />
