@@ -1,6 +1,6 @@
 import { useAppTheme } from '@shared/theme/hooks'
 import { PropsWithChildren } from 'react'
-import { Modal, ModalProps, StyleSheet, View } from 'react-native'
+import { Modal, ModalProps, ScrollView, StyleSheet, View } from 'react-native'
 import { IconButton, Text } from 'react-native-paper'
 
 
@@ -33,7 +33,9 @@ export function ThemedModal({ title, isVisible, children, onClose, style, ...oth
                             onPress={onClose}
                         />
                     </View>
-                    {children}
+                    <ScrollView showsVerticalScrollIndicator={true}>
+                        {children}
+                    </ScrollView>
                 </View>
             </View>
         </Modal>
@@ -47,6 +49,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#bbbbbbe3'
     },
     modalContainer: {
+        maxHeight: '90%',
         margin: 10,
         padding: 10,
         top: 50,

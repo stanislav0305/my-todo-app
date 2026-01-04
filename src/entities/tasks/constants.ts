@@ -16,6 +16,7 @@ export const DEFAULT_TASK = {
 } as Task
 
 const DEFAULT_TASK_PAGING = {
+    fetchType: 'fetchFromBegin',
     itemCount: 0,
     skip: TASK_TAKE_ITEMS_COUNT * (-1),
     take: TASK_TAKE_ITEMS_COUNT,

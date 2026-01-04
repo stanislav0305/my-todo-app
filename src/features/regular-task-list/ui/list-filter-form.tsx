@@ -1,7 +1,7 @@
-import { Task, taskStatusIconNames } from '@/src/entities/tasks'
-import { calendarDateHelper, stringHelper, timeHelper } from '@/src/shared/lib/helpers'
-import { sharedStyles } from '@/src/shared/styles'
-import { useAppTheme } from '@/src/shared/theme/hooks'
+import { RegularTask } from '@entities/regular-tasks'
+import { calendarDateHelper, stringHelper, timeHelper } from '@shared/lib/helpers'
+import { sharedStyles } from '@shared/styles'
+import { useAppTheme } from '@shared/theme/hooks'
 import { AppDatePickerSingleModal, AppTimePickerModal, ThemedModal } from '@shared/ui'
 import { useFormik } from 'formik'
 import { Keyboard, StyleSheet, View } from 'react-native'
@@ -11,10 +11,9 @@ import { IconSource } from 'react-native-paper/lib/typescript/components/Icon'
 import { FindOptionsWhere, Like } from 'typeorm'
 
 
-
 type Props = {
-    filter: FindOptionsWhere<Task> | undefined
-    onChangeFilter: (filter: FindOptionsWhere<Task> | undefined) => void
+    filter: FindOptionsWhere<RegularTask> | undefined
+    onChangeFilter: (filter: FindOptionsWhere<RegularTask> | undefined) => void
     onClose: () => void
 }
 
@@ -22,13 +21,13 @@ type FilterEnteredValuesType = {
     [key: string]: any;
 }
 
-function convertFilterToTask(filter: FindOptionsWhere<Task> | undefined): Task {
+function convertFilterToRegTask(filter: FindOptionsWhere<RegularTask> | undefined): RegularTask {
     let filterEnteredValues: FilterEnteredValuesType = {}
 
     if (!!filter) {
         Object.entries(filter).forEach(([key, value]) => {
             if (key === 'title') {
-                filterEnteredValues[key] = (Object.entries(value as FindOptionsWhere<Task>)
+                filterEnteredValues[key] = (Object.entries(value as FindOptionsWhere<RegularTask>)
                     .find(v => v[0] === '_value')!
                     .at(1) as string)
                     .replaceAll('%', '')
@@ -40,13 +39,13 @@ function convertFilterToTask(filter: FindOptionsWhere<Task> | undefined): Task {
     }
 
     console.log('filterEnteredValues:', filterEnteredValues)
-    const res: Task = Object.assign({} as Task, filterEnteredValues) as Task
+    const res: RegularTask = Object.assign({} as RegularTask, filterEnteredValues) as RegularTask
     console.log('Task obj:', res)
 
-    return res ?? {} as Task
+    return res ?? {} as RegularTask
 }
 
-function convertTaskToFilter(task: Task): FindOptionsWhere<Task> | undefined {
+function convertRegTaskToFilter(task: RegularTask): FindOptionsWhere<RegularTask> | undefined {
     let newFilterElements: FilterEnteredValuesType = {}
 
     Object.entries(task)
@@ -62,9 +61,9 @@ function convertTaskToFilter(task: Task): FindOptionsWhere<Task> | undefined {
                 newFilterElements[key] = value
         })
 
-    let newFilter: FindOptionsWhere<Task> | undefined = undefined
+    let newFilter: FindOptionsWhere<RegularTask> | undefined = undefined
     if (Object.keys(newFilterElements ?? {}).length > 0)
-        newFilter = { ...newFilterElements } as FindOptionsWhere<Task> | undefined
+        newFilter = { ...newFilterElements } as FindOptionsWhere<RegularTask> | undefined
 
     console.log('newFilter:', newFilter)
 
@@ -72,6 +71,8 @@ function convertTaskToFilter(task: Task): FindOptionsWhere<Task> | undefined {
 }
 
 export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
+    const appTheme = useAppTheme()
+    const { success, danger } = appTheme.colors
 
     const onConfirmTimePicker = (hoursAndMinutes: { hours: number | undefined, minutes: number | undefined }) => {
         const timeStr = timeHelper.toFormattedStringOrEmpty(hoursAndMinutes, 'hh:mm')
@@ -86,24 +87,20 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
     }
 
     const formik = useFormik({
-        initialValues: convertFilterToTask(filter),
-        onReset: (values: Task) => {
+        initialValues: convertFilterToRegTask(filter),
+        onReset: (values: RegularTask) => {
             console.log('Form reset, old data:', values)
 
-            let newFilter = convertTaskToFilter({} as Task)
+            let newFilter = convertRegTaskToFilter({} as RegularTask)
             onChangeFilter(newFilter)
         },
-        onSubmit: (values: Task) => {
+        onSubmit: (values: RegularTask) => {
             console.log('Form submit:', values)
 
-            let newFilter = convertTaskToFilter(values)
+            let newFilter = convertRegTaskToFilter(values)
             onChangeFilter(newFilter)
         }
     })
-
-
-    const appTheme = useAppTheme()
-    const { success, danger } = appTheme.colors
 
     return (
         <ThemedModal
@@ -134,7 +131,7 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
             />
             <Divider style={styles.divider0} />
             <AppDatePickerSingleModal
-                date={calendarDateHelper.toCalendarDate(formik.values.date)}
+                date={formik.values.from as CalendarDate}
                 onConfirm={(params: { date: CalendarDate }) => {
                     onConfirmDatePicker(params.date)
                 }}
@@ -156,32 +153,6 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
             />
             <Divider style={styles.divider0} />
             <SegmentedButtons
-                value={formik.values.status + ''}
-                onValueChange={formik.handleChange('status')}
-                buttons={[
-                    {
-                        value: 'undefined',
-                        label: 'Any',
-                    },
-                    {
-                        value: 'todo',
-                        icon: taskStatusIconNames['todo'],
-                        label: 'Todo',
-                    },
-                    {
-                        value: 'doing',
-                        icon: taskStatusIconNames['doing'],
-                        label: 'Doing',
-                    },
-                    {
-                        value: 'done',
-                        icon: taskStatusIconNames['done'],
-                        label: 'Done',
-                    },
-                ]}
-            />
-            <Divider style={styles.divider0} />
-            <SegmentedButtons
                 value={formik.values.isImportant + ''}
                 onValueChange={(v) => formik.setFieldValue('isImportant', v === 'undefined' ? undefined : (v === 'true'))}
                 buttons={[
@@ -190,7 +161,6 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
                         label: 'Any',
                     },
                     {
-
                         value: 'true',
                         icon: {
                             source: 'chevron-double-up',
@@ -215,7 +185,6 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
                         label: 'Any',
                     },
                     {
-
                         value: 'true',
                         icon: {
                             source: 'fire',
@@ -234,7 +203,7 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
 
             <Divider style={styles.divider1} />
 
-            <View style={sharedStyles.btnRow}>
+            <View style={sharedStyles.row}>
                 <Button
                     onPress={(e) => formik.handleReset(e)}
                     disabled={!formik.isValid}

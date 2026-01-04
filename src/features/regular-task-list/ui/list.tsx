@@ -1,32 +1,24 @@
 import { useAppData } from '@/src/app/providers'
-import { dateHelper, stringHelper } from '@/src/shared/lib/helpers'
 import { useAppDispatch, useAppSelector } from '@/src/shared/lib/hooks'
 import { ModificationType, Paging } from '@/src/shared/lib/types'
-import { createTask, DEFAULT_TASK, fetchTasks, getCopyOfPaging, removeTask, selectTasks, Task, TaskStatus, updateTask } from '@entities/tasks'
-import { TaskEditFormModal } from '@features/task-edit'
+import { createRegTask, DEFAULT_REGULAR_TASK, fetchRegTasks, getCopyOfPaging, RegularTask, removeRegTask, selectRegularTasks, updateRegTask } from '@entities/regular-tasks'
+import { RegularTaskEditFormModal } from '@features/regular-task-edit'
 import { useAppTheme } from '@shared/theme/hooks'
 import { RemoveFormModal } from '@shared/ui/remove-form-modal'
 import { useCallback, useState } from 'react'
 import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native'
-import { ActivityIndicator, Badge, Button, Chip, Divider, IconButton, Text } from 'react-native-paper'
+import { ActivityIndicator, Badge, Button, Divider, IconButton, Text } from 'react-native-paper'
 import { FindOptionsWhere } from 'typeorm'
 import { ListFilterForm } from './list-filter-form'
-import { TaskListItem } from './list-item'
+import { RegularTaskListItem } from './list-item'
 
 
 interface PageState {
     mode: ModificationType
-    item: Task
+    item: RegularTask
 }
 
-const isSameDate = (currentItem: Task, prevItem: Task) => {
-    return !!currentItem
-        && !!prevItem
-        && ((stringHelper.isEmpty(currentItem.date) && stringHelper.isEmpty(prevItem.date))
-            || (!stringHelper.isEmpty(currentItem.date) && !stringHelper.isEmpty(prevItem.date) && currentItem.date === prevItem.date))
-}
-
-export const TaskList = () => {
+export const RegularTaskList = () => {
     const appTheme = useAppTheme()
     const { primary } = appTheme.colors
 
@@ -35,16 +27,16 @@ export const TaskList = () => {
 
     const [state, setState] = useState<PageState>({
         mode: 'none',
-        item: { ...DEFAULT_TASK } as Task,
+        item: { ...DEFAULT_REGULAR_TASK } as RegularTask,
     })
 
     const [isLoading, setIsLoading] = useState(false)
 
     const paging = useAppSelector(getCopyOfPaging)
-    const items = useAppSelector(selectTasks)
+    const items = useAppSelector(selectRegularTasks)
 
     const changeMode = useCallback((mode: ModificationType = 'none', itemId: number = 0) => {
-        const item = itemId === 0 ? { ...DEFAULT_TASK } as Task : items.find(item => item.id === itemId)!
+        const item = itemId === 0 ? { ...DEFAULT_REGULAR_TASK } as RegularTask : items.find(item => item.id === itemId)!
 
         setState({
             ...state,
@@ -53,13 +45,7 @@ export const TaskList = () => {
         })
     }, [items, state])
 
-    const changeItemStatus = useCallback((itemId: number, status: TaskStatus) => {
-        const item = { ...(items.find(item => item.id === itemId)!) }
-        item.status = status
-        dispatch(updateTask({ taskRep: appData.taskRep, item }))
-    }, [appData.taskRep, dispatch, items])
-
-    const fetchMore = useCallback((paging: Paging<Task>) => {
+    const fetchMore = useCallback((paging: Paging<RegularTask>) => {
         console.log("fetchMore...")
         paging = { ...paging }
 
@@ -72,7 +58,7 @@ export const TaskList = () => {
         setIsLoading(true)
 
         const timeout = window.setTimeout(async () => {
-            dispatch(await fetchTasks({ taskRep: appData.taskRep, paging: paging }))
+            dispatch(await fetchRegTasks({ regularTaskRep: appData.regularTaskRep, paging: paging }))
                 .then(() => {
                     setIsLoading(false)
                     window.clearTimeout(timeout)
@@ -80,11 +66,11 @@ export const TaskList = () => {
                 })
         }, 1000)
     },
-        [appData.taskRep, isLoading, setIsLoading, dispatch])
+        [appData.regularTaskRep, isLoading, setIsLoading, dispatch])
 
 
 
-    const onChangeFilter = useCallback((filter: FindOptionsWhere<Task> | undefined) => {
+    const onChangeFilter = useCallback((filter: FindOptionsWhere<RegularTask> | undefined) => {
         console.log("onChangeFilter...")
         paging.fetchType = 'fetchFromBegin'
         paging.where = filter
@@ -104,7 +90,7 @@ export const TaskList = () => {
                     icon={{ source: 'plus-thick', direction: 'ltr' }}
                     mode='contained'
                 >
-                    Add task
+                    Add regular task
                 </Button>
                 <IconButton
                     style={{ margin: 0, marginLeft: 10 }}
@@ -127,7 +113,7 @@ export const TaskList = () => {
                 data={items}
                 extraData={[items, paging]}
                 style={{ borderColor: primary, borderWidth: 1 }}
-                keyExtractor={((item: Task, index: number) => `task-${item.id}`)}
+                keyExtractor={((item: RegularTask, index: number) => `reg-task-${item.id}`)}
                 ItemSeparatorComponent={() => <Divider style={styles.divider} />}
                 initialNumToRender={8}
                 maxToRenderPerBatch={2}
@@ -138,24 +124,12 @@ export const TaskList = () => {
                     fetchMore(paging)
                 }}
 
-                renderItem={(itemInfo: ListRenderItemInfo<Task>) => {
+                renderItem={(itemInfo: ListRenderItemInfo<RegularTask>) => {
                     return (
-                        <>
-                            {!isSameDate(items[itemInfo.index], items[itemInfo.index - 1]) &&
-                                <Chip
-                                    mode='flat'
-                                    icon='calendar'
-                                    compact={true}
-                                >
-                                    {stringHelper.isEmpty(itemInfo.item.date) ? '...' : dateHelper.dbStrDateToFormattedString(itemInfo.item.date, 'DD/MM/YYYY')}
-                                </Chip>
-                            }
-                            <TaskListItem
-                                item={itemInfo.item}
-                                onChange={changeMode}
-                                onChangeStatus={changeItemStatus}
-                            />
-                        </>
+                        <RegularTaskListItem
+                            item={itemInfo.item}
+                            onChange={changeMode}
+                        />
                     )
                 }}
                 ListEmptyComponent={<Text variant='labelMedium'>No data</Text>}
@@ -169,16 +143,16 @@ export const TaskList = () => {
                 }
             />
             {state.mode === 'edit' &&
-                <TaskEditFormModal
+                <RegularTaskEditFormModal
                     item={state.item}
-                    onChangeItem={(item: Task) => {
+                    onChangeItem={(item: RegularTask) => {
                         if (!!item.id) {
-                            dispatch(updateTask({ taskRep: appData.taskRep, item }))
+                            dispatch(updateRegTask({ regularTaskRep: appData.regularTaskRep, item }))
                                 .then(() => {
                                     changeMode()
                                 })
                         } else {
-                            dispatch(createTask({ taskRep: appData.taskRep, item }))
+                            dispatch(createRegTask({ regularTaskRep: appData.regularTaskRep, item }))
                                 .then(() => {
                                     paging.fetchType = 'fetchFromBegin'
                                     fetchMore(paging)
@@ -192,10 +166,10 @@ export const TaskList = () => {
             {state.mode === 'remove' &&
                 <RemoveFormModal
                     itemId={state.item.id}
-                    questionText={`Do you really want to delete task '${state.item.title}' 
+                    questionText={`Do you really want to delete regular task '${state.item.title}' 
                     by id '${state.item.id}'?`}
                     onDelete={(id: number) => {
-                        dispatch(removeTask({ taskRep: appData.taskRep, id }))
+                        dispatch(removeRegTask({ regularTaskRep: appData.regularTaskRep, id }))
                         changeMode()
                     }}
                     onClose={changeMode}

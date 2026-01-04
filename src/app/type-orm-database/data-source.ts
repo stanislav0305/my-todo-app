@@ -1,9 +1,11 @@
+import { RegularTask } from '@entities/regular-tasks'
 import { Task } from '@entities/tasks'
 import * as SQLite from 'expo-sqlite'
 import "reflect-metadata"
 import { DataSource, DataSourceOptions } from 'typeorm'
 import { TasksTableCreate1764668295103 } from './migrations/1764668295103-tasks-table-create'
 import { NextMigration1765049101409 } from './migrations/1765049101409-next-migration'
+import { RegularTasksTableCreate1767122311432 } from './migrations/1767122311432-regular-tasks-table-create'
 
 
 export const SQLITE_DB_NAME = 'my-todo.db'
@@ -12,13 +14,13 @@ export const AppDataSource = new DataSource({
     database: SQLITE_DB_NAME,
     type: 'expo',
     driver: SQLite,
-    entities: [Task],
+    entities: [Task, RegularTask],
     logging: true,
 
     synchronize: false,
     migrationsTableName: 'db_migrations',
     migrationsTransactionMode: 'each',
-    migrations: [TasksTableCreate1764668295103, NextMigration1765049101409],//['migrations/*{.js,.ts}'],
+    migrations: [TasksTableCreate1764668295103, NextMigration1765049101409, RegularTasksTableCreate1767122311432],//['migrations/*{.js,.ts}'],
     migrationsRun: true,
 } as DataSourceOptions)
 

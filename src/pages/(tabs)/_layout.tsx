@@ -25,6 +25,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name='regular-tasks'
+        options={{
+          title: 'Regular tasks',
+          tabBarIcon: ({ color }) => <Icon size={34} source='target' color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name='settings'
         options={{
           title: 'Settings',

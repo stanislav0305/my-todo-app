@@ -1,0 +1,1 @@
+export const selectRegularTasks = (state: RootState) => state.regularTasks.items

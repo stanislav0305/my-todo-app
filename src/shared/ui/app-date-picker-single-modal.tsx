@@ -43,12 +43,16 @@ type AppDatePickerModalPros =
         inputEnabled?: boolean
         presentationStyle?: 'pageSheet' | 'overFullScreen'
     }
+    & {
+        //custom props
+        withDateRemoveBtn?: boolean
+    }
 
 type State = {
     visible: boolean
 }
 
-export function AppDatePickerSingleModal({ onConfirm, onDismiss, locale, ...rest }: AppDatePickerModalPros) {
+export function AppDatePickerSingleModal({ onConfirm, onDismiss, locale, withDateRemoveBtn = true, ...rest }: AppDatePickerModalPros) {
     const appTheme = useAppTheme()
     const { primary } = appTheme.colors
     const [state, setSate] = useState<State>({
@@ -88,10 +92,10 @@ export function AppDatePickerSingleModal({ onConfirm, onDismiss, locale, ...rest
             <View style={styles.row}>
                 <Text
                     style={[{ 'color': primary }, styles.date]}
-                    variant='bodyMedium'
+                    variant='titleMedium'
                     onPress={() => setStateData(true)}
                 >
-                    {calendarDateHelper.isUndefined(rest.date)
+                    {calendarDateHelper.isUndefinedOrNull(rest.date)
                         ? dateHelper.getTemplate('DD/MM/YYYY')
                         : calendarDateHelper.toFormattedStringOrEmpty(rest.date, 'DD/MM/YYYY')
                     }
@@ -104,13 +108,15 @@ export function AppDatePickerSingleModal({ onConfirm, onDismiss, locale, ...rest
                     onPress={() => setStateData(true)
                     }
                 />
-                <IconButton
-                    style={styles.dateRemoveBtn}
-                    mode='contained'
-                    icon='calendar-remove'
-                    size={22}
-                    onPress={() => onConfirmDatePicker({ date: undefined })}
-                />
+                {withDateRemoveBtn &&
+                    <IconButton
+                        style={styles.dateRemoveBtn}
+                        mode='contained'
+                        icon='calendar-remove'
+                        size={22}
+                        onPress={() => onConfirmDatePicker({ date: undefined })}
+                    />
+                }
             </View>
             <DatePickerModal
                 {...rest}
@@ -129,6 +135,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     date: {
+        marginLeft: 5,
         textAlignVertical: 'center',
         height: 38,
     },

@@ -73,7 +73,7 @@ export function AppTimePickerModal({ onConfirm, onDismiss, locale, ...rest }: Ap
             <View style={styles.row}>
                 <Text
                     style={[{ 'color': primary }, styles.time]}
-                    variant='bodyMedium'
+                    variant='titleMedium'
                     onPress={() => setStateData(true)}
                 >
                     {timeHelper.isUndefined(rest.hours, rest.minutes)
@@ -117,6 +117,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     time: {
+        marginLeft: 5,
         textAlignVertical: 'center',
         height: 38,
     },
