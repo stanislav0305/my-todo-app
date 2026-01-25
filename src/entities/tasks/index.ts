@@ -5,6 +5,10 @@ export * from './model/tasks.slice'
 
 //types
 export * from './types/task'
+export * from './types/task-columns-show'
+export * from './types/tasks-filter'
+export * from './types/tasks-filter-mode-type'
+export * from './types/tasks-paging'
 export * from './types/tasks-state'
 
 //constants

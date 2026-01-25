@@ -1,39 +1,57 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { revertAll } from '@shared/lib/actions'
-import { Paging } from '@shared/lib/types'
-import { FindManyOptions, Repository } from 'typeorm'
+import { DbFilter, FetchTasksTypes } from '@shared/lib/types'
+import {
+    FindManyOptions,
+    FindOneOptions,
+    FindOptionsWhere,
+    Repository,
+} from 'typeorm'
 import { INITIAL_TASKS_STATE, TASK_TAKE_ITEMS_COUNT } from '../constants'
 import { Task } from '../types/task'
-
+import { TaskColumnsShow } from '../types/task-columns-show'
+import { TasksFilterModeType } from '../types/tasks-filter-mode-type'
+import { TaskPaging } from '../types/tasks-paging'
 
 export const tasksSlice = createSlice({
     name: 'tasksSlice',
     initialState: INITIAL_TASKS_STATE,
-    extraReducers: (builder) => builder.addCase(revertAll, () => INITIAL_TASKS_STATE),
+    extraReducers: builder =>
+        builder.addCase(revertAll, () => INITIAL_TASKS_STATE),
     reducers: {
-        setTasks: (draftState, action: PayloadAction<{ tasks: Task[], paging: Paging<Task> }>) => {
+        setTasks: (
+            draftState,
+            action: PayloadAction<{ tasks: Task[]; paging: TaskPaging }>,
+        ) => {
             const { tasks, paging } = action.payload
 
             draftState.items = [...tasks]
             draftState.paging = paging
         },
-        appendTasks: (draftState, action: PayloadAction<{ tasks: Task[], paging: Paging<Task> }>) => {
+        appendTasks: (
+            draftState,
+            action: PayloadAction<{ tasks: Task[]; paging: TaskPaging }>,
+        ) => {
             const { tasks, paging } = action.payload
 
             draftState.items = [...draftState.items, ...tasks]
             draftState.paging = paging
         },
+        setPaging: (draftState, action: PayloadAction<{ paging: TaskPaging }>) => {
+            const { paging } = action.payload
+            draftState.paging = paging
+        },
         /*  create: (draftState, action: PayloadAction<Task>) => {
-              let item = {
-                  ...DEFAULT_TASK,
-                  ...action.payload,
-              } satisfies Task
-  
-              if (!draftState.items)
-                  draftState.items = []
-  
-              draftState.items.push(item)
-          }, */
+                                                                          let item = {
+                                                                              ...DEFAULT_TASK,
+                                                                              ...action.payload,
+                                                                          } satisfies Task
+                                                              
+                                                                          if (!draftState.items)
+                                                                              draftState.items = []
+                                                              
+                                                                          draftState.items.push(item)
+                                                                      }, */
         update: (draftState, action: PayloadAction<Task>) => {
             const item = { ...action.payload }
             const index = draftState.items.findIndex(i => i.id === item.id)
@@ -41,7 +59,7 @@ export const tasksSlice = createSlice({
             if (index >= 0) {
                 draftState.items[index] = {
                     ...draftState.items[index],
-                    ...item
+                    ...item,
                 } satisfies Task
             }
         },
@@ -58,109 +76,127 @@ export const tasksSlice = createSlice({
     },
 })
 
-const { appendTasks, setTasks, update, remove } = tasksSlice.actions
+const { appendTasks, setTasks, setPaging, update, remove } = tasksSlice.actions
 export const tasksReducers = tasksSlice.reducer
-
 
 const fetchTasks = createAsyncThunk(
     'tasks/fetch',
-    async ({ taskRep, paging }:
-        { taskRep: Repository<Task>, paging: Paging<Task> }, thunkApi) => {
+    async (
+        {
+            taskRep,
+            paging,
+            fetchType,
+            columnsShow,
+            filter,
+        }: {
+            taskRep: Repository<Task>
+            paging: TaskPaging
+            fetchType: FetchTasksTypes
+            columnsShow: TaskColumnsShow | null
+            filter: DbFilter<Task, TasksFilterModeType> | null
+        },
+        thunkApi,
+    ) => {
         console.log('tasks/fetch...')
 
-        if (paging.fetchType === 'fetchFromBegin') {
-            paging.skip = 0
-            paging.hasNext = true
-            paging.hasPrevious = false
-        }
-        else if (paging.fetchType === 'fetchNext') {
-            paging.skip = paging.skip + paging.take
-        }
-        else if (paging.fetchType === 'fetchFromBeginToSkipped') {
-            const oldSkip = paging.skip
-            paging.skip = 0
-            paging.take = oldSkip
-            //paging.hasNext = true
-            //paging.hasPrevious = false
-
-        }
-
-        if (!paging.hasNext) {
-            console.log(`tasks/fetch stopped (paging.hasNext:${paging.hasNext})`)
+        const hasNext = fetchType === 'fetchFromBegin' ? true : paging.hasNext
+        if (!hasNext) {
+            console.log(`tasks/fetch stopped (hasNext:${hasNext})`)
             return
+        }
+
+        let p = Object.assign({}, paging)
+        p = {
+            ...p,
+            fetchType,
+            filter: filter ?? p.filter,
+            columnsShow: columnsShow ?? p.columnsShow,
+            itemCount: fetchType === 'fetchFromBegin' ? 0 : p.itemCount,
+            skip: fetchType === 'fetchFromBegin' ? 0 : p.skip,
+            hasNext: hasNext,
+            hasPrevious: fetchType === 'fetchFromBegin' ? false : p.hasPrevious,
         }
 
         console.log('tasks/fetch begin')
         const [items, itemCount] = await taskRep.findAndCount({
-            skip: paging.skip,
-            take: paging.take,
-            where: paging.where,
-            order: paging.order,
+            where: p.filter.where,
+            withDeleted: p.filter.withDeleted,
+            order: p.order,
+            skip: p.skip,
+            take: p.take,
         } as FindManyOptions<Task>)
 
+        p.skip = p.skip + TASK_TAKE_ITEMS_COUNT
+        p.itemCount = itemCount
+        p.hasPrevious = p.skip > 0
+        p.hasNext = p.skip < p.itemCount
 
-        if (paging.fetchType === 'fetchFromBeginToSkipped') {
-            paging.skip = paging.take
-            paging.take = TASK_TAKE_ITEMS_COUNT
-        }
+        if (p.fetchType === 'fetchFromBegin')
+            thunkApi.dispatch(setTasks({ tasks: items, paging: p }))
+        else if (p.fetchType === 'fetchNext')
+            thunkApi.dispatch(appendTasks({ tasks: items, paging: p }))
 
-        paging.itemCount = itemCount
-        paging.hasPrevious = paging.skip > 0
-        paging.hasNext = paging.skip < paging.itemCount
-
-        if (paging.fetchType === 'fetchFromBegin' || paging.fetchType === 'fetchFromBeginToSkipped')
-            thunkApi.dispatch(setTasks({ tasks: items, paging }))
-        else if (paging.fetchType === 'fetchNext')
-            thunkApi.dispatch(appendTasks({ tasks: items, paging }))
-
-    })
+        console.log(`fetchMore end (hasNext:${p.hasNext}, skip:${p.skip})`)
+    },
+)
 
 const createTask = createAsyncThunk(
     'tasks/createTask',
-    async ({ taskRep, item }: { taskRep: Repository<Task>, item: Task }, thunkApi) => {
+    async ({ taskRep, item }: { taskRep: Repository<Task>; item: Task }) => {
         let t = new Task()
         t = {
             ...t,
             ...item,
-            id: t.id
+            id: t.id,
         }
 
         await taskRep.save(t)
-        //const i = await taskRep.save(t)
-        // thunkApi.dispatch(create(i))
-
-        //need reload, because maybe in list not loaded all existed tasks 
-        // => can't insert new created tasks to sorted task list, because it maybe is'nt full loaded
-        const state = thunkApi.getState() as RootState
-        const paging = JSON.parse(JSON.stringify(state.tasks.paging)) as Paging<Task>
-        paging.hasNext = true
-        paging.fetchType = 'fetchFromBeginToSkipped'
-
-        thunkApi.dispatch(await fetchTasks({ taskRep, paging }))
-    })
+    },
+)
 
 const updateTask = createAsyncThunk(
     'tasks/updateTask',
-    async ({ taskRep, item }: { taskRep: Repository<Task>, item: Task }, thunkApi) => {
-        let t = await taskRep.findOneBy({ id: item.id, })
+    async (
+        { taskRep, item }: { taskRep: Repository<Task>; item: Task },
+        thunkApi,
+    ) => {
+        let t = await taskRep.findOneBy({ id: item.id })
         t = {
             ...t,
             ...item,
         }
         const i = await taskRep.save(t)
+
         thunkApi.dispatch(update(i))
-    })
+    },
+)
 
 const removeTask = createAsyncThunk(
     'tasks/removeTask',
-    async ({ taskRep, id }: { taskRep: Repository<Task>, id: number }, thunkApi) => {
+    async (
+        {
+            taskRep,
+            id,
+            softRemove,
+        }: { taskRep: Repository<Task>; id: number; softRemove: boolean },
+        thunkApi,
+    ) => {
+        const findOpts = { id } as FindOptionsWhere<Task>
 
-        const taskToRemove = await taskRep.findOneBy({ id: id, })
-        if (taskToRemove != null) {
-            await taskRep.remove(taskToRemove)
-            thunkApi.dispatch(remove(id))
+        if (softRemove) {
+            const taskToRemove = await taskRep.findOneBy(findOpts)
+            await taskRep.softRemove(taskToRemove!)
+        } else {
+            const taskToRemove = await taskRep.findOne({
+                where: findOpts,
+                withDeleted: true,
+            } as FindOneOptions<Task>)
+            await taskRep.remove(taskToRemove!)
         }
-    })
 
-export { createTask, fetchTasks, removeTask, updateTask }
+        thunkApi.dispatch(remove(id))
+    },
+)
+
+export { createTask, fetchTasks, removeTask, setPaging, updateTask }
 

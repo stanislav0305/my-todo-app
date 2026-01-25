@@ -78,7 +78,7 @@ export const EditableField = ({ schema, title, fieldName, fieldType, fieldValue,
             ref={textInputRef}
             style={isFocused ? styles.inputFocused : styles.inputUnFocused}
             keyboardType={fieldType === 'numberInt' ? 'numeric' : 'default'}
-            value={textInputValue + ''}
+            value={textInputValue ?? ''}
             onBlur={() => setIsFocused(false)}
             onFocus={() => {
               textInputRef.current?.setSelection(textInputValue.length, textInputValue.length)

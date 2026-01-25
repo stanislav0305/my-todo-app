@@ -1,10 +1,10 @@
+import { AppDataContext } from '@/src/app/providers'
 import { TaskList } from '@features/task-list'
-
 
 export const TaskListWidget = () => {
     return (
-        <>
-            <TaskList />
-        </>
+        <AppDataContext.Consumer>
+            {value => <TaskList taskRep={value.taskRep} />}
+        </AppDataContext.Consumer>
     )
 }

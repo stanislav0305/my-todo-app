@@ -7,45 +7,45 @@ export class RegularTask {
     @PrimaryGeneratedColumn('increment')
     id: number
 
-    @Column('text', { nullable: true })
+    @Column('varchar', { length: 5, nullable: true })
     time: string
 
-    @Column('date', { nullable: false, default: Date.now() })
-    from: Date
-    @Column('date', { nullable: true })
-    to: Date | null
+    @Column('varchar', { length: 10, nullable: false })
+    beginDate: string
+    @Column('varchar', { length: 10, nullable: true })
+    endDate: string | null
 
-    @Column('varchar', { length: 50, nullable: false, default: 'everyDay' })
+    @Column('varchar', { length: 25, nullable: false, default: 'everyDay' })
     period: Period
     //if (period = everyDay) then 
-    //          begin from 'from date' and end to 'to date' if entered 
+    //          begin from 'beginDate' and end to 'endDate' if entered 
     //          periodSize = repeat each first, second ... day
     //          =>
     //          Repeat DAILY every (1, 2, ...) day
 
     //if (period = everyWeek) then 
-    //          begin from 'from date' and end to 'to date' if entered 
+    //          begin from 'beginDate' and end to 'endDate' if entered 
     //          periodSize = repeat each one, second or ... (1, 2, ...) week 
     //          su, mo, tu, we, th, fr, sa = repeat on Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday
     //          =>
     //          Repeat WEEKLY every (1, 2, ...) weeks on (Sunday, Monday, Tuesday, Wednesday, Thursday, Friday or Saturday ...) 
 
     //if (period = everyMonth) then
-    //          begin from 'from date' and end to 'to date' if entered 
+    //          begin from 'beginDate' and end to 'endDate' if entered 
     //          periodSize = repeat each one, second or ... (1, 2, ...) month 
     //          useLastDayFix = 
-    //                      true  - if month day number 'from date' not exist in current month use last month day number in current month
+    //                      true  - if month day number 'beginDate' not exist in current month use last month day number in current month
     //                   or false - skip month because month day number not exist in current month
     //          =>
-    //          if (everyMonthType = 'byDayOfMonth') => Repeat MONTHLY every (1, 2, ...) months on the (1, 2, ...) day of date 'from date' and 
+    //          if (everyMonthType = 'byDayOfMonth') => Repeat MONTHLY every (1, 2, ...) months on the (1, 2, ...) day of date 'beginDate' and 
     //          (if useLastDayFix = true) use last month day number if months on the (1, 2, ...) day not exist
     //          (else useLastDayFix = false) skip month if months on the (1, 2, ...) day not exist
 
     //if (period = everyYear) then
-    //          begin from 'from date' and end to 'to date' if entered 
-    //          periodSize = repeat each first, second ... year on day and month 'from date'
+    //          begin from 'beginDate' and end to 'endDate' if entered 
+    //          periodSize = repeat each first, second ... year on day and month 'beginDate'
     //          =>
-    //          Repeat DAILY every (1, 2, ...) on day and month 'from date'
+    //          Repeat DAILY every (1, 2, ...) on day and month 'beginDate'
     //          (if useLastDayFix = true) use last month day number if months on the (1, 2, ...) day not exist
     //          (else useLastDayFix = false) skip month if months on the (1, 2, ...) day not exist
 
@@ -84,11 +84,11 @@ export class RegularTask {
     isUrgent: boolean
 
     @CreateDateColumn()
-    createdAt: Date
+    createdAt: string
 
     @UpdateDateColumn()
-    updateAt: Date
+    updateAt: string
 
     @DeleteDateColumn()
-    deletedAt: Date | null
+    deletedAt: string | null
 }

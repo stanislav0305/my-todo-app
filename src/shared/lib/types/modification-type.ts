@@ -1,1 +1,1 @@
-export type ModificationType = 'edit' | 'remove' | 'filter' | 'none'
+export type ModificationType = 'edit' | 'softRemove' | 'remove' | 'filter' | 'columnsShow' | 'none'

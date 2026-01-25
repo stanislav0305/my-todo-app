@@ -1,15 +1,19 @@
-import { Paging } from '@shared/lib/types/paging'
+import { dateHelper } from '@shared/lib/helpers'
+import { DbFilter } from '@shared/lib/types'
 import { Period, RegularTask } from './types/regular-task'
+import { RegularTaskColumnsShow } from './types/regular-task-columns-show'
+import { RegularTasksFilterModeType } from './types/regular-tasks-filter-mode-type'
+import { RegularTaskPaging } from './types/regular-tasks-paging'
 import { RegularTasksState } from './types/regular-tasks-state'
 
 
-export const REGULAR_TASK_TAKE_ITEMS_COUNT = 10
+export const REGULAR_TASK_TAKE_ITEMS_COUNT = 20
 
 export const DEFAULT_REGULAR_TASK = {
     id: 0,
     time: '',
-    from: new Date(Date.now()),
-    to: null,
+    beginDate: dateHelper.toFormattedString(new Date(Date.now()), 'YYYY-MM-DD'),
+    endDate: null,
     period: 'everyDay',
     periodSize: 1,
     useLastDayFix: true,
@@ -22,26 +26,31 @@ export const DEFAULT_REGULAR_TASK = {
     sa: false,
     title: '',
     isImportant: false,
-    isUrgent: false,
+    isUrgent: false
 } as RegularTask
 
-const DEFAULT_REGULAR_TASK_PAGING = {
+export const DEFAULT_REGULAR_TASK_PAGING = {
     fetchType: 'fetchFromBegin',
     itemCount: 0,
     skip: REGULAR_TASK_TAKE_ITEMS_COUNT * (-1),
     take: REGULAR_TASK_TAKE_ITEMS_COUNT,
     hasNext: true,
     hasPrevious: false,
-    order: { from: 'ASC', time: 'ASC' },
-    where: undefined,
-} as Paging<RegularTask>
+    filter: {
+        mode: 'all',
+        count: 0,
+        where: undefined,
+    } as DbFilter<RegularTask, RegularTasksFilterModeType>,
+    columnsShow: {} as RegularTaskColumnsShow,
+    order: { beginDate: 'ASC', time: 'ASC' },
+} as RegularTaskPaging
 
 export const INITIAL_REGULAR_TASKS_STATE = {
     paging: DEFAULT_REGULAR_TASK_PAGING,
     items: [] as RegularTask[],
 } satisfies RegularTasksState as RegularTasksState
 
-export const periodNames: Record<Period, string> = {
+const periodNames: Record<Period, string> = {
     'everyDay': 'Every day',
     'everyWeek': 'Every week',
     'everyMonth': 'Every month',

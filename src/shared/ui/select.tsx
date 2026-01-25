@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { OpaqueColorValue, StyleSheet, View } from 'react-native';
-import { Dropdown } from 'react-native-element-dropdown';
-import { Text } from 'react-native-paper';
-import { useAppTheme } from '../theme/hooks';
+import { useState } from 'react'
+import { StyleSheet, View } from 'react-native'
+import { Dropdown } from 'react-native-element-dropdown'
+import { Text } from 'react-native-paper'
+import { useAppTheme } from '../theme/hooks'
 
 
 type Props = {
@@ -16,7 +16,9 @@ type Props = {
     value?: any
     data: any[]
     onChange: (item: any) => void
-    renderLeftIcon?: (isFocus: boolean, focusedColor: string | OpaqueColorValue | undefined, unFocusedColor: string | OpaqueColorValue | undefined) => React.JSX.Element
+    renderItemIcon?: (item: any, selected?: boolean | undefined) => React.JSX.Element
+    //renderLeftIcon?: (isFocus: boolean, focusedColor: string | OpaqueColorValue | undefined, unFocusedColor: string | OpaqueColorValue | undefined) => React.JSX.Element
+    renderLeftIcon?: (isFocus: boolean, focusedColor: string | undefined, unFocusedColor: string | undefined) => React.JSX.Element
 }
 
 //Example renderLeftIcon
@@ -35,11 +37,11 @@ const renderLeftIcon = (isFocus: boolean,
 */
 
 export function Select({ maxHeight = 300, label, placeholder, search = false, searchPlaceholder, value, data, onChange,
-    labelField = 'label', valueField = 'value', renderLeftIcon }: Props) {
+    labelField = 'label', valueField = 'value', renderItemIcon, renderLeftIcon }: Props) {
     const appTheme = useAppTheme()
     const { primary, secondary, secondaryContainer, background } = appTheme.colors
 
-    const [isFocus, setIsFocus] = useState(false);
+    const [isFocus, setIsFocus] = useState(false)
 
     return (
         <View style={styles.container}>
@@ -89,6 +91,9 @@ export function Select({ maxHeight = 300, label, placeholder, search = false, se
                             backgroundColor: selected ? secondaryContainer : background,
                             borderColor: secondaryContainer
                         }]}>
+                            {!!renderItemIcon &&
+                                renderItemIcon(item, selected)
+                            }
                             <Text>{item[labelField]}</Text>
                         </View>
                     )
@@ -148,9 +153,11 @@ const styles = StyleSheet.create({
         top: 21,
     },
     itemContainer: {
+        flexDirection: 'row',
+        justifyContent: "flex-start",
+        flexWrap: "wrap",
         paddingHorizontal: 12,
         paddingVertical: 8,
-        justifyContent: 'center',
         borderWidth: 1,
         // backgroundColor can also be dynamic if needed
     },

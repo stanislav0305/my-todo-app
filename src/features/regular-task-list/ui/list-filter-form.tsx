@@ -1,58 +1,102 @@
-import { RegularTask } from '@entities/regular-tasks'
+import { filterModesDropDownItems, RegularTask, RegularTasksFilter, RegularTasksFilterModeType } from '@entities/regular-tasks'
+import { ONE_DAY_IN_MILLISECONDS } from '@shared/lib/constants'
 import { calendarDateHelper, stringHelper, timeHelper } from '@shared/lib/helpers'
+import { DbFilter, DropDownItems } from '@shared/lib/types'
 import { sharedStyles } from '@shared/styles'
 import { useAppTheme } from '@shared/theme/hooks'
 import { AppDatePickerSingleModal, AppTimePickerModal, ThemedModal } from '@shared/ui'
-import { useFormik } from 'formik'
+import { Select } from '@shared/ui/select'
+import { FormikProps, useFormik } from 'formik'
 import { Keyboard, StyleSheet, View } from 'react-native'
-import { Button, Divider, SegmentedButtons, TextInput } from 'react-native-paper'
+import { Button, Divider, Icon, SegmentedButtons, Text, TextInput } from 'react-native-paper'
 import { CalendarDate } from 'react-native-paper-dates/lib/typescript/Date/Calendar'
 import { IconSource } from 'react-native-paper/lib/typescript/components/Icon'
-import { FindOptionsWhere, Like } from 'typeorm'
+import { Between, FindOptionsWhere, IsNull, Like, Not } from 'typeorm'
 
 
 type Props = {
-    filter: FindOptionsWhere<RegularTask> | undefined
-    onChangeFilter: (filter: FindOptionsWhere<RegularTask> | undefined) => void
+    filter: DbFilter<RegularTask, RegularTasksFilterModeType>
+    onChangeFilter: (filter: DbFilter<RegularTask, RegularTasksFilterModeType>) => void
     onClose: () => void
 }
 
 type FilterEnteredValuesType = {
-    [key: string]: any;
+    [key: string]: any
 }
 
-function convertFilterToRegTask(filter: FindOptionsWhere<RegularTask> | undefined): RegularTask {
-    let filterEnteredValues: FilterEnteredValuesType = {}
+function convertToRegularTaskFilter(dbFilter: DbFilter<RegularTask, RegularTasksFilterModeType>): RegularTasksFilter {
+    let filterEnteredValues: FilterEnteredValuesType = {
+        mode: dbFilter.mode,
+        withDeleted: dbFilter.withDeleted,
+    }
 
-    if (!!filter) {
-        Object.entries(filter).forEach(([key, value]) => {
-            if (key === 'title') {
-                filterEnteredValues[key] = (Object.entries(value as FindOptionsWhere<RegularTask>)
-                    .find(v => v[0] === '_value')!
-                    .at(1) as string)
-                    .replaceAll('%', '')
-            }
-            else {
-                filterEnteredValues[key] = value
-            }
-        })
+    if (!!dbFilter && !!dbFilter.where) {
+        Object.entries(dbFilter.where)
+            .filter(([key, _value]) => key !== 'deletedAt')
+            .forEach(([key, value]) => {
+                if (key === 'title') {
+                    filterEnteredValues[key] = (Object.entries(value as FindOptionsWhere<RegularTask>)
+                        .find(v => v[0] === '_value')!
+                        .at(1) as string)
+                        .replaceAll('%', '')
+                } else if (key === 'beginDate') {
+                    //between
+                    const valueArr = Object.entries(value as FindOptionsWhere<RegularTask>)
+                        .find(v => v[0] === '_value')!
+                        .at(1) as any
+
+                    filterEnteredValues['beginDate0'] = valueArr[0]
+                    filterEnteredValues['beginDate1'] = valueArr[1]
+                }
+                else if (key === 'endDate') {
+                    //between
+                    const valueArr = Object.entries(value as FindOptionsWhere<RegularTask>)
+                        .find(v => v[0] === '_value')!
+                        .at(1) as any
+
+                    filterEnteredValues['endDate0'] = valueArr[0]
+                    filterEnteredValues['endDate1'] = valueArr[1]
+                }
+                else {
+                    filterEnteredValues[key] = value
+                }
+            })
     }
 
     console.log('filterEnteredValues:', filterEnteredValues)
-    const res: RegularTask = Object.assign({} as RegularTask, filterEnteredValues) as RegularTask
-    console.log('Task obj:', res)
+    const res: RegularTasksFilter = Object.assign({} as RegularTasksFilter, filterEnteredValues) as RegularTasksFilter
+    console.log('RegularTasksFilter obj:', res)
 
-    return res ?? {} as RegularTask
+    return res ?? {} as RegularTasksFilter
 }
 
-function convertRegTaskToFilter(task: RegularTask): FindOptionsWhere<RegularTask> | undefined {
-    let newFilterElements: FilterEnteredValuesType = {}
+function convertToDbFilter(filter: RegularTasksFilter): DbFilter<RegularTask, RegularTasksFilterModeType> {
+    let newFilter: DbFilter<RegularTask, RegularTasksFilterModeType> = {
+        mode: filter.mode,
+        withDeleted: filter.withDeleted
+    } as DbFilter<RegularTask, RegularTasksFilterModeType>
 
-    Object.entries(task)
-        .filter(([_, value]) =>
+    let newFilterElements: FilterEnteredValuesType = {}
+    if (
+        !stringHelper.isEmpty(filter.beginDate0) &&
+        !stringHelper.isEmpty(filter.beginDate1)
+    ) {
+        newFilterElements['beginDate'] = Between(filter.beginDate0, filter.beginDate1)
+    }
+
+    if (
+        !stringHelper.isEmpty(filter.endDate0) &&
+        !stringHelper.isEmpty(filter.endDate1)
+    ) {
+        newFilterElements['endDate'] = Between(filter.endDate0, filter.endDate1)
+    }
+
+    Object.entries(filter)
+        .filter(([name, value]) =>
             value !== 'undefined'
             && typeof value != 'undefined'
             && !(typeof value === 'string' && stringHelper.isEmpty(value))
+            && !(['mode', 'withDeleted', 'beginDate0', 'beginDate1', 'endDate0', 'endDate1'].includes(name)) //exclude fields)
         )
         .forEach(([key, value]) => {
             if (key === 'title')
@@ -61,43 +105,114 @@ function convertRegTaskToFilter(task: RegularTask): FindOptionsWhere<RegularTask
                 newFilterElements[key] = value
         })
 
-    let newFilter: FindOptionsWhere<RegularTask> | undefined = undefined
+    if (filter.withDeleted === true) {
+        newFilterElements['deletedAt'] = Not(IsNull())
+    }
+
     if (Object.keys(newFilterElements ?? {}).length > 0)
-        newFilter = { ...newFilterElements } as FindOptionsWhere<RegularTask> | undefined
+        newFilter.where = { ...newFilterElements } as FindOptionsWhere<RegularTask> | undefined
+
+    newFilter.count = !!newFilter.where
+        ? Object.keys(newFilter.where ?? {}).filter(p => p !== 'deletedAt').length
+        : 0
 
     console.log('newFilter:', newFilter)
 
     return newFilter
 }
 
+function onChangeFilterMode(
+    item: DropDownItems,
+    formik: FormikProps<RegularTasksFilter>,
+) {
+    switch (item.value as RegularTasksFilterModeType) {
+        case 'all': {
+            formik.setValues({
+                ...formik.values,
+                mode: item.value as RegularTasksFilterModeType,
+                withDeleted: false,
+                beginDate0: undefined,
+                beginDate1: undefined,
+                endDate0: undefined,
+                endDate1: undefined,
+            })
+            break
+        }
+        case 'today': {
+            const date = new Date()
+
+            formik.setValues({
+                ...formik.values,
+                mode: item.value as RegularTasksFilterModeType,
+                withDeleted: false,
+                beginDate0: calendarDateHelper.toFormattedStringOrEmpty(
+                    date as CalendarDate,
+                    'YYYY-MM-DD',
+                ),
+                beginDate1: calendarDateHelper.toFormattedStringOrEmpty(
+                    date as CalendarDate,
+                    'YYYY-MM-DD',
+                ),
+                endDate0: undefined,
+                endDate1: undefined,
+            })
+            break
+        }
+        case 'byPeriod': {
+            const date0 = new Date()
+            const date1 = new Date(
+                new Date().getTime() + ONE_DAY_IN_MILLISECONDS * 7,
+            )
+
+            formik.setValues({
+                ...formik.values,
+                mode: item.value as RegularTasksFilterModeType,
+                withDeleted: undefined,
+                beginDate0: calendarDateHelper.toFormattedStringOrEmpty(
+                    date0 as CalendarDate,
+                    'YYYY-MM-DD',
+                ),
+                beginDate1: calendarDateHelper.toFormattedStringOrEmpty(
+                    date1 as CalendarDate,
+                    'YYYY-MM-DD',
+                ),
+            })
+            break
+        }
+        case 'inTrash': {
+            formik.setValues({
+                ...formik.values,
+                mode: item.value as RegularTasksFilterModeType,
+                withDeleted: true,
+                beginDate0: undefined,
+                beginDate1: undefined,
+                endDate0: undefined,
+                endDate1: undefined,
+            })
+            break
+        }
+    }
+}
+
 export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
     const appTheme = useAppTheme()
     const { success, danger } = appTheme.colors
 
-    const onConfirmTimePicker = (hoursAndMinutes: { hours: number | undefined, minutes: number | undefined }) => {
-        const timeStr = timeHelper.toFormattedStringOrEmpty(hoursAndMinutes, 'hh:mm')
-        console.log('selected time in form:', timeStr)
-        formik.setFieldValue('time', timeStr)
-    }
-
-    const onConfirmDatePicker = (date: CalendarDate) => {
-        const dateStr = calendarDateHelper.toFormattedStringOrEmpty(date, 'YYYY-MM-DD')
-        console.log('selected date in form:', dateStr)
-        formik.setFieldValue('date', dateStr)
-    }
-
     const formik = useFormik({
-        initialValues: convertFilterToRegTask(filter),
-        onReset: (values: RegularTask) => {
+        initialValues: convertToRegularTaskFilter(filter),
+        onReset: (values: RegularTasksFilter) => {
             console.log('Form reset, old data:', values)
 
-            let newFilter = convertRegTaskToFilter({} as RegularTask)
+            let newFilter = convertToDbFilter({
+                mode: 'all',
+                withDeleted: undefined
+            } as RegularTasksFilter)
             onChangeFilter(newFilter)
         },
-        onSubmit: (values: RegularTask) => {
+        onSubmit: (values: RegularTasksFilter) => {
             console.log('Form submit:', values)
 
-            let newFilter = convertRegTaskToFilter(values)
+            let newFilter = convertToDbFilter(values)
             onChangeFilter(newFilter)
         }
     })
@@ -108,6 +223,37 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
             isVisible={true}
             onClose={onClose}
         >
+            <Select
+                label='Filter mode'
+                placeholder='Filter mode...'
+                searchPlaceholder='Filter mode...'
+                value={formik.values.mode}
+                data={filterModesDropDownItems}
+                onChange={item => onChangeFilterMode(item, formik)}
+                renderItemIcon={(item: DropDownItems, selected?: boolean | undefined) => {
+                    return (
+                        <View style={{ marginRight: 5 }}>
+                            <Icon
+                                source={item.icon}
+                                size={20}
+                            />
+                        </View>
+                    )
+                }}
+                renderLeftIcon={(isFocus: boolean,
+                    focusedColor: string | undefined,
+                    unFocusedColor: string | undefined) => {
+                    return (
+                        <View style={{ marginLeft: 5 }}>
+                            <Icon
+                                color={isFocus ? focusedColor : unFocusedColor}
+                                source={filterModesDropDownItems.find(i => i.value === formik.values.mode)?.icon}
+                                size={20}
+                            />
+                        </View>
+                    )
+                }}
+            />
             <TextInput
                 label='id'
                 placeholder='id'
@@ -126,18 +272,61 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
                 use24HourClock={true}
                 hours={timeHelper.getHoursFromStringOrUndefined(formik.values.time)}
                 minutes={timeHelper.getMinutesFromStringOrUndefined(formik.values.time)}
-                onConfirm={(hoursAndMinutes) => onConfirmTimePicker(hoursAndMinutes)}
+                onConfirm={(hoursAndMinutes: { hours: number | undefined, minutes: number | undefined }) => {
+                    formik.setFieldValue('time', timeHelper.toFormattedStringOrEmpty(hoursAndMinutes, 'hh:mm'))
+                }}
                 locale='ru'
             />
             <Divider style={styles.divider0} />
-            <AppDatePickerSingleModal
-                date={formik.values.from as CalendarDate}
-                onConfirm={(params: { date: CalendarDate }) => {
-                    onConfirmDatePicker(params.date)
-                }}
-                locale='ru'
-                mode='single'
-            />
+            <View style={sharedStyles.row}>
+                <View style={sharedStyles.col}>
+                    <Text variant='bodyMedium' style={{ marginLeft: 5 }}>From begin date</Text>
+                    <AppDatePickerSingleModal
+                        date={formik.values.beginDate0 as CalendarDate}
+                        onConfirm={(params: { date: CalendarDate }) => {
+                            formik.setFieldValue('beginDate0', calendarDateHelper.toFormattedStringOrEmpty(params.date, 'YYYY-MM-DD'))
+                        }}
+                        locale='ru'
+                        mode='single'
+                    />
+                </View>
+                <View style={sharedStyles.col}>
+                    <Text variant='bodyMedium' style={{ marginLeft: 5 }}>To begin date</Text>
+                    <AppDatePickerSingleModal
+                        date={formik.values.beginDate1 as CalendarDate}
+                        onConfirm={(params: { date: CalendarDate }) => {
+                            formik.setFieldValue('beginDate1', calendarDateHelper.toFormattedStringOrEmpty(params.date, 'YYYY-MM-DD'))
+                        }}
+                        locale='ru'
+                        mode='single'
+                    />
+                </View>
+            </View>
+            <Divider style={styles.divider0} />
+            <View style={sharedStyles.row}>
+                <View style={sharedStyles.col}>
+                    <Text variant='bodyMedium' style={{ marginLeft: 5 }}>From end date</Text>
+                    <AppDatePickerSingleModal
+                        date={formik.values.endDate0 as CalendarDate}
+                        onConfirm={(params: { date: CalendarDate }) => {
+                            formik.setFieldValue('endDate0', calendarDateHelper.toFormattedStringOrEmpty(params.date, 'YYYY-MM-DD'))
+                        }}
+                        locale='ru'
+                        mode='single'
+                    />
+                </View>
+                <View style={sharedStyles.col}>
+                    <Text variant='bodyMedium' style={{ marginLeft: 5 }}>To end date</Text>
+                    <AppDatePickerSingleModal
+                        date={formik.values.endDate1 as CalendarDate}
+                        onConfirm={(params: { date: CalendarDate }) => {
+                            formik.setFieldValue('endDate1', calendarDateHelper.toFormattedStringOrEmpty(params.date, 'YYYY-MM-DD'))
+                        }}
+                        locale='ru'
+                        mode='single'
+                    />
+                </View>
+            </View>
             <Divider style={styles.divider0} />
             <TextInput
                 label='title contains'
@@ -146,7 +335,7 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
                 numberOfLines={5}
                 onChangeText={formik.handleChange('title')}
                 onBlur={formik.handleBlur('title')}
-                value={(typeof formik.values.title === 'undefined') ? '' : (formik.values.title + '')}
+                value={formik.values.title ?? ''}
                 mode='outlined'
                 dense={true}
                 onSubmitEditing={Keyboard.dismiss}

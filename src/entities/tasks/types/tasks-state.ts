@@ -1,8 +1,8 @@
-import { Paging } from '@shared/lib/types';
-import { Task } from './task';
+import { Task } from './task'
+import { TaskPaging } from './tasks-paging'
 
 
 export interface TasksState {
-    paging: Paging<Task>,
+    paging: TaskPaging,
     items: Task[],
 }

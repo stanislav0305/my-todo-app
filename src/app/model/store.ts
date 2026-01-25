@@ -22,8 +22,8 @@ export const store = configureStore({
             thunk: true,
             serializableCheck: false, // or configure specific checks
             /* serializableCheck: {
-                 ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-             },*/
+                ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+            },*/
         })
             .concat(loggerMiddleware)
 })

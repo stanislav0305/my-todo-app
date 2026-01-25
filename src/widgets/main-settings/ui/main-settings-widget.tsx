@@ -17,10 +17,6 @@ const mainSettingsSchema = Yup.object().shape({
         .required('This is required'),
 })
 
-interface MainSettingsErrors {
-    wordsLearningPartSize: number
-}
-
 export const MainSettingsWidget = () => {
     const appData = useAppData()
     const dispatch = useAppDispatch()

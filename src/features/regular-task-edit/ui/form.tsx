@@ -11,9 +11,9 @@ import { Keyboard, OpaqueColorValue, StyleSheet, View } from 'react-native'
 import { Button, Divider, Icon, Surface, Text, TextInput } from 'react-native-paper'
 import { CalendarDate } from 'react-native-paper-dates/lib/typescript/Date/Calendar'
 import * as Yup from 'yup'
+import { RegularTaskInfo } from './regular-task-info'
 import { WeekDayButton } from './week-day-button'
 
-type RegularTaskPartial = Partial<RegularTask>
 
 const regularTaskEditSchema = Yup.object().shape({
     title: Yup.string()
@@ -45,7 +45,7 @@ const regularTaskEditSchema = Yup.object().shape({
 
 type Props = {
     item: RegularTask
-    onChangeItem: (task: RegularTask) => void
+    onChangeItem: (task: RegularTask, withListReload: boolean) => void
     onClose: () => void
 }
 
@@ -59,22 +59,18 @@ export function RegularTaskEditFormModal({ item, onChangeItem, onClose }: Props)
         formik.setFieldValue('time', timeStr)
     }
 
-    const onConfirmDatePicker = (params: { date: CalendarDate }, fieldName: string) => {
-        const dateStr = calendarDateHelper.toFormattedStringOrEmpty(params.date, 'YYYY-MM-DD')
-        console.log('selected date from in form:', dateStr)
 
-        formik.setFieldValue(fieldName, params.date as Date)
-    }
 
-    const itemPartial: RegularTaskPartial = { ...item }
-    console.log('itemPartial:', itemPartial)
     const formik = useFormik({
-        initialValues: itemPartial,
+        initialValues: item,
         validationSchema: regularTaskEditSchema,
-        onSubmit: (values: RegularTaskPartial) => {
-            const newItem = Object.assign({} as RegularTask, values) as RegularTask
-            console.log('Form submit:', newItem)
-            onChangeItem(newItem)
+        onSubmit: (values: RegularTask) => {
+            console.log('Form submit:', values)
+
+            const withListReload = !values.id || values.time !== item.time || values.beginDate !== item.beginDate
+                || values.endDate !== item.endDate
+
+            onChangeItem(values, withListReload)
         }
     })
 
@@ -88,7 +84,7 @@ export function RegularTaskEditFormModal({ item, onChangeItem, onClose }: Props)
                 !!item.id &&
                 <View style={sharedStyles.row}>
                     <Text variant='labelMedium'>id:</Text>
-                    <Text variant='bodyMedium'>{item.id}</Text>
+                    <Text variant='labelMedium'>{item.id}</Text>
                 </View>
             }
             <Divider style={styles.divider0} />
@@ -104,11 +100,20 @@ export function RegularTaskEditFormModal({ item, onChangeItem, onClose }: Props)
             </View>
             <Divider style={styles.divider0} />
             <View style={[sharedStyles.row, { alignItems: 'center' }]}>
-                <Text variant='labelMedium'>from:</Text>
+                <Text variant='labelMedium'>From date:</Text>
                 <AppDatePickerSingleModal
-                    date={calendarDateHelper.toCalendarDate(formik.values.from)}
+                    date={calendarDateHelper.toCalendarDate(formik.values.beginDate)}
                     onConfirm={(params: { date: CalendarDate }) => {
-                        onConfirmDatePicker(params, 'from')
+                        formik.setValues({
+                            ...formik.values,
+                            beginDate: calendarDateHelper.toFormattedStringOrEmpty(params.date, 'YYYY-MM-DD'),
+                            endDate:
+                                (!stringHelper.isEmpty(formik.values.endDate)
+                                    && (!calendarDateHelper.isUndefined(params.date))
+                                    && (params.date! < dateHelper.dbStrDateToDate(formik.values.endDate!)))
+                                    ? formik.values.endDate
+                                    : null
+                        })
                     }}
                     locale='ru'
                     mode='single'
@@ -117,14 +122,14 @@ export function RegularTaskEditFormModal({ item, onChangeItem, onClose }: Props)
             </View>
             <Divider style={styles.divider0} />
             <View style={[sharedStyles.row, { alignItems: 'center' }]}>
-                <Text variant='labelMedium'>to:</Text>
+                <Text variant='labelMedium'>To date:</Text>
                 <AppDatePickerSingleModal
-                    date={calendarDateHelper.toCalendarDate(formik.values.to)}
+                    date={calendarDateHelper.toCalendarDate(formik.values.endDate)}
                     validRange={{
-                        startDate: formik.values.from as CalendarDate
+                        startDate: calendarDateHelper.toCalendarDate(formik.values.beginDate) as CalendarDate
                     }}
                     onConfirm={(params: { date: CalendarDate }) => {
-                        onConfirmDatePicker(params, 'to')
+                        formik.setFieldValue('endDate', calendarDateHelper.toFormattedStringOrEmpty(params.date, 'YYYY-MM-DD'))
                     }}
                     locale='ru'
                     mode='single'
@@ -136,7 +141,7 @@ export function RegularTaskEditFormModal({ item, onChangeItem, onClose }: Props)
                 numberOfLines={5}
                 onChangeText={formik.handleChange('title')}
                 onBlur={formik.handleBlur('title')}
-                value={formik.values.title + ''}
+                value={formik.values.title ?? ''}
                 label='title'
                 placeholder='title'
                 mode='outlined'
@@ -271,7 +276,21 @@ export function RegularTaskEditFormModal({ item, onChangeItem, onClose }: Props)
                     </>
                 )
             }
-
+            <Divider style={styles.divider0} />
+            <RegularTaskInfo
+                period={formik.values.period}
+                periodSize={formik.values.periodSize}
+                beginDate={formik.values.beginDate}
+                endDate={formik.values.endDate}
+                useLastDayFix={formik.values.useLastDayFix}
+                su={formik.values.su}
+                mo={formik.values.mo}
+                tu={formik.values.tu}
+                we={formik.values.we}
+                th={formik.values.th}
+                fr={formik.values.fr}
+                sa={formik.values.sa}
+            />
             <Divider style={styles.divider0} />
             <CustomCheckbox
                 checkBoxState={formik.values.isImportant ? 'checked' : 'unchecked'}
@@ -299,15 +318,15 @@ export function RegularTaskEditFormModal({ item, onChangeItem, onClose }: Props)
             <Divider style={styles.divider1} />
             <View style={sharedStyles.row}>
                 <Text variant='labelMedium'>created at:</Text>
-                <Text variant='bodyMedium'>{dateHelper.toFormattedString(item.createdAt, 'DD/MM/YYYY hh:mm:ss')}</Text>
+                <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(item.createdAt, 'DD/MM/YYYY hh:mm:ss')}</Text>
             </View>
             <View style={sharedStyles.row}>
                 <Text variant='labelMedium'>update at:</Text>
-                <Text variant='bodyMedium'>{dateHelper.toFormattedString(item.updateAt, 'DD/MM/YYYY hh:mm:ss')}</Text>
+                <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(item.updateAt, 'DD/MM/YYYY hh:mm:ss')}</Text>
             </View>
             <View style={sharedStyles.row}>
                 <Text variant='labelMedium'>deleted at:</Text>
-                <Text variant='bodyMedium'>{dateHelper.toFormattedString(item.deletedAt, 'DD/MM/YYYY hh:mm:ss')}</Text>
+                <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(item.deletedAt, 'DD/MM/YYYY hh:mm:ss')}</Text>
             </View>
 
             <View style={sharedStyles.btnRow}>
@@ -357,21 +376,3 @@ const styles = StyleSheet.create({
         borderRadius: 0,
     }
 })
-
-/*
-            <Divider style={styles.divider0} />
-            <RegularTaskInfo
-                period={formik.values.period}
-                periodSize={formik.values.periodSize}
-                from={formik.values.from}
-                to={formik.values.to}
-                useLastDayFix={formik.values.useLastDayFix}
-                su={formik.values.su}
-                mo={formik.values.mo}
-                tu={formik.values.tu}
-                we={formik.values.we}
-                th={formik.values.th}
-                fr={formik.values.fr}
-                sa={formik.values.sa}
-            />
-*/

@@ -1,19 +1,23 @@
-import { RegularTask } from '@entities/regular-tasks'
+import { dateHelper } from '@/src/shared/lib/helpers'
+import { RegularTask, RegularTaskColumnsShow } from '@entities/regular-tasks'
 import { ModificationType } from '@shared/lib/types'
 import { useAppTheme } from '@shared/theme/hooks'
 import { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Divider, Icon, IconButton, Menu, Text } from 'react-native-paper'
+import { ListItemInfo } from './list-item-info'
 
 
 type Props = {
+    serialNumber: number
     item: RegularTask
+    columnsShow: RegularTaskColumnsShow
     onChange: (mode: ModificationType, itemId: number) => void
 }
 
-export const RegularTaskListItem = ({ item, onChange }: Props) => {
+export const RegularTaskListItem = ({ serialNumber, item, columnsShow, onChange }: Props) => {
     const appTheme = useAppTheme()
-    const { success, danger, primary } = appTheme.colors
+    const { success, danger, primary, blue } = appTheme.colors
 
     const [visible, setVisible] = useState(false)
     const openMenu = () => setVisible(true)
@@ -54,6 +58,22 @@ export const RegularTaskListItem = ({ item, onChange }: Props) => {
                 </View>
                 <View style={styles.column2}>
                     <View style={styles.row}>
+                        {!!columnsShow.serialNumber && (
+                            <Text
+                                variant="bodyMedium"
+                                style={{ color: blue, marginRight: 10 }}
+                            >
+                                {`${serialNumber + 1}.`}
+                            </Text>
+                        )}
+                        {!!columnsShow.id && (
+                            <Text
+                                variant="bodyMedium"
+                                style={{ color: blue, marginRight: 10 }}
+                            >
+                                id: {item.id}
+                            </Text>
+                        )}
                         {!!item.time &&
                             <Text
                                 variant='bodyMedium'
@@ -62,45 +82,66 @@ export const RegularTaskListItem = ({ item, onChange }: Props) => {
                                 {item.time}
                             </Text>
                         }
+                        {!!item.beginDate &&
+                            <Text variant='bodyMedium'>{dateHelper.dbStrDateToFormattedString(item.beginDate, 'DD/MM/YYYY')}</Text>
+                        }
+                        {!!item.endDate &&
+                            <Text variant='bodyMedium'>{` - ${dateHelper.dbStrDateToFormattedString(item.endDate.toString(), 'DD/MM/YYYY')}`}</Text>
+                        }
+                    </View>
+                    <ListItemInfo
+                        period={item.period}
+                        periodSize={item.periodSize}
+                        beginDate={item.beginDate}
+                        useLastDayFix={item.useLastDayFix}
+                        su={item.su}
+                        mo={item.mo}
+                        tu={item.tu}
+                        we={item.we}
+                        th={item.th}
+                        fr={item.fr}
+                        sa={item.sa}
+                    />
+                    <View style={styles.row}>
                         <Text
                             variant='bodySmall'
                             style={styles.columnBig}>
                             {item.title}
                         </Text>
                     </View>
-                    {/*
-                    <View style={styles.row}>
-                        <Text
-                            variant='bodyMedium'
-                            style={{ color: blue }}
-                        >
-                            id:{item.id}{' '}
-                        </Text>
-                        {!!item.date &&
-                            <Text>
-                                date:{dateHelper.dbStrDateToFormattedString(item.date, 'DD/MM/YYYY')}{' '}
-                            </Text>
-                        }
-                    </View>
-                    <View style={styles.row}>
-                        <Text>
-                            createdAt:{dateHelper.toFormattedString(item.createdAt, 'DD/MM/YYYY hh:mm:ss')}{' '}
-                        </Text>
-                    </View>
-                    <View style={styles.row}>
-                        <Text>
-                            updateAt:{dateHelper.toFormattedString(item.updateAt, 'DD/MM/YYYY hh:mm:ss')}{' '}
-                        </Text>
-                    </View>
-                    {!!item.deletedAt &&
+                    {!!columnsShow.createdAt && (
                         <View style={styles.row}>
                             <Text>
-                                deletedAt:{dateHelper.toFormattedString(item.deletedAt, 'DD/MM/YYYY hh:mm:ss')}{' '}
+                                createdAt:
+                                {dateHelper.dbStrDateToFormattedString(
+                                    item.createdAt,
+                                    'DD/MM/YYYY hh:mm:ss',
+                                )}{' '}
                             </Text>
                         </View>
-                    }
-               
-                */}
+                    )}
+                    {!!columnsShow.updateAt && (
+                        <View style={styles.row}>
+                            <Text>
+                                updateAt:
+                                {dateHelper.dbStrDateToFormattedString(
+                                    item.updateAt,
+                                    'DD/MM/YYYY hh:mm:ss',
+                                )}{' '}
+                            </Text>
+                        </View>
+                    )}
+                    {!!columnsShow.deletedAt && !!item.deletedAt && (
+                        <View style={styles.row}>
+                            <Text>
+                                deletedAt:
+                                {dateHelper.dbStrDateToFormattedString(
+                                    item.deletedAt,
+                                    'DD/MM/YYYY hh:mm:ss',
+                                )}{' '}
+                            </Text>
+                        </View>
+                    )}
                 </View>
                 <View style={styles.column3}>
                     <Menu
@@ -124,10 +165,10 @@ export const RegularTaskListItem = ({ item, onChange }: Props) => {
                         />
                         <Divider style={styles.divider} />
                         <Menu.Item
-                            title='remove'
-                            leadingIcon='trash-can'
+                            title={!!item.deletedAt ? 'remove' : 'move to trash'}
+                            leadingIcon={!!item.deletedAt ? 'close-thick' : 'trash-can'}
                             onPress={() => {
-                                onChange('remove', item.id)
+                                onChange(!!item.deletedAt ? 'remove' : 'softRemove', item.id)
                                 closeMenu()
                             }}
                         />

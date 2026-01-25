@@ -1,195 +1,340 @@
-import { useAppData } from '@/src/app/providers'
-import { useAppDispatch, useAppSelector } from '@/src/shared/lib/hooks'
-import { ModificationType, Paging } from '@/src/shared/lib/types'
-import { createRegTask, DEFAULT_REGULAR_TASK, fetchRegTasks, getCopyOfPaging, RegularTask, removeRegTask, selectRegularTasks, updateRegTask } from '@entities/regular-tasks'
-import { RegularTaskEditFormModal } from '@features/regular-task-edit'
-import { useAppTheme } from '@shared/theme/hooks'
+import { createRegTask, DEFAULT_REGULAR_TASK, fetchRegTasks, filterModes, RegularTask, RegularTaskColumnsShow, RegularTaskPaging, RegularTasksFilterModeType, removeRegTask, setRegPaging, updateRegTask } from '@entities/regular-tasks'
+import { AppDispatchType } from '@shared/lib/hooks'
+import { DbFilter, FetchTasksTypes, ModificationType } from '@shared/lib/types'
+import { AppTheme } from '@shared/theme/lib'
+import { selectAppTheme } from '@shared/theme/model'
+import { ListFooter, ListNoData } from '@shared/ui'
 import { RemoveFormModal } from '@shared/ui/remove-form-modal'
-import { useCallback, useState } from 'react'
+import React, { Component } from 'react'
 import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native'
-import { ActivityIndicator, Badge, Button, Divider, IconButton, Text } from 'react-native-paper'
-import { FindOptionsWhere } from 'typeorm'
+import { Badge, Button, Divider, Icon, IconButton, Text } from 'react-native-paper'
+import { connect } from 'react-redux'
+import { Repository } from 'typeorm'
+import { RegularTaskEditFormModal } from '../../regular-task-edit'
+import { ListColumnsShowForm } from './list-columns-show-form'
 import { ListFilterForm } from './list-filter-form'
 import { RegularTaskListItem } from './list-item'
 
-
-interface PageState {
+type StateType = {
     mode: ModificationType
     item: RegularTask
+    isLoading: boolean
+    isRefreshing: boolean
 }
 
-export const RegularTaskList = () => {
-    const appTheme = useAppTheme()
-    const { primary } = appTheme.colors
+type PropsType = {
+    appTheme: AppTheme
+    regularTaskRep: Repository<RegularTask>
+    dispatch: AppDispatchType
+    paging: RegularTaskPaging
+    items: RegularTask[]
+}
 
-    const dispatch = useAppDispatch()
-    const appData = useAppData()
+class RegularTaskListComponent extends Component<PropsType, StateType> {
+    regularTaskRep: Repository<RegularTask>
+    callOnScrollEnd = true;
+    keyExtractor = (item: RegularTask, index: number) =>
+        `${item.deletedAt == null ? '' : 'deleted-'}regular-task-${item.id}`;
 
-    const [state, setState] = useState<PageState>({
-        mode: 'none',
-        item: { ...DEFAULT_REGULAR_TASK } as RegularTask,
-    })
+    constructor(props: PropsType) {
+        super(props)
 
-    const [isLoading, setIsLoading] = useState(false)
+        this.state = {
+            mode: 'none',
+            item: { ...DEFAULT_REGULAR_TASK } as RegularTask,
+            isLoading: false,
+            isRefreshing: false,
+        }
+    }
 
-    const paging = useAppSelector(getCopyOfPaging)
-    const items = useAppSelector(selectRegularTasks)
+    componentDidMount() {
+        this.fetchMore('fetchFromBegin')
+    }
 
-    const changeMode = useCallback((mode: ModificationType = 'none', itemId: number = 0) => {
-        const item = itemId === 0 ? { ...DEFAULT_REGULAR_TASK } as RegularTask : items.find(item => item.id === itemId)!
+    changeMode = (mode: ModificationType = 'none', itemId: number = 0) => {
+        const { items } = { ...this.props }
 
-        setState({
-            ...state,
+        const item =
+            itemId === 0
+                ? ({ ...DEFAULT_REGULAR_TASK } as RegularTask)
+                : items.find(i => i.id === itemId)!
+
+        this.setState({
+            ...this.state,
             mode: mode,
-            item
+            item: { ...item },
         })
-    }, [items, state])
+    };
 
-    const fetchMore = useCallback((paging: Paging<RegularTask>) => {
-        console.log("fetchMore...")
-        paging = { ...paging }
+    fetchMore = (
+        fetchType: FetchTasksTypes,
+        columnsShow: RegularTaskColumnsShow | null = null,
+        filter: DbFilter<RegularTask, RegularTasksFilterModeType> | null = null,
+    ) => {
+        console.log(`fetchMore... fetchType:${fetchType}`)
 
-        if (isLoading || !paging.hasNext) {
-            console.log(`fetchMore stopped (isLoading:${isLoading}, paging.hasNext:${paging.hasNext})`)
+        const { regularTaskRep, dispatch, paging } = { ...this.props }
+        const { isLoading } = { ...this.state }
+        const newHasNext = fetchType === 'fetchFromBegin' ? true : paging.hasNext
+
+        if (isLoading || !newHasNext) {
+            console.log(
+                `fetchMore stopped (isLoading:${isLoading}, hasNext:${newHasNext})`,
+            )
             return
         }
 
-        console.log("fetchMore begin")
-        setIsLoading(true)
+        this.setState({
+            ...this.state,
+            isLoading: true,
+        })
 
         const timeout = window.setTimeout(async () => {
-            dispatch(await fetchRegTasks({ regularTaskRep: appData.regularTaskRep, paging: paging }))
-                .then(() => {
-                    setIsLoading(false)
-                    window.clearTimeout(timeout)
-                    console.log("fetchMore end")
+            dispatch(
+                await fetchRegTasks({
+                    regularTaskRep: regularTaskRep,
+                    paging,
+                    fetchType,
+                    columnsShow,
+                    filter,
+                }),
+            ).then(() => {
+                this.setState({
+                    ...this.state,
+                    isLoading: false,
                 })
+
+                window.clearTimeout(timeout)
+            })
         }, 1000)
-    },
-        [appData.regularTaskRep, isLoading, setIsLoading, dispatch])
+    };
 
+    onChangeColumnsShow = (columnsShow: RegularTaskColumnsShow) => {
+        console.log('onChangeColumnsShow...')
+        const { dispatch, paging } = { ...this.props }
 
+        let newPaging = Object.assign({}, paging)
+        newPaging.columnsShow = columnsShow
 
-    const onChangeFilter = useCallback((filter: FindOptionsWhere<RegularTask> | undefined) => {
-        console.log("onChangeFilter...")
-        paging.fetchType = 'fetchFromBegin'
-        paging.where = filter
-        paging.hasNext = true
-        console.log('paging', paging)
+        dispatch(setRegPaging({ paging: newPaging }))
+        this.changeMode()
+    };
 
-        fetchMore(paging)
-        changeMode()
-    },
-        [fetchMore, changeMode, paging])
+    onChangeFilter = (filter: DbFilter<RegularTask, RegularTasksFilterModeType>) => {
+        this.fetchMore('fetchFromBegin', null, filter)
+        this.changeMode()
+    };
 
-    return (
-        <>
-            <View style={styles.row}>
-                <Button
-                    onPress={() => changeMode('edit')}
-                    icon={{ source: 'plus-thick', direction: 'ltr' }}
-                    mode='contained'
-                >
-                    Add regular task
-                </Button>
-                <IconButton
-                    style={{ margin: 0, marginLeft: 10 }}
-                    onPress={() => changeMode('filter')}
-                    icon="filter"
-                    mode='contained'
-                    size={20}
-                >
-                </IconButton>
-                <Badge
-                    style={{ alignSelf: 'flex-start', marginLeft: -10 }}
-                >
-                    {Object.keys(paging.where ?? {}).length}
-                </Badge>
-            </View >
-            <View style={styles.row2}>
-                <Text variant='labelMedium'>Item count: {paging.itemCount}</Text>
-            </View>
-            <FlatList
-                data={items}
-                extraData={[items, paging]}
-                style={{ borderColor: primary, borderWidth: 1 }}
-                keyExtractor={((item: RegularTask, index: number) => `reg-task-${item.id}`)}
-                ItemSeparatorComponent={() => <Divider style={styles.divider} />}
-                initialNumToRender={8}
-                maxToRenderPerBatch={2}
-                onEndReachedThreshold={0.1}
-                onEndReached={() => {
-                    console.log("onEndReached...")
-                    paging.fetchType = 'fetchNext'
-                    fetchMore(paging)
-                }}
+    onEndReached = () => {
+        console.log('onEndReached...')
+        this.fetchMore('fetchNext')
+    };
 
-                renderItem={(itemInfo: ListRenderItemInfo<RegularTask>) => {
-                    return (
-                        <RegularTaskListItem
-                            item={itemInfo.item}
-                            onChange={changeMode}
-                        />
-                    )
-                }}
-                ListEmptyComponent={<Text variant='labelMedium'>No data</Text>}
-                ListFooterComponent={() =>
-                    <>
-                        {isLoading &&
-                            <ActivityIndicator style={{ marginVertical: 10 }} animating={true} color={primary} />
-                        }
-                        <Divider style={styles.divider} />
-                    </>
-                }
+    onSaveTask = async (item: RegularTask, withListReload: boolean) => {
+        const { regularTaskRep, dispatch } = { ...this.props }
+
+        const promise = !!item.id
+            ? dispatch(updateRegTask({ regularTaskRep, item }))
+            : dispatch(createRegTask({ regularTaskRep, item }))
+
+        promise.then(async () => {
+            if (withListReload) await this.fetchMore('fetchFromBegin')
+            this.changeMode()
+        })
+    };
+
+    onDeleteTask = (id: number) => {
+        const { regularTaskRep, dispatch } = { ...this.props }
+        const { mode } = { ...this.state }
+
+        dispatch(
+            removeRegTask({
+                regularTaskRep,
+                id,
+                softRemove: mode === 'softRemove',
+            }),
+        )
+        this.changeMode()
+    };
+
+    // Refreshing--------------------------------------
+
+    onRefresh = async () => {
+        this.setState({
+            ...this.state,
+            isRefreshing: true,
+        })
+
+        this.fetchMore('fetchFromBegin')
+
+        this.setState({
+            ...this.state,
+            isRefreshing: false,
+        })
+    };
+
+    //--------------------------------------------------
+
+    renderItem = (itemInfo: ListRenderItemInfo<RegularTask>) => {
+        const { paging } = { ...this.props }
+
+        return (
+            <RegularTaskListItem
+                serialNumber={itemInfo.index}
+                item={itemInfo.item}
+                columnsShow={paging.columnsShow}
+                onChange={this.changeMode}
             />
-            {state.mode === 'edit' &&
-                <RegularTaskEditFormModal
-                    item={state.item}
-                    onChangeItem={(item: RegularTask) => {
-                        if (!!item.id) {
-                            dispatch(updateRegTask({ regularTaskRep: appData.regularTaskRep, item }))
-                                .then(() => {
-                                    changeMode()
-                                })
-                        } else {
-                            dispatch(createRegTask({ regularTaskRep: appData.regularTaskRep, item }))
-                                .then(() => {
-                                    paging.fetchType = 'fetchFromBegin'
-                                    fetchMore(paging)
-                                    changeMode()
-                                })
+        )
+    };
+
+    render() {
+        const { mode, item, isLoading, isRefreshing } = { ...this.state }
+        const { paging, items, appTheme, dispatch, regularTaskRep } = { ...this.props }
+        const { primary } = { ...appTheme.colors }
+
+        return (
+            <>
+                <View style={styles.row}>
+                    <Button
+                        onPress={() => this.changeMode('edit')}
+                        icon={{ source: 'plus-thick', direction: 'ltr' }}
+                        mode="contained"
+                    >
+                        Add regular task
+                    </Button>
+                    <IconButton
+                        style={{ margin: 0, marginLeft: 10 }}
+                        onPress={() => this.changeMode('filter')}
+                        icon="filter"
+                        mode="contained"
+                        size={20}
+                    ></IconButton>
+                    <Badge style={{ alignSelf: 'flex-start', marginLeft: -10 }}>
+                        {paging.filter.count}
+                    </Badge>
+                    <IconButton
+                        style={{ margin: 0, marginLeft: 10 }}
+                        onPress={() => this.changeMode('columnsShow')}
+                        icon="view-column"
+                        mode="contained"
+                        size={20}
+                    ></IconButton>
+                </View>
+                <View style={styles.row2}>
+                    <View style={styles.row2Col1}>
+                        <Text variant="labelLarge" style={{ flexWrap: 'wrap' }}>
+                            <Icon source={filterModes[paging.filter.mode].icon} size={20} />
+                        </Text>
+                        <Text variant="labelLarge" style={{ flexWrap: 'wrap' }}>
+                            {` ${filterModes[paging.filter.mode].label} `}
+                        </Text>
+                    </View>
+                    <View style={styles.row2Col2}>
+                        <Text variant="labelMedium" style={styles.row2Col2Text}>
+                            Item count: {paging.itemCount}
+                        </Text>
+                    </View>
+                </View>
+                <FlatList
+                    data={items}
+                    extraData={[items, paging]}
+                    style={{ borderColor: primary, borderWidth: 1 }}
+                    keyExtractor={this.keyExtractor}
+                    ItemSeparatorComponent={() => <Divider style={styles.divider} />}
+                    onEndReachedThreshold={0.25} //when scroll to 25% from the bottom
+                    onMomentumScrollEnd={() => {
+                        this.callOnScrollEnd && this.onEndReached()
+                        this.callOnScrollEnd = false
+                    }}
+                    onEndReached={() => (this.callOnScrollEnd = true)}
+                    renderItem={this.renderItem}
+                    refreshing={isRefreshing}
+                    onRefresh={this.onRefresh}
+                    ListEmptyComponent={ListNoData}
+                    ListFooterComponent={ListFooter({ isLoading, color: primary })}
+                />
+                {mode === 'edit' &&
+                    <RegularTaskEditFormModal
+                        item={item}
+                        onChangeItem={this.onSaveTask}
+                        onClose={this.changeMode}
+                    />
+                }
+                {(mode === 'softRemove' || mode === 'remove') &&
+                    <RemoveFormModal
+                        itemId={item.id}
+                        softRemove={mode === 'softRemove'}
+                        questionText={
+                            (mode === 'softRemove')
+                                ? `Do you really want to move to trash regular task '${item.title}' by id '${item.id}'?`
+                                : `Do you really want to delete regular task '${item.title}' by id '${item.id}'?`
                         }
-                    }}
-                    onClose={changeMode}
-                />
-            }
-            {state.mode === 'remove' &&
-                <RemoveFormModal
-                    itemId={state.item.id}
-                    questionText={`Do you really want to delete regular task '${state.item.title}' 
-                    by id '${state.item.id}'?`}
-                    onDelete={(id: number) => {
-                        dispatch(removeRegTask({ regularTaskRep: appData.regularTaskRep, id }))
-                        changeMode()
-                    }}
-                    onClose={changeMode}
-                />
-            }
-            {state.mode === 'filter' &&
-                <ListFilterForm
-                    filter={paging.where}
-                    onChangeFilter={onChangeFilter}
-                    onClose={changeMode}
-                />
-            }
-        </>
-    )
+                        onDelete={(id: number) => {
+                            dispatch(removeRegTask({ regularTaskRep: regularTaskRep, id, softRemove: mode === 'softRemove' }))
+                            this.changeMode()
+                        }}
+                        onClose={this.changeMode}
+                    />
+                }
+                {mode === 'filter' &&
+                    <ListFilterForm
+                        filter={paging.filter}
+                        onChangeFilter={this.onChangeFilter}
+                        onClose={this.changeMode}
+                    />
+                }
+                {mode === 'columnsShow' && (
+                    <ListColumnsShowForm
+                        columnsShow={paging.columnsShow}
+                        onChangeColumnsShow={this.onChangeColumnsShow}
+                        onClose={this.changeMode}
+                    />
+                )}
+            </>
+        )
+    }
 }
+
+const mapStateToProps = (state: RootState) => {
+    return {
+        appTheme: selectAppTheme(state),
+        paging: state.regularTasks.paging,
+        items: state.regularTasks.items,
+    } as PropsType
+}
+
+const mapDispatchToProps = (dispatch: AppDispatchType) => {
+    return {
+        dispatch: dispatch,
+    } as PropsType
+}
+
+type ownPropsType = {
+    regularTaskRep: Repository<RegularTask>
+}
+
+function mergeProps(
+    stateProps: PropsType,
+    dispatchProps: PropsType,
+    ownProps: ownPropsType,
+) {
+    return Object.assign({}, ownProps, stateProps, dispatchProps)
+}
+
+export const RegularTaskList = connect(
+    mapStateToProps,
+    mapDispatchToProps,
+    mergeProps,
+)(RegularTaskListComponent)
+
+//---------------------------------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
     divider: {
         marginHorizontal: 5,
         marginVertical: 1,
+        height: StyleSheet.hairlineWidth,
     },
     row: {
         flexDirection: 'row',
@@ -205,5 +350,18 @@ const styles = StyleSheet.create({
     },
     row2: {
         flexDirection: 'row',
+    },
+    row2Col1: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        marginLeft: 10,
+    },
+    row2Col2: {
+        flex: 1,
+    },
+    row2Col2Text: {
+        textAlign: 'right',
+        marginRight: 10,
     },
 })

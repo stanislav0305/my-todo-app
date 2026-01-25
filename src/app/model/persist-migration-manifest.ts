@@ -1,4 +1,4 @@
-import { INITIAL_REGULAR_TASKS_STATE } from '@entities/regular-tasks/constants'
+import { INITIAL_REGULAR_TASKS_STATE } from '@entities/regular-tasks'
 import { INITIAL_SETTINGS_STATE } from '@entities/settings'
 import { INITIAL_TASKS_STATE } from '@entities/tasks'
 import { INITIAL_THEME_STATE } from '@shared/theme/lib'

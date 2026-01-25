@@ -1,8 +1,8 @@
-import { Paging } from '@shared/lib/types';
 import { RegularTask } from './regular-task';
+import { RegularTaskPaging } from './regular-tasks-paging';
 
 
 export interface RegularTasksState {
-    paging: Paging<RegularTask>,
+    paging: RegularTaskPaging,
     items: RegularTask[],
 }

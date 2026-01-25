@@ -9,8 +9,8 @@ import { Text } from 'react-native-paper'
 type Props = {
     period: Period | undefined
     periodSize: number | undefined
-    from: Date | undefined
-    to: Date | null | undefined
+    beginDate: string | undefined
+    endDate: string | null | undefined
     useLastDayFix: boolean | undefined
     su: boolean | undefined
     mo: boolean | undefined
@@ -21,27 +21,27 @@ type Props = {
     sa: boolean | undefined
 }
 
-export function RegularTaskInfo({ period, periodSize, from, to, useLastDayFix,
+export function RegularTaskInfo({ period, periodSize, beginDate, endDate, useLastDayFix,
     su, mo, tu, we, th, fr, sa
 }: Props) {
     const appTheme = useAppTheme()
     const { success } = appTheme.colors
 
-    const fromStr = !!from ? dateHelper.toFormattedString(from!, 'DD/MM/YYYY') : ''
-    const fromDayStr = !!from ? fromStr.substring(0, 2) : ''
-    const fromDayAndMonthStr = !!from ? fromStr.substring(0, 5) : ''
-    const toStr = !!to ? dateHelper.toFormattedString(to!, 'DD/MM/YYYY') : ''
+    const fromStr = !!beginDate ? dateHelper.dbStrDateToFormattedString(beginDate, 'DD/MM/YYYY') : ''
+    const fromDayStr = !!beginDate ? fromStr.substring(0, 2) : ''
+    const fromDayAndMonthStr = !!beginDate ? fromStr.substring(0, 5) : ''
+    const toStr = !!endDate ? dateHelper.dbStrDateToFormattedString(endDate.toString(), 'DD/MM/YYYY') : ''
 
     const days = []
     su && days.push('Sunday')
     mo && days.push('Monday')
     tu && days.push('Tuesday')
-    we && days.push('Washday')
+    we && days.push('Wednesday')
     th && days.push('Thursday')
     fr && days.push('Friday')
     sa && days.push('Saturday')
 
-    const daysStr = days.join(', ')
+    const daysStr = days.length === 0 ? '...' : days.join(', ')
 
     return (
         <View style={[styles.container, { borderColor: success }]}>

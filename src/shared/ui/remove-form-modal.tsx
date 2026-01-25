@@ -6,6 +6,7 @@ import { Button, Text } from 'react-native-paper'
 
 type Props = {
     itemId: number
+    softRemove: boolean
     questionText: string
     deleteBtnText?: string
     closeBtnText?: string
@@ -13,10 +14,10 @@ type Props = {
     onClose: () => void
 }
 
-export function RemoveFormModal({ itemId, questionText, deleteBtnText, closeBtnText, onDelete, onClose }: Props) {
+export function RemoveFormModal({ itemId, softRemove, questionText, deleteBtnText, closeBtnText, onDelete, onClose }: Props) {
     return (
         <ThemedModal
-            title='Delete task'
+            title={softRemove ? 'Move to trash' : 'Remove'}
             isVisible={true}
             onClose={onClose}
         >
@@ -25,13 +26,13 @@ export function RemoveFormModal({ itemId, questionText, deleteBtnText, closeBtnT
             >
                 {questionText}
             </Text>
-            <View style={sharedStyles.row}>
+            <View style={sharedStyles.btnRow}>
                 <Button
                     onPress={() => onDelete(itemId)}
-                    icon={{ source: 'trash-can', direction: 'ltr' }}
+                    icon={{ source: softRemove ? 'trash-can' : 'close-thick', direction: 'ltr' }}
                     mode='outlined'
                 >
-                    {deleteBtnText ?? 'Delete'}
+                    {deleteBtnText ?? softRemove ? 'Move to trash' : 'Remove'}
                 </Button>
                 <Button
                     onPress={() => onClose()}

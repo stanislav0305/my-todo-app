@@ -8,10 +8,10 @@ export class Task {
     @PrimaryGeneratedColumn('increment')
     id: number
 
-    @Column('text', { nullable: true })
+    @Column('varchar', { length: 5, nullable: true })
     time: string
 
-    @Column('text', { nullable: true })
+    @Column('varchar', { length: 10, nullable: true })
     date: string
 
     @Column('text', { nullable: true })
@@ -27,11 +27,11 @@ export class Task {
     isUrgent: boolean
 
     @CreateDateColumn()
-    createdAt: Date
+    createdAt: string
 
     @UpdateDateColumn()
-    updateAt: Date
+    updateAt: string
 
     @DeleteDateColumn()
-    deletedAt: Date | null
+    deletedAt: string | null
 }

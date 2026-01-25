@@ -1,13 +1,12 @@
-import { Paging } from "@/src/shared/lib/types"
 import { createSelector } from "@reduxjs/toolkit"
-import { Task } from "../types/task"
+import { TaskPaging } from "../types/tasks-paging"
 
 
 export const getCopyOfPaging = createSelector(
     [
         (state: RootState) => state.tasks.paging
     ],
-    (paging: Paging<Task>) => {
-        return JSON.parse(JSON.stringify(paging)) as Paging<Task>
+    (paging: TaskPaging) => {
+        return JSON.parse(JSON.stringify(paging)) as TaskPaging
     }
 )

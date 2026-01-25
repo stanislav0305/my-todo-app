@@ -4,24 +4,13 @@ import { stringHelper } from "./string-helper"
 
 
 export const calendarDateHelper = {
-    /*
-    toUTCStringOrEmpty: (date: CalendarDate): string => {
-        return typeof date === 'undefined' ? '' : dateHelper.toUTCString(new Date(date?.getDate()))
-    },
-*/
-    toCalendarDate: (date: string | Date | null | undefined): CalendarDate => {
-        //if not date and isEmpty(date)
-        if (!(typeof date === 'object' && date instanceof Date) && stringHelper.isEmpty(date)) {
+    toCalendarDate: (date: string | null | undefined): CalendarDate => {
+        if (stringHelper.isEmpty(date)) {
             return undefined as CalendarDate
         }
 
-        if (typeof date === "string") {
-            return dateHelper.dbStrDateToDate(date) as CalendarDate
-        }
-
-        if (typeof date === 'object' && date instanceof Date) {
-            return date as CalendarDate
-        }
+        date = date as string
+        return dateHelper.dbStrDateToDate(date) as CalendarDate
     },
 
 

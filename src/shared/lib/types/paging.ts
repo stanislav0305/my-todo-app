@@ -1,14 +1,16 @@
-import { FindOptionsOrder, FindOptionsWhere } from "typeorm";
+import { FindOptionsOrder } from 'typeorm'
+import { DbFilter } from './db-filter'
 
-export type FetchTasksTypes = 'fetchFromBegin' | 'fetchNext' | 'fetchFromBeginToSkipped'
+export type FetchTasksTypes = 'fetchFromBegin' | 'fetchNext'
 
-export interface Paging<T> {
+export interface Paging<T, M, CS> {
     fetchType: FetchTasksTypes
     itemCount: number
     skip: number
     take: number
     hasNext: boolean
     hasPrevious: boolean
-    where: FindOptionsWhere<T> | undefined
+    filter: DbFilter<T, M>
+    columnsShow: CS
     order: FindOptionsOrder<T> | undefined
 }
