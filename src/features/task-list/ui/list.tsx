@@ -1,6 +1,6 @@
 import { filterModes } from '@entities/regular-tasks'
 import {
-    createTask, DEFAULT_TASK, fetchTasks, removeTask, setPaging, Task, TaskColumnsShow, TaskPaging,
+    createTask, DEFAULT_TASK, fetchTasks, removeTask, setPaging, Task, TaskColumnsShow, TaskExtendedRepository, TaskPaging,
     TasksFilterModeType, TaskStatus, updateTask
 } from '@entities/tasks'
 import { TaskEditFormModal } from '@features/task-edit'
@@ -15,7 +15,6 @@ import React, { Component } from 'react'
 import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native'
 import { Badge, Button, Divider, Icon, IconButton, Text } from 'react-native-paper'
 import { connect } from 'react-redux'
-import { Repository } from 'typeorm'
 import { ListColumnsShowForm } from './list-columns-show-form'
 import { ListFilterForm } from './list-filter-form'
 import { TaskListItem } from './list-item'
@@ -29,14 +28,14 @@ type StateType = {
 
 type PropsType = {
     appTheme: AppTheme
-    taskRep: Repository<Task>
+    taskRep: TaskExtendedRepository
     dispatch: AppDispatchType
     paging: TaskPaging
     items: Task[]
 }
 
 class TaskListComponent extends Component<PropsType, StateType> {
-    taskRep: Repository<Task>
+    taskRep: TaskExtendedRepository
     callOnScrollEnd = true;
     lastStartIndex: number = 0;
     keyExtractor = (item: Task, index: number) =>
@@ -345,7 +344,7 @@ const mapDispatchToProps = (dispatch: AppDispatchType) => {
 }
 
 type ownPropsType = {
-    taskRep: Repository<Task>
+    taskRep: TaskExtendedRepository
 }
 
 function mergeProps(

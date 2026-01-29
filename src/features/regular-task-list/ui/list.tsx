@@ -1,4 +1,4 @@
-import { createRegTask, DEFAULT_REGULAR_TASK, fetchRegTasks, filterModes, RegularTask, RegularTaskColumnsShow, RegularTaskPaging, RegularTasksFilterModeType, removeRegTask, setRegPaging, updateRegTask } from '@entities/regular-tasks'
+import { createRegTask, DEFAULT_REGULAR_TASK, fetchRegTasks, filterModes, RegularTask, RegularTaskColumnsShow, RegularTaskExtendedRepository, RegularTaskPaging, RegularTasksFilterModeType, removeRegTask, setRegPaging, updateRegTask } from '@entities/regular-tasks'
 import { AppDispatchType } from '@shared/lib/hooks'
 import { DbFilter, FetchTasksTypes, ModificationType } from '@shared/lib/types'
 import { AppTheme } from '@shared/theme/lib'
@@ -9,7 +9,6 @@ import React, { Component } from 'react'
 import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native'
 import { Badge, Button, Divider, Icon, IconButton, Text } from 'react-native-paper'
 import { connect } from 'react-redux'
-import { Repository } from 'typeorm'
 import { RegularTaskEditFormModal } from '../../regular-task-edit'
 import { ListColumnsShowForm } from './list-columns-show-form'
 import { ListFilterForm } from './list-filter-form'
@@ -24,14 +23,13 @@ type StateType = {
 
 type PropsType = {
     appTheme: AppTheme
-    regularTaskRep: Repository<RegularTask>
+    regularTaskRep: RegularTaskExtendedRepository
     dispatch: AppDispatchType
     paging: RegularTaskPaging
     items: RegularTask[]
 }
 
 class RegularTaskListComponent extends Component<PropsType, StateType> {
-    regularTaskRep: Repository<RegularTask>
     callOnScrollEnd = true;
     keyExtractor = (item: RegularTask, index: number) =>
         `${item.deletedAt == null ? '' : 'deleted-'}regular-task-${item.id}`;
@@ -311,7 +309,7 @@ const mapDispatchToProps = (dispatch: AppDispatchType) => {
 }
 
 type ownPropsType = {
-    regularTaskRep: Repository<RegularTask>
+    regularTaskRep: RegularTaskExtendedRepository
 }
 
 function mergeProps(

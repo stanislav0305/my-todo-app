@@ -1,5 +1,6 @@
 //model
 export * from './model/get-copy-of-paging'
+export * from './model/regular-task.extended.repository'
 export * from './model/regular-tasks.slice'
 export * from './model/select-regular-tasks'
 
@@ -13,3 +14,4 @@ export * from './types/regular-tasks-state'
 
 //constants
 export * from './constants'
+

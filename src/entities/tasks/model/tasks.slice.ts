@@ -1,17 +1,12 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { revertAll } from '@shared/lib/actions'
 import { DbFilter, FetchTasksTypes } from '@shared/lib/types'
-import {
-    FindManyOptions,
-    FindOneOptions,
-    FindOptionsWhere,
-    Repository,
-} from 'typeorm'
-import { INITIAL_TASKS_STATE, TASK_TAKE_ITEMS_COUNT } from '../constants'
+import { INITIAL_TASKS_STATE } from '../constants'
 import { Task } from '../types/task'
 import { TaskColumnsShow } from '../types/task-columns-show'
 import { TasksFilterModeType } from '../types/tasks-filter-mode-type'
 import { TaskPaging } from '../types/tasks-paging'
+import { TaskExtendedRepository } from './task.extended.repository'
 
 export const tasksSlice = createSlice({
     name: 'tasksSlice',
@@ -81,119 +76,50 @@ export const tasksReducers = tasksSlice.reducer
 
 const fetchTasks = createAsyncThunk(
     'tasks/fetch',
-    async (
-        {
-            taskRep,
-            paging,
-            fetchType,
-            columnsShow,
-            filter,
-        }: {
-            taskRep: Repository<Task>
-            paging: TaskPaging
-            fetchType: FetchTasksTypes
-            columnsShow: TaskColumnsShow | null
-            filter: DbFilter<Task, TasksFilterModeType> | null
-        },
-        thunkApi,
-    ) => {
+    async ({ taskRep, paging, fetchType, columnsShow, filter }: {
+        taskRep: TaskExtendedRepository, paging: TaskPaging, fetchType: FetchTasksTypes,
+        columnsShow: TaskColumnsShow | null, filter: DbFilter<Task, TasksFilterModeType> | null
+    }, thunkApi) => {
         console.log('tasks/fetch...')
 
-        const hasNext = fetchType === 'fetchFromBegin' ? true : paging.hasNext
-        if (!hasNext) {
-            console.log(`tasks/fetch stopped (hasNext:${hasNext})`)
+        const mp = taskRep.mapPagingBefore(paging, fetchType, columnsShow, filter)
+        if (!mp.hasNext) {
+            console.log(`regularTasks/fetch stopped (hasNext:${mp.hasNext})`)
             return
         }
 
-        let p = Object.assign({}, paging)
-        p = {
-            ...p,
-            fetchType,
-            filter: filter ?? p.filter,
-            columnsShow: columnsShow ?? p.columnsShow,
-            itemCount: fetchType === 'fetchFromBegin' ? 0 : p.itemCount,
-            skip: fetchType === 'fetchFromBegin' ? 0 : p.skip,
-            hasNext: hasNext,
-            hasPrevious: fetchType === 'fetchFromBegin' ? false : p.hasPrevious,
-        }
+        const [items, itemCount] = await taskRep.fetchTasks(mp.paging)
+        const newP = taskRep.mapPagingAfter(mp.paging, itemCount)
 
-        console.log('tasks/fetch begin')
-        const [items, itemCount] = await taskRep.findAndCount({
-            where: p.filter.where,
-            withDeleted: p.filter.withDeleted,
-            order: p.order,
-            skip: p.skip,
-            take: p.take,
-        } as FindManyOptions<Task>)
+        if (newP.fetchType === 'fetchFromBegin')
+            thunkApi.dispatch(setTasks({ tasks: items, paging: newP }))
+        else if (newP.fetchType === 'fetchNext')
+            thunkApi.dispatch(appendTasks({ tasks: items, paging: newP }))
 
-        p.skip = p.skip + TASK_TAKE_ITEMS_COUNT
-        p.itemCount = itemCount
-        p.hasPrevious = p.skip > 0
-        p.hasNext = p.skip < p.itemCount
 
-        if (p.fetchType === 'fetchFromBegin')
-            thunkApi.dispatch(setTasks({ tasks: items, paging: p }))
-        else if (p.fetchType === 'fetchNext')
-            thunkApi.dispatch(appendTasks({ tasks: items, paging: p }))
-
-        console.log(`fetchMore end (hasNext:${p.hasNext}, skip:${p.skip})`)
+        console.log(`fetchMore end (hasNext:${newP.hasNext}, skip:${newP.skip})`)
     },
 )
 
 const createTask = createAsyncThunk(
     'tasks/createTask',
-    async ({ taskRep, item }: { taskRep: Repository<Task>; item: Task }) => {
-        let t = new Task()
-        t = {
-            ...t,
-            ...item,
-            id: t.id,
-        }
-
-        await taskRep.save(t)
+    async ({ taskRep, item }: { taskRep: TaskExtendedRepository, item: Task }) => {
+        await taskRep.createTask(item)
     },
 )
 
 const updateTask = createAsyncThunk(
     'tasks/updateTask',
-    async (
-        { taskRep, item }: { taskRep: Repository<Task>; item: Task },
-        thunkApi,
-    ) => {
-        let t = await taskRep.findOneBy({ id: item.id })
-        t = {
-            ...t,
-            ...item,
-        }
-        const i = await taskRep.save(t)
-
+    async ({ taskRep, item }: { taskRep: TaskExtendedRepository, item: Task }, thunkApi) => {
+        const i = await taskRep.updateTask(item)
         thunkApi.dispatch(update(i))
     },
 )
 
 const removeTask = createAsyncThunk(
     'tasks/removeTask',
-    async (
-        {
-            taskRep,
-            id,
-            softRemove,
-        }: { taskRep: Repository<Task>; id: number; softRemove: boolean },
-        thunkApi,
-    ) => {
-        const findOpts = { id } as FindOptionsWhere<Task>
-
-        if (softRemove) {
-            const taskToRemove = await taskRep.findOneBy(findOpts)
-            await taskRep.softRemove(taskToRemove!)
-        } else {
-            const taskToRemove = await taskRep.findOne({
-                where: findOpts,
-                withDeleted: true,
-            } as FindOneOptions<Task>)
-            await taskRep.remove(taskToRemove!)
-        }
-
+    async ({ taskRep, id, softRemove }: { taskRep: TaskExtendedRepository, id: number, softRemove: boolean }, thunkApi) => {
+        await taskRep.removeTask(id, softRemove!)
         thunkApi.dispatch(remove(id))
     },
 )

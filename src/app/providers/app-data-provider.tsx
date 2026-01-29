@@ -1,25 +1,24 @@
-import { RegularTask } from '@entities/regular-tasks'
-import { Task } from '@entities/tasks'
+import { RegularTask, RegularTaskExtendedRepository, regularTaskExtendedRepository } from '@entities/regular-tasks'
+import { Task, taskExtendedRepository, TaskExtendedRepository } from '@entities/tasks'
 import * as SQLite from 'expo-sqlite'
 import React, { createContext, PropsWithChildren, useContext } from "react"
 import 'reflect-metadata'
-import { Repository } from 'typeorm'
 import { AppDataSource, SQLITE_DB_NAME } from '../type-orm-database/data-source'
 import SQLiteManager from '../type-orm-database/sqlite-manager'
 
 
 type AppDataContextValueType = {
     dataManager: SQLiteManager
-    taskRep: Repository<Task>
-    regularTaskRep: Repository<RegularTask>
+    taskRep: TaskExtendedRepository
+    regularTaskRep: RegularTaskExtendedRepository
 }
 
 const db = SQLite.openDatabaseSync(SQLITE_DB_NAME)
 
 export const AppDataContext = createContext<AppDataContextValueType>({
     dataManager: new SQLiteManager(db),
-    taskRep: AppDataSource.getRepository(Task),
-    regularTaskRep: AppDataSource.getRepository(RegularTask)
+    taskRep: AppDataSource.getRepository(Task).extend(taskExtendedRepository),
+    regularTaskRep: AppDataSource.getRepository(RegularTask).extend(regularTaskExtendedRepository)
 } satisfies AppDataContextValueType as AppDataContextValueType)
 
 

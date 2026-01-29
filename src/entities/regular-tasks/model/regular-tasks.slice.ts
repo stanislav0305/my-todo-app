@@ -1,12 +1,12 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { revertAll } from '@shared/lib/actions'
 import { DbFilter, FetchTasksTypes } from '@shared/lib/types'
-import { FindManyOptions, FindOneOptions, FindOptionsWhere, Repository } from 'typeorm'
-import { INITIAL_REGULAR_TASKS_STATE, REGULAR_TASK_TAKE_ITEMS_COUNT } from '../constants'
+import { INITIAL_REGULAR_TASKS_STATE } from '../constants'
 import { RegularTask } from '../types/regular-task'
 import { RegularTaskColumnsShow } from '../types/regular-task-columns-show'
 import { RegularTasksFilterModeType } from '../types/regular-tasks-filter-mode-type'
 import { RegularTaskPaging } from '../types/regular-tasks-paging'
+import { RegularTaskExtendedRepository } from './regular-task.extended.repository'
 
 export const regularTasksSlice = createSlice({
     name: 'regularTasksSlice',
@@ -81,128 +81,53 @@ const { appendRegTasks, setRegTasks, setRegPaging, update, remove } =
     regularTasksSlice.actions
 export const regularTasksReducers = regularTasksSlice.reducer
 
+
 const fetchRegTasks = createAsyncThunk(
     'regularTasks/fetch',
-    async (
-        {
-            regularTaskRep,
-            paging,
-            fetchType,
-            columnsShow,
-            filter,
-        }: {
-            regularTaskRep: Repository<RegularTask>
-            paging: RegularTaskPaging
-            fetchType: FetchTasksTypes
-            columnsShow: RegularTaskColumnsShow | null
-            filter: DbFilter<RegularTask, RegularTasksFilterModeType> | null
-        },
-        thunkApi,
-    ) => {
+    async ({ regularTaskRep, paging, fetchType, columnsShow, filter, }: {
+        regularTaskRep: RegularTaskExtendedRepository, paging: RegularTaskPaging, fetchType: FetchTasksTypes,
+        columnsShow: RegularTaskColumnsShow | null, filter: DbFilter<RegularTask, RegularTasksFilterModeType> | null
+    }, thunkApi) => {
         console.log('regularTasks/fetch...')
 
-        const hasNext = fetchType === 'fetchFromBegin' ? true : paging.hasNext
-        if (!hasNext) {
-            console.log(`regularTasks/fetch stopped (hasNext:${hasNext})`)
+        const mp = regularTaskRep.mapPagingBefore(paging, fetchType, columnsShow, filter)
+        if (!mp.hasNext) {
+            console.log(`regularTasks/fetch stopped (hasNext:${mp.hasNext})`)
             return
         }
 
-        let p = Object.assign({}, paging)
-        p = {
-            ...p,
-            fetchType,
-            filter: filter ?? p.filter,
-            columnsShow: columnsShow ?? p.columnsShow,
-            itemCount: fetchType === 'fetchFromBegin' ? 0 : p.itemCount,
-            skip: fetchType === 'fetchFromBegin' ? 0 : p.skip,
-            hasNext: hasNext,
-            hasPrevious: fetchType === 'fetchFromBegin' ? false : p.hasPrevious,
-        }
+        const [items, itemCount] = await regularTaskRep.fetchRegTasks(mp.paging)
+        const newP = regularTaskRep.mapPagingAfter(mp.paging, itemCount)
 
-        console.log('regularTasks/fetch begin')
-        const [items, itemCount] = await regularTaskRep.findAndCount({
-            where: p.filter.where,
-            withDeleted: p.filter.withDeleted,
-            order: p.order,
-            skip: p.skip,
-            take: p.take,
-        } as FindManyOptions<RegularTask>)
+        if (newP.fetchType === 'fetchFromBegin')
+            thunkApi.dispatch(setRegTasks({ regularTasks: items, paging: newP }))
+        else if (newP.fetchType === 'fetchNext')
+            thunkApi.dispatch(appendRegTasks({ regularTasks: items, paging: newP }))
 
-        p.skip = p.skip + REGULAR_TASK_TAKE_ITEMS_COUNT
-        p.itemCount = itemCount
-        p.hasPrevious = p.skip > 0
-        p.hasNext = p.skip < p.itemCount
 
-        if (p.fetchType === 'fetchFromBegin')
-            thunkApi.dispatch(setRegTasks({ regularTasks: items, paging: p }))
-        else if (p.fetchType === 'fetchNext')
-            thunkApi.dispatch(appendRegTasks({ regularTasks: items, paging: p }))
-
-        console.log(`fetchMore end (hasNext:${p.hasNext}, skip:${p.skip})`)
+        console.log(`fetchMore end (hasNext:${newP.hasNext}, skip:${newP.skip})`)
     },
 )
 
 const createRegTask = createAsyncThunk(
     'regularTasks/createRegTask',
-    async (
-        { regularTaskRep, item }: { regularTaskRep: Repository<RegularTask>; item: RegularTask }) => {
-        let t = new RegularTask()
-        t = {
-            ...t,
-            ...item,
-            id: t.id,
-        }
-        await regularTaskRep.save(t)
+    async ({ regularTaskRep, item }: { regularTaskRep: RegularTaskExtendedRepository, item: RegularTask }) => {
+        await regularTaskRep.createRegTask(item)
     },
 )
 
 const updateRegTask = createAsyncThunk(
     'regularTasks/updateRegTask',
-    async (
-        {
-            regularTaskRep,
-            item,
-        }: { regularTaskRep: Repository<RegularTask>; item: RegularTask },
-        thunkApi,
-    ) => {
-        let rt = await regularTaskRep.findOneBy({ id: item.id })
-        rt = {
-            ...rt,
-            ...item,
-        }
-        const i = await regularTaskRep.save(rt)
-
+    async ({ regularTaskRep, item }: { regularTaskRep: RegularTaskExtendedRepository, item: RegularTask }, thunkApi) => {
+        const i = await regularTaskRep.updateRegTask(item)
         thunkApi.dispatch(update(i))
     },
 )
 
 const removeRegTask = createAsyncThunk(
     'regularTasks/removeRegTask',
-    async (
-        {
-            regularTaskRep,
-            id,
-            softRemove,
-        }: {
-            regularTaskRep: Repository<RegularTask>
-            id: number
-            softRemove: boolean
-        },
-        thunkApi,
-    ) => {
-        const findOpts = { id } as FindOptionsWhere<RegularTask>
-
-        if (softRemove) {
-            const taskToRemove = await regularTaskRep.findOneBy(findOpts)
-            await regularTaskRep.softRemove(taskToRemove!)
-        } else {
-            const taskToRemove = await regularTaskRep.findOne({
-                where: findOpts,
-                withDeleted: true,
-            } as FindOneOptions<RegularTask>)
-            await regularTaskRep.remove(taskToRemove!)
-        }
-
+    async ({ regularTaskRep, id, softRemove, }: { regularTaskRep: RegularTaskExtendedRepository, id: number, softRemove: boolean }, thunkApi) => {
+        await regularTaskRep.removeRegTask(id, softRemove)
         thunkApi.dispatch(remove(id))
     },
 )
