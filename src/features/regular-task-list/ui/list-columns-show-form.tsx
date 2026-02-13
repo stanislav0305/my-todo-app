@@ -45,6 +45,13 @@ export function ListColumnsShowForm({
             </CustomCheckbox>
             <Divider style={styles.divider0} />
             <CustomCheckbox
+                checkBoxState={formik.values.periodParam ? 'checked' : 'unchecked'}
+                onPress={() => formik.setFieldValue('periodParam', !formik.values.periodParam)}
+            >
+                <Text variant="labelMedium">periodParam</Text>
+            </CustomCheckbox>
+            <Divider style={styles.divider0} />
+            <CustomCheckbox
                 checkBoxState={formik.values.createdAt ? 'checked' : 'unchecked'}
                 onPress={() =>
                     formik.setFieldValue('createdAt', !formik.values.createdAt)

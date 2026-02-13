@@ -1,4 +1,4 @@
-import { TaskStatus } from './task'
+import { TaskStatus } from './task.entity'
 import { TasksFilterModeType } from './tasks-filter-mode-type'
 
 export interface TasksFilter {

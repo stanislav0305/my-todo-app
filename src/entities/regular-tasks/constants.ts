@@ -1,7 +1,8 @@
 import { dateHelper } from '@shared/lib/helpers'
 import { DbFilter } from '@shared/lib/types'
-import { Period, RegularTask } from './types/regular-task'
 import { RegularTaskColumnsShow } from './types/regular-task-columns-show'
+import { Period, RegularTask } from './types/regular-task.entity'
+import { RegularTaskModel } from './types/regular-task.model'
 import { RegularTasksFilterModeType } from './types/regular-tasks-filter-mode-type'
 import { RegularTaskPaging } from './types/regular-tasks-paging'
 import { RegularTasksState } from './types/regular-tasks-state'
@@ -9,25 +10,17 @@ import { RegularTasksState } from './types/regular-tasks-state'
 
 export const REGULAR_TASK_TAKE_ITEMS_COUNT = 20
 
-export const DEFAULT_REGULAR_TASK = {
+export const DEFAULT_REGULAR_TASK_MODEL = {
     id: 0,
     time: '',
     beginDate: dateHelper.toFormattedString(new Date(Date.now()), 'YYYY-MM-DD'),
     endDate: null,
     period: 'everyDay',
     periodSize: 1,
-    useLastDayFix: true,
-    su: false,
-    mo: false,
-    tu: false,
-    we: false,
-    th: false,
-    fr: false,
-    sa: false,
     title: '',
     isImportant: false,
-    isUrgent: false
-} as RegularTask
+    isUrgent: false,
+} as RegularTaskModel
 
 export const DEFAULT_REGULAR_TASK_PAGING = {
     fetchType: 'fetchFromBegin',
@@ -47,7 +40,7 @@ export const DEFAULT_REGULAR_TASK_PAGING = {
 
 export const INITIAL_REGULAR_TASKS_STATE = {
     paging: DEFAULT_REGULAR_TASK_PAGING,
-    items: [] as RegularTask[],
+    items: [] as RegularTaskModel[],
 } satisfies RegularTasksState as RegularTasksState
 
 const periodNames: Record<Period, string> = {

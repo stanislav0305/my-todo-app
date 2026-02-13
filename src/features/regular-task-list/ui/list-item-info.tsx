@@ -8,7 +8,6 @@ type Props = {
     period: Period | undefined
     periodSize: number | undefined
     beginDate: string | undefined
-    useLastDayFix: boolean | undefined
     su: boolean | undefined
     mo: boolean | undefined
     tu: boolean | undefined
@@ -18,7 +17,7 @@ type Props = {
     sa: boolean | undefined
 }
 
-export function ListItemInfo({ period, periodSize, beginDate, useLastDayFix,
+export function ListItemInfo({ period, periodSize, beginDate,
     su, mo, tu, we, th, fr, sa
 }: Props) {
     const fromStr = !!beginDate ? dateHelper.dbStrDateToFormattedString(beginDate, 'DD/MM/YYYY') : ''
@@ -58,7 +57,6 @@ export function ListItemInfo({ period, periodSize, beginDate, useLastDayFix,
                 && (
                     <>
                         <Text variant='bodySmall'>{`MONTHLY, every ${periodSize} month, on: ${fromDayStr}`}</Text>
-                        {!!useLastDayFix && <Text variant='bodySmall'>With day fix.</Text>}
                     </>
                 )
             }
@@ -68,7 +66,6 @@ export function ListItemInfo({ period, periodSize, beginDate, useLastDayFix,
                 && (
                     <>
                         <Text variant='bodySmall'>{`YEARLY, every ${periodSize} year, on: ${fromDayAndMonthStr}`}</Text>
-                        {!!useLastDayFix && <Text variant='bodySmall'>With day fix.</Text>}
                     </>
                 )
             }

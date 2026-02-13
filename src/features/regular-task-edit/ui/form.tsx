@@ -1,9 +1,9 @@
-import { periodNamesDropDownItems, RegularTask } from '@entities/regular-tasks'
+import { periodNamesDropDownItems, RegularTaskModel } from '@entities/regular-tasks'
 import { MaterialIcons } from '@expo/vector-icons'
 import { calendarDateHelper, dateHelper, numberHelper, stringHelper, timeHelper } from '@shared/lib/helpers'
 import { sharedStyles } from '@shared/styles'
 import { useAppTheme } from '@shared/theme/hooks'
-import { AppDatePickerSingleModal, AppTimePickerModal, CustomCheckbox, FormErrorText, ThemedModal } from '@shared/ui'
+import { AppDatePickerSingleModal, AppText, AppTimePickerModal, BorderedView, CustomCheckbox, FormErrorText, ThemedModal } from '@shared/ui'
 import { Select } from '@shared/ui/select'
 import { useFormik } from 'formik'
 import React from 'react'
@@ -15,7 +15,7 @@ import { RegularTaskInfo } from './regular-task-info'
 import { WeekDayButton } from './week-day-button'
 
 
-const regularTaskEditSchema = Yup.object().shape({
+const regularTaskEditSchema = Yup.object<RegularTaskModel>().shape({
     title: Yup.string()
         .min(1, 'Min value length is 1')
         .max(300, 'Max value length is 300')
@@ -41,11 +41,39 @@ const regularTaskEditSchema = Yup.object().shape({
             'period',
             (period, schema) => ((!!period && period + '' === 'everyYear') ? schema.max(10, 'Max value is 10 years') : schema),
         ),
+    su: Yup.boolean(),
+    mo: Yup.boolean(),
+    tu: Yup.boolean(),
+    we: Yup.boolean(),
+    th: Yup.boolean(),
+    fr: Yup.boolean(),
+    sa: Yup.boolean(),
 })
+    .test(
+        'at-least-one-of-week-day',
+        'At least one of week day',
+        function (value) {
+            if (value.period === 'everyWeek'
+                && (typeof value.su === 'undefined' || value.su === false)
+                && (typeof value.mo === 'undefined' || value.mo === false)
+                && (typeof value.tu === 'undefined' || value.tu === false)
+                && (typeof value.we === 'undefined' || value.we === false)
+                && (typeof value.th === 'undefined' || value.th === false)
+                && (typeof value.fr === 'undefined' || value.fr === false)
+                && (typeof value.sa === 'undefined' || value.sa === false)) {
+                return this.createError({
+                    path: 'su', // Specify which field the error message attaches to
+                    message: 'You must specify at least one of the following days of the week: su, mo, tu, we, th, fr, sa',
+                })
+            }
+
+            return true // Validation passes
+        }
+    )
 
 type Props = {
-    item: RegularTask
-    onChangeItem: (task: RegularTask, withListReload: boolean) => void
+    item: RegularTaskModel
+    onChangeItem: (task: RegularTaskModel, withListReload: boolean) => void
     onClose: () => void
 }
 
@@ -59,16 +87,15 @@ export function RegularTaskEditFormModal({ item, onChangeItem, onClose }: Props)
         formik.setFieldValue('time', timeStr)
     }
 
-
-
     const formik = useFormik({
         initialValues: item,
         validationSchema: regularTaskEditSchema,
-        onSubmit: (values: RegularTask) => {
+        onSubmit: (values: RegularTaskModel) => {
             console.log('Form submit:', values)
 
             const withListReload = !values.id || values.time !== item.time || values.beginDate !== item.beginDate
                 || values.endDate !== item.endDate
+                || (!!values.id && values.period === 'everyWeek')
 
             onChangeItem(values, withListReload)
         }
@@ -120,6 +147,35 @@ export function RegularTaskEditFormModal({ item, onChangeItem, onClose }: Props)
                     withDateRemoveBtn={false}
                 />
             </View>
+            {(formik.values.period === 'everyMonth'
+                && [29, 30, 31].includes(dateHelper.dbStrDateToMonthDayNumberOrZero(formik.values.beginDate))
+            ) &&
+                <BorderedView
+                    borderColorType='warning'
+                >
+                    <AppText
+                        textColor='warning'
+                        iconType='warning'
+                    >
+                        If the date does not exist in the month, the last day of the month will be used.
+                    </AppText>
+                </BorderedView>
+            }
+            {(formik.values.period === 'everyYear'
+                && dateHelper.dbStrDateToMonthDayNumberOrZero(formik.values.beginDate) === 29
+                && dateHelper.dbStrDateToMonthNumberOrZero(formik.values.beginDate) === 2
+            ) &&
+                <BorderedView
+                    borderColorType='warning'
+                >
+                    <AppText
+                        textColor='warning'
+                        iconType='warning'
+                    >
+                        The date 29 february is only in leap years, so in non-leap years the last day of the month (28 february) will be used.
+                    </AppText>
+                </BorderedView>
+            }
             <Divider style={styles.divider0} />
             <View style={[sharedStyles.row, { alignItems: 'center' }]}>
                 <Text variant='labelMedium'>To date:</Text>
@@ -215,82 +271,51 @@ export function RegularTaskEditFormModal({ item, onChangeItem, onClose }: Props)
                 </Surface>
             </View>
             {!!formik.errors.periodSize && <FormErrorText>{formik.errors.periodSize}</FormErrorText>}
-            {
-                formik.values.period === 'everyWeek' && (
-                    <>
-                        <View style={sharedStyles.btnRow}>
-                            <WeekDayButton
-                                day='mo'
-                                dayValue={formik.values.mo!}
-                                onPress={() => { formik.setFieldValue('mo', !formik.values.mo) }}
-                            />
-                            <WeekDayButton
-                                day='tu'
-                                dayValue={formik.values.tu!}
-                                onPress={() => { formik.setFieldValue('tu', !formik.values.tu) }}
-                            />
-                            <WeekDayButton
-                                day='we'
-                                dayValue={formik.values.we!}
-                                onPress={() => { formik.setFieldValue('we', !formik.values.we) }}
-                            />
-                            <WeekDayButton
-                                day='th'
-                                dayValue={formik.values.th!}
-                                onPress={() => { formik.setFieldValue('th', !formik.values.th) }}
-                            />
-                            <WeekDayButton
-                                day='fr'
-                                dayValue={formik.values.fr!}
-                                onPress={() => { formik.setFieldValue('fr', !formik.values.fr) }}
-                            />
-                            <WeekDayButton
-                                day='sa'
-                                dayValue={formik.values.sa!}
-                                onPress={() => { formik.setFieldValue('sa', !formik.values.sa) }}
-                            />
-                            <WeekDayButton
-                                day='su'
-                                dayValue={formik.values.su!}
-                                onPress={() => { formik.setFieldValue('su', !formik.values.su) }}
-                            />
-                        </View>
-                    </>
-                )
-            }
-            {
-                (formik.values.period === 'everyMonth' || formik.values.period === 'everyYear') && (
-                    <>
-                        <Divider style={styles.divider0} />
-                        <CustomCheckbox
-                            checkBoxState={formik.values.useLastDayFix ? 'checked' : 'unchecked'}
-                            onPress={() => formik.setFieldValue('useLastDayFix', !formik.values.useLastDayFix)}
-                        >
-                            <Text variant='labelMedium'>last month day fix</Text>
-                            <MaterialIcons
-                                style={{ marginLeft: 5 }}
-                                name='auto-fix-high'
-                                size={20}
-                            />
-                        </CustomCheckbox>
-                    </>
-                )
-            }
             <Divider style={styles.divider0} />
-            <RegularTaskInfo
-                period={formik.values.period}
-                periodSize={formik.values.periodSize}
-                beginDate={formik.values.beginDate}
-                endDate={formik.values.endDate}
-                useLastDayFix={formik.values.useLastDayFix}
-                su={formik.values.su}
-                mo={formik.values.mo}
-                tu={formik.values.tu}
-                we={formik.values.we}
-                th={formik.values.th}
-                fr={formik.values.fr}
-                sa={formik.values.sa}
-            />
+            {formik.values.period === 'everyWeek' && (
+                <>
+                    <View style={[sharedStyles.btnRow, { marginTop: 0 }]}>
+                        <WeekDayButton
+                            day='mo'
+                            dayValue={formik.values.mo!}
+                            onPress={() => { formik.setFieldValue('mo', !formik.values.mo) }}
+                        />
+                        <WeekDayButton
+                            day='tu'
+                            dayValue={formik.values.tu!}
+                            onPress={() => { formik.setFieldValue('tu', !formik.values.tu) }}
+                        />
+                        <WeekDayButton
+                            day='we'
+                            dayValue={formik.values.we!}
+                            onPress={() => { formik.setFieldValue('we', !formik.values.we) }}
+                        />
+                        <WeekDayButton
+                            day='th'
+                            dayValue={formik.values.th!}
+                            onPress={() => { formik.setFieldValue('th', !formik.values.th) }}
+                        />
+                        <WeekDayButton
+                            day='fr'
+                            dayValue={formik.values.fr!}
+                            onPress={() => { formik.setFieldValue('fr', !formik.values.fr) }}
+                        />
+                        <WeekDayButton
+                            day='sa'
+                            dayValue={formik.values.sa!}
+                            onPress={() => { formik.setFieldValue('sa', !formik.values.sa) }}
+                        />
+                        <WeekDayButton
+                            day='su'
+                            dayValue={formik.values.su!}
+                            onPress={() => { formik.setFieldValue('su', !formik.values.su) }}
+                        />
+                    </View>
+                </>
+            )}
+            {!!formik.errors.su && <FormErrorText>{formik.errors.su}</FormErrorText>}
+            <Divider style={styles.divider0} />
+            <RegularTaskInfo item={formik.values} />
             <Divider style={styles.divider0} />
             <CustomCheckbox
                 checkBoxState={formik.values.isImportant ? 'checked' : 'unchecked'}

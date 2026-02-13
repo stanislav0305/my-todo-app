@@ -1,6 +1,6 @@
 import { DbFilter } from '@/src/shared/lib/types'
-import { Task } from './types/task'
 import { TaskColumnsShow } from './types/task-columns-show'
+import { Task } from './types/task.entity'
 import { TasksFilterModeType } from './types/tasks-filter-mode-type'
 import { TaskPaging } from './types/tasks-paging'
 import { TasksState } from './types/tasks-state'

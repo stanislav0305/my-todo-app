@@ -1,7 +1,7 @@
 import { numberHelper } from './number-helper'
 import { stringHelper } from './string-helper'
 
-export const weekDayNames: Record<number, string> = {
+export const weekDayNamesShort: Record<number, string> = {
     0: 'Su', //'Sunday',
     1: 'Mo', //'Monday',
     2: 'Tu', //'Tuesday',
@@ -9,6 +9,16 @@ export const weekDayNames: Record<number, string> = {
     4: 'Th', //'Thursday',
     5: 'Fr', //'Friday',
     6: 'Sa', //'Saturday',
+}
+
+export const weekDayNames: Record<number, string> = {
+    0: 'Sunday',
+    1: 'Monday',
+    2: 'Tuesday',
+    3: 'Wednesday',
+    4: 'Thursday',
+    5: 'Friday',
+    6: 'Saturday',
 }
 
 //for sqlite db is used date format YYYY-MM-DD
@@ -41,6 +51,18 @@ export const dateHelper = {
 
         const date = dateHelper.dbStrDateToDate(dateStr as string)
         return dateHelper.toFormattedString(date, format)
+    },
+    dbStrDateToMonthDayNumberOrZero: (dateStr: string | null | undefined): number => {
+        if (stringHelper.isEmpty(dateStr)) return 0
+
+        const date = dateHelper.dbStrDateToDate(dateStr as string)
+        return date.getDate()
+    },
+    dbStrDateToMonthNumberOrZero: (dateStr: string | null | undefined): number => {
+        if (stringHelper.isEmpty(dateStr)) return 0
+
+        const date = dateHelper.dbStrDateToDate(dateStr as string)
+        return date.getMonth() + 1
     },
     DateStrParse: (value: string): number => {
         return value && value.length > 0 ? Date.parse(value) : 0
@@ -102,10 +124,18 @@ export const dateHelper = {
     getTemplate: (format: DateFormatType) => {
         return templatesByFormats.get(format)
     },
-    getWeekDayName: (dateStr: string | null | undefined) => {
-        if (stringHelper.isEmpty(dateStr)) return ''
+    getWeekDayNumOrNull: (dateStr: string | null | undefined): number | null => {
+        if (stringHelper.isEmpty(dateStr)) return null
         const date = dateHelper.dbStrDateToDate(dateStr as string)
 
-        return weekDayNames[date.getDay()]
+        return date.getDay()
+    },
+    getWeekDayNameShort: (dateStr: string | null | undefined) => {
+        const dayNum = dateHelper.getWeekDayNumOrNull(dateStr)
+        return dayNum == null ? '' : weekDayNamesShort[dayNum]
+    },
+    getWeekDayName: (dateStr: string | null | undefined) => {
+        const dayNum = dateHelper.getWeekDayNumOrNull(dateStr)
+        return dayNum == null ? '' : weekDayNames[dayNum]
     },
 }

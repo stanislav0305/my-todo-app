@@ -1,0 +1,1 @@
+export type ColorType = 'success' | 'warning' | 'danger'

@@ -38,7 +38,7 @@ const TaskListItemComponent = ({
             {!!showDayRow && (
                 <Chip mode="flat" icon="calendar" compact={true}>
                     {!stringHelper.isEmpty(item.date) && (
-                        <Text variant="bodySmall">{`${dateHelper.getWeekDayName(item.date)} `}</Text>
+                        <Text variant="bodySmall">{`${dateHelper.getWeekDayNameShort(item.date)} `}</Text>
                     )}
                     <Text variant="bodyMedium">
                         {stringHelper.isEmpty(item.date)

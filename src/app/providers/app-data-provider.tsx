@@ -1,4 +1,6 @@
-import { RegularTask, RegularTaskExtendedRepository, regularTaskExtendedRepository } from '@entities/regular-tasks'
+import { RegularTask, RegularTaskWeek } from '@entities/regular-tasks'
+import { regularTaskWeekExtendedRepository, RegularTaskWeekExtendedRepository } from '@entities/regular-tasks/model/regular-task-week.extended.repository'
+import { RegularTaskExtendedRepository, regularTaskExtendedRepository } from '@entities/regular-tasks/model/regular-task.extended.repository'
 import { Task, taskExtendedRepository, TaskExtendedRepository } from '@entities/tasks'
 import * as SQLite from 'expo-sqlite'
 import React, { createContext, PropsWithChildren, useContext } from "react"
@@ -11,6 +13,7 @@ type AppDataContextValueType = {
     dataManager: SQLiteManager
     taskRep: TaskExtendedRepository
     regularTaskRep: RegularTaskExtendedRepository
+    regularTaskWeekRep: RegularTaskWeekExtendedRepository
 }
 
 const db = SQLite.openDatabaseSync(SQLITE_DB_NAME)
@@ -18,7 +21,8 @@ const db = SQLite.openDatabaseSync(SQLITE_DB_NAME)
 export const AppDataContext = createContext<AppDataContextValueType>({
     dataManager: new SQLiteManager(db),
     taskRep: AppDataSource.getRepository(Task).extend(taskExtendedRepository),
-    regularTaskRep: AppDataSource.getRepository(RegularTask).extend(regularTaskExtendedRepository)
+    regularTaskRep: AppDataSource.getRepository(RegularTask).extend(regularTaskExtendedRepository),
+    regularTaskWeekRep: AppDataSource.getRepository(RegularTaskWeek).extend(regularTaskWeekExtendedRepository)
 } satisfies AppDataContextValueType as AppDataContextValueType)
 
 

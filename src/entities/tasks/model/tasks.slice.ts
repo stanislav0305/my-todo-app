@@ -2,11 +2,12 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { revertAll } from '@shared/lib/actions'
 import { DbFilter, FetchTasksTypes } from '@shared/lib/types'
 import { INITIAL_TASKS_STATE } from '../constants'
-import { Task } from '../types/task'
 import { TaskColumnsShow } from '../types/task-columns-show'
+import { Task } from '../types/task.entity'
 import { TasksFilterModeType } from '../types/tasks-filter-mode-type'
 import { TaskPaging } from '../types/tasks-paging'
 import { TaskExtendedRepository } from './task.extended.repository'
+
 
 export const tasksSlice = createSlice({
     name: 'tasksSlice',
@@ -36,17 +37,6 @@ export const tasksSlice = createSlice({
             const { paging } = action.payload
             draftState.paging = paging
         },
-        /*  create: (draftState, action: PayloadAction<Task>) => {
-                                                                          let item = {
-                                                                              ...DEFAULT_TASK,
-                                                                              ...action.payload,
-                                                                          } satisfies Task
-                                                              
-                                                                          if (!draftState.items)
-                                                                              draftState.items = []
-                                                              
-                                                                          draftState.items.push(item)
-                                                                      }, */
         update: (draftState, action: PayloadAction<Task>) => {
             const item = { ...action.payload }
             const index = draftState.items.findIndex(i => i.id === item.id)

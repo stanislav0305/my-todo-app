@@ -9,5 +9,6 @@ export { themeHelper } from './helpers/theme-helper'
 export { AppTheme } from './types/app-theme'
 export { AppThemeColors } from './types/app-theme-colors'
 export { AppThemeNameType } from './types/app-theme-name-type'
+export * from './types/color-type'
 export { ThemeNameType } from './types/theme-name-type'
 

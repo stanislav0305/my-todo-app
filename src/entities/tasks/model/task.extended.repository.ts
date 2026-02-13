@@ -1,8 +1,8 @@
 import { DbFilter, FetchTasksTypes } from '@shared/lib/types'
 import { FindManyOptions, FindOneOptions, FindOptionsWhere, Repository } from 'typeorm'
 import { TASK_TAKE_ITEMS_COUNT } from '../constants'
-import { Task } from '../types/task'
 import { TaskColumnsShow } from '../types/task-columns-show'
+import { Task } from '../types/task.entity'
 import { TasksFilterModeType } from '../types/tasks-filter-mode-type'
 import { TaskPaging } from '../types/tasks-paging'
 
@@ -92,4 +92,4 @@ export const taskExtendedRepository: TaskExtendedRepository = {
             return this.remove(taskToRemove!)
         }
     }
-} as TaskExtendedRepository
+} as TaskExtendedRepository satisfies TaskExtendedRepository

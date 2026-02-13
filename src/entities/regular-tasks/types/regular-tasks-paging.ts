@@ -1,6 +1,6 @@
 import { Paging } from "@shared/lib/types"
-import { RegularTask } from "./regular-task"
 import { RegularTaskColumnsShow } from "./regular-task-columns-show"
+import { RegularTask } from "./regular-task.entity"
 import { RegularTasksFilterModeType } from "./regular-tasks-filter-mode-type"
 
 

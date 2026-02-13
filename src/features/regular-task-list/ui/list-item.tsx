@@ -1,5 +1,5 @@
 import { dateHelper } from '@/src/shared/lib/helpers'
-import { RegularTask, RegularTaskColumnsShow } from '@entities/regular-tasks'
+import { RegularTaskColumnsShow, RegularTaskModel } from '@entities/regular-tasks'
 import { ModificationType } from '@shared/lib/types'
 import { useAppTheme } from '@shared/theme/hooks'
 import { useState } from 'react'
@@ -10,7 +10,7 @@ import { ListItemInfo } from './list-item-info'
 
 type Props = {
     serialNumber: number
-    item: RegularTask
+    item: RegularTaskModel
     columnsShow: RegularTaskColumnsShow
     onChange: (mode: ModificationType, itemId: number) => void
 }
@@ -93,7 +93,6 @@ export const RegularTaskListItem = ({ serialNumber, item, columnsShow, onChange 
                         period={item.period}
                         periodSize={item.periodSize}
                         beginDate={item.beginDate}
-                        useLastDayFix={item.useLastDayFix}
                         su={item.su}
                         mo={item.mo}
                         tu={item.tu}
@@ -109,6 +108,14 @@ export const RegularTaskListItem = ({ serialNumber, item, columnsShow, onChange 
                             {item.title}
                         </Text>
                     </View>
+                    {!!columnsShow.periodParam && (
+                        <View style={styles.row}>
+                            <Text>
+                                periodParam:
+                                {item.periodParam}{' '}
+                            </Text>
+                        </View>
+                    )}
                     {!!columnsShow.createdAt && (
                         <View style={styles.row}>
                             <Text>

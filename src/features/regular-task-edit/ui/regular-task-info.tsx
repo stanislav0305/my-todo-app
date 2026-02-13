@@ -1,31 +1,15 @@
-import { dateHelper } from "@/src/shared/lib/helpers"
-import { useAppTheme } from "@/src/shared/theme/hooks"
-import { Period } from "@entities/regular-tasks"
-import { AntDesign } from '@expo/vector-icons'
-import { StyleSheet, View } from "react-native"
-import { Text } from 'react-native-paper'
+import { RegularTaskModel } from '@/src/entities/regular-tasks'
+import { dateHelper, weekDayNames } from "@shared/lib/helpers"
+import { AppText, BorderedView } from '@shared/ui'
 
 
 type Props = {
-    period: Period | undefined
-    periodSize: number | undefined
-    beginDate: string | undefined
-    endDate: string | null | undefined
-    useLastDayFix: boolean | undefined
-    su: boolean | undefined
-    mo: boolean | undefined
-    tu: boolean | undefined
-    we: boolean | undefined
-    th: boolean | undefined
-    fr: boolean | undefined
-    sa: boolean | undefined
+    item: RegularTaskModel
 }
 
-export function RegularTaskInfo({ period, periodSize, beginDate, endDate, useLastDayFix,
-    su, mo, tu, we, th, fr, sa
-}: Props) {
-    const appTheme = useAppTheme()
-    const { success } = appTheme.colors
+export function RegularTaskInfo({ item }: Props) {
+    const { period, periodSize, beginDate, endDate,
+        su, mo, tu, we, th, fr, sa } = item
 
     const fromStr = !!beginDate ? dateHelper.dbStrDateToFormattedString(beginDate, 'DD/MM/YYYY') : ''
     const fromDayStr = !!beginDate ? fromStr.substring(0, 2) : ''
@@ -33,26 +17,22 @@ export function RegularTaskInfo({ period, periodSize, beginDate, endDate, useLas
     const toStr = !!endDate ? dateHelper.dbStrDateToFormattedString(endDate.toString(), 'DD/MM/YYYY') : ''
 
     const days = []
-    su && days.push('Sunday')
-    mo && days.push('Monday')
-    tu && days.push('Tuesday')
-    we && days.push('Wednesday')
-    th && days.push('Thursday')
-    fr && days.push('Friday')
-    sa && days.push('Saturday')
+    su && days.push(weekDayNames[0])
+    mo && days.push(weekDayNames[1])
+    tu && days.push(weekDayNames[2])
+    we && days.push(weekDayNames[3])
+    th && days.push(weekDayNames[4])
+    fr && days.push(weekDayNames[5])
+    sa && days.push(weekDayNames[6])
 
     const daysStr = days.length === 0 ? '...' : days.join(', ')
 
     return (
-        <View style={[styles.container, { borderColor: success }]}>
-
-            <Text style={{ color: success }}>
-                <AntDesign
-                    name="info-circle"
-                    size={20}
-                    color={success}
-                />
-                {' '}
+        <BorderedView borderColorType='success'>
+            <AppText
+                textColor='success'
+                iconType='info'
+            >
                 {!!period && period === 'everyDay'
                     && !!periodSize
                     && !!fromStr
@@ -80,7 +60,6 @@ export function RegularTaskInfo({ period, periodSize, beginDate, endDate, useLas
                         <>
                             {`Repeat MONTHLY every ${periodSize} month on ${fromDayStr} date. Starting from ${fromStr}`
                                 + (!!toStr ? ` and ending on ${toStr}.` : '.')
-                                + (!!useLastDayFix ? ` Date well be corrected to last month date if ${fromDayStr} date not exist in current month.` : '')
                             }
                         </>
                     )
@@ -92,19 +71,11 @@ export function RegularTaskInfo({ period, periodSize, beginDate, endDate, useLas
                         <>
                             {`Repeat YEARLY every ${periodSize} year on ${fromDayAndMonthStr}. Starting from ${fromStr}`
                                 + (!!toStr ? ` and ending on ${toStr}.` : '.')
-                                + (!!useLastDayFix ? ` Date well be corrected to last month date if ${fromDayAndMonthStr} date not exist in current year.` : '')
                             }
                         </>
                     )
                 }
-            </Text>
-        </View>
+            </AppText>
+        </BorderedView>
     )
 }
-
-const styles = StyleSheet.create({
-    container: {
-        borderWidth: 1,
-        padding: 5
-    }
-})
