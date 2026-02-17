@@ -1,5 +1,6 @@
 import { dateHelper } from '@shared/lib/helpers'
 import { DbFilter } from '@shared/lib/types'
+import { FindOptionsWhere, IsNull } from 'typeorm'
 import { RegularTaskColumnsShow } from './types/regular-task-columns-show'
 import { Period, RegularTask } from './types/regular-task.entity'
 import { RegularTaskModel } from './types/regular-task.model'
@@ -32,7 +33,8 @@ export const DEFAULT_REGULAR_TASK_PAGING = {
     filter: {
         mode: 'all',
         count: 0,
-        where: undefined,
+        //for view typeorm automatically not add this query part
+        where: { deletedAt: IsNull() } as FindOptionsWhere<RegularTask> | undefined,
     } as DbFilter<RegularTask, RegularTasksFilterModeType>,
     columnsShow: {} as RegularTaskColumnsShow,
     order: { beginDate: 'ASC', time: 'ASC' },

@@ -1,167 +1,23 @@
 import { mapper } from '@entities/regular-tasks/mapper'
 import { dateHelper } from '@shared/lib/helpers'
-import { DbFilter, FetchTasksTypes } from '@shared/lib/types'
-import { FindManyOptions, FindOneOptions, FindOptionsWhere, Repository } from 'typeorm'
-import { REGULAR_TASK_TAKE_ITEMS_COUNT } from '../constants'
-import { RegularTaskColumnsShow } from '../types/regular-task-columns-show'
+import { FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from 'typeorm'
 import { RegularTask } from '../types/regular-task.entity'
 import { RegularTaskModel } from '../types/regular-task.model'
-import { RegularTasksFilterModeType } from '../types/regular-tasks-filter-mode-type'
-import { RegularTaskPaging } from '../types/regular-tasks-paging'
-import { RegularTaskWeekExtendedRepository } from './regular-task-week.extended.repository'
+import type { RegularTaskWeekExtendedRepository } from './regular-task-week.extended.repository'
 
 
 export interface RegularTaskExtendedRepository extends Repository<RegularTask> {
-    mapPagingBefore(paging: RegularTaskPaging, fetchType: FetchTasksTypes, columnsShow: RegularTaskColumnsShow | null,
-        filter: DbFilter<RegularTask, RegularTasksFilterModeType> | null): { paging: RegularTaskPaging, hasNext: boolean }
-    mapPagingAfter(paging: RegularTaskPaging, itemCount: number): RegularTaskPaging
-    fetchRegTasks(weekRep: RegularTaskWeekExtendedRepository, paging: RegularTaskPaging): Promise<[RegularTaskModel[], number]>
     findByPeriod(from: Date, to: Date): Promise<RegularTask[]>
 
     createRegTask(model: RegularTaskModel): Promise<RegularTaskModel>
-    updateRegTask(model: RegularTaskModel): Promise<RegularTaskModel>
-    removeRegTask(id: number, softRemove: boolean): Promise<RegularTask[]>
+    updateRegTask(regularTaskWeekRep: RegularTaskWeekExtendedRepository, model: RegularTaskModel, oldWeekId: number | null | undefined): Promise<RegularTaskModel>
+    softRemoveRegTask(id: number): Promise<RegularTask>
+    removeRegTask(id: number): Promise<RegularTask>
+    restoreRegTask(id: number): Promise<UpdateResult>
+    findOneRegTask(id: number, withDeleted: boolean | undefined): Promise<RegularTask>
 }
 
 export const regularTaskExtendedRepository: RegularTaskExtendedRepository = {
-    mapPagingBefore(paging: RegularTaskPaging, fetchType: FetchTasksTypes, columnsShow: RegularTaskColumnsShow | null,
-        filter: DbFilter<RegularTask, RegularTasksFilterModeType> | null) {
-        const hasNext = fetchType === 'fetchFromBegin' ? true : paging.hasNext
-        if (!hasNext) {
-            return { paging: paging, hasNext: hasNext }
-        }
-
-        let p = Object.assign({}, paging)
-        p = {
-            ...p,
-            fetchType,
-            filter: filter ?? p.filter,
-            columnsShow: columnsShow ?? p.columnsShow,
-            itemCount: fetchType === 'fetchFromBegin' ? 0 : p.itemCount,
-            skip: fetchType === 'fetchFromBegin' ? 0 : p.skip,
-            hasNext: hasNext,
-            hasPrevious: fetchType === 'fetchFromBegin' ? false : p.hasPrevious,
-        }
-
-        return { paging: p, hasNext: hasNext }
-    },
-    mapPagingAfter(paging: RegularTaskPaging, itemCount: number) {
-        let p = Object.assign({}, paging)
-
-        p.skip = p.skip + REGULAR_TASK_TAKE_ITEMS_COUNT
-        p.itemCount = itemCount
-        p.hasPrevious = p.skip > 0
-        p.hasNext = p.skip < p.itemCount
-
-        return p
-    },
-    async fetchRegTasks(this: Repository<RegularTask>, weekRep: RegularTaskWeekExtendedRepository, paging: RegularTaskPaging): Promise<[RegularTaskModel[], number]> {
-
-        console.log('paging', paging)
-
-
-        const [items] = await this.findAndCount({
-            where: paging.filter.where,
-            withDeleted: paging.filter.withDeleted,
-            order: paging.order,
-            skip: paging.skip,
-            take: paging.take,
-            relations: ['week']
-        } as FindManyOptions<RegularTask>)
-
-
-        //-------------------------------
-        // let queryBuilder = this.createQueryBuilder('regularTasks')
-
-        // paging.filter.withDeleted && queryBuilder.withDeleted()
-
-        //queryBuilder.where(paging.filter.where)
-        //.where('table.id = :id', { id: 'some-id' })
-        /*  const items = await queryBuilder.leftJoin(
-              'regularTasks.week',
-              'regularTasksWeek',
-              ` regularTasksWeek.suRegularTaskId = regularTasks.id 
-      OR regularTasksWeek.moRegularTaskId = regularTasks.id 
-      OR regularTasksWeek.tuRegularTaskId = regularTasks.id 
-      OR regularTasksWeek.weRegularTaskId = regularTasks.id 
-      OR regularTasksWeek.thRegularTaskId = regularTasks.id 
-      OR regularTasksWeek.frRegularTaskId = regularTasks.id 
-      OR regularTasksWeek.saRegularTaskId = regularTasks.id 
-              )`
-          )
-              .getMany() */
-        //   queryBuilder.leftJoinAndSelect('regularTasks.week', 'regularTasksWeek')
-
-
-        // this removes all ".deletedAt IS NULL" conditions, so that soft-deleted relations will also be included in the response
-        /* queryBuilder.expressionMap.joinAttributes
-             .filter(
-                 ({ condition }) =>
-                     condition && /.+\.deletedAt IS NULL/gi.test(condition),
-             )
-             .forEach((joinAttribute: JoinAttribute) => {
-                 joinAttribute.condition = undefined
-             })
- */
-
-        //GROUP BY WEEK
-
-        // this.createQueryBuilder('')
-        //.where("user.name = :name", { name: "Timber" })
-        //.getManyAndCount()
-        /*  const week = items.find(item => item.period === 'everyWeek')
-          console.log('week', week)
-  
-          const groupedItems: RegularTask[] = []
-          let m = Map.groupBy<number | undefined, RegularTask>(items, item => item.week?.id)
-          console.log('MMMMMMMMMMMMMMM', m)
-  
-          m.forEach((value: RegularTask[], key: number | undefined) => {
-              if (typeof key !== 'undefined')
-                  groupedItems.push(value[0])
-              else
-                  groupedItems.push(...value)
-          })
-  
-          const models = groupedItems.map(item => {
-              return mapper.mapToModel(item)
-          }) */
-
-        //   const items = await queryBuilder.getMany()
-        //-------------------------------
-        /*
-        const items = await this.query<RegularTask[]>(`
-            SELECT regularTasks.*,
-            regularTasksWeek.id as "week.id"
-            FROM regularTasks 
-            LEFT JOIN regularTasksWeek
-            ON   regularTasksWeek.suRegularTaskId = regularTasks.id 
-                OR regularTasksWeek.moRegularTaskId = regularTasks.id 
-                OR regularTasksWeek.tuRegularTaskId = regularTasks.id 
-                OR regularTasksWeek.weRegularTaskId = regularTasks.id 
-                OR regularTasksWeek.thRegularTaskId = regularTasks.id 
-                OR regularTasksWeek.frRegularTaskId = regularTasks.id 
-                OR regularTasksWeek.saRegularTaskId = regularTasks.id 
-        `)
-*/
-
-
-        // console.log('-------------------------')
-        // console.log('ZZZZZZZZZZZZ items:', JSON.stringify(items))
-
-        const models = items.map(item => {
-            return mapper.mapToModel(item)
-        })
-        //  console.log('-------------------------')
-        //  console.log('ZZZZZZZZZZZZ models:', JSON.stringify(models))
-
-        //  const w = await weekRep.findOneRegTaskWeek(1, true)
-        //   console.log('ZZZZZZZZZZZZ w', w)
-        ////  console.log('ZZZZZZZZZZZZ w.id', w.id)
-
-        const result: [RegularTaskModel[], number] = [models, models.length]
-        return result
-    },
     findByPeriod(this: Repository<RegularTask>, from: Date, to: Date): Promise<RegularTask[]> {
         /*
         const { regularTaskRep } = { ...this.props }
@@ -316,28 +172,53 @@ export const regularTaskExtendedRepository: RegularTaskExtendedRepository = {
     async createRegTask(model: RegularTaskModel): Promise<RegularTaskModel> {
         const rt = mapper.mapToEntity({ model })
         const result = await this.save(rt)
-
         return mapper.mapToModel(result)
     },
 
-    async updateRegTask(model: RegularTaskModel): Promise<RegularTaskModel> {
-        let rt = (await this.findOneBy({ id: model.id }))!
+    async updateRegTask(regularTaskWeekRep: RegularTaskWeekExtendedRepository, model: RegularTaskModel,
+        oldWeekId: number | null | undefined): Promise<RegularTaskModel> {
+        //can't update soft deleted
+        let result: RegularTaskModel
 
-        rt = mapper.mapToEntity({ model, rt })
-        const result = await this.save(rt)
+        if (!!oldWeekId) {
+            //convert week regular task to daily, monthly or yearly regular task 
+            await regularTaskWeekRep.removeRegTaskWeek(oldWeekId)
+            result = await this.createRegTask(model)
+        } else {
+            //update daily, monthly and yearly regular task
+            let rt = (await this.findOne({ where: { id: model.id }, withDeleted: false }))!
 
-        return mapper.mapToModel(result)
-    },
-    async removeRegTask(id: number, softRemove: boolean): Promise<RegularTask[]> {
-        const taskToRemove = await this.find({
-            where: { id } as FindOptionsWhere<RegularTask>,
-            withDeleted: softRemove ? undefined : true,
-        } as FindOneOptions<RegularTask>)
-
-        const result = softRemove
-            ? await this.softRemove(taskToRemove)
-            : await this.remove(taskToRemove)
+            rt = mapper.mapToEntity({ model, rt })
+            rt = await this.save(rt)
+            result = mapper.mapToModel(rt)
+        }
 
         return result
     },
+
+    async softRemoveRegTask(id: number): Promise<RegularTask> {
+        //can remove only not soft deleted
+        const taskToRemove = await this.findOneRegTask(id, false)
+        return await this.softRemove(taskToRemove)
+    },
+
+    async removeRegTask(id: number): Promise<RegularTask> {
+        //can remove soft deleted and not
+        const taskToRemove = await this.findOneRegTask(id, true)
+        return await this.remove(taskToRemove)
+    },
+
+    async restoreRegTask(id: number): Promise<UpdateResult> {
+        return await this.restore(id)
+    },
+
+    async findOneRegTask(id: number, withDeleted: boolean | undefined): Promise<RegularTask> {
+        const rt = (await this.findOne({
+            where: { id } as FindOptionsWhere<RegularTask>,
+            withDeleted: withDeleted,
+            relations: { week: true },
+        } as FindOneOptions<RegularTask>))!
+
+        return rt
+    }
 } as RegularTaskExtendedRepository satisfies RegularTaskExtendedRepository

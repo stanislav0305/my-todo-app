@@ -8,6 +8,7 @@ export class RegularTaskModel {
     period: Period
     periodParam: string
     periodSize: number
+    weekDay: number | null
     title: string
     isImportant: boolean
     isUrgent: boolean
@@ -16,7 +17,7 @@ export class RegularTaskModel {
     updateAt: string
     deletedAt: string | null
 
-    regularTaskWeekId?: number | undefined
+    weekId?: number | null | undefined
     su: boolean
     mo: boolean
     tu: boolean

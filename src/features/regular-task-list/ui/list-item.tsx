@@ -1,5 +1,5 @@
-import { dateHelper } from '@/src/shared/lib/helpers'
-import { RegularTaskColumnsShow, RegularTaskModel } from '@entities/regular-tasks'
+import { RegularTaskColumnsShow, RegularTaskModel, RegularTasksFilterModeType } from '@entities/regular-tasks'
+import { dateHelper } from '@shared/lib/helpers'
 import { ModificationType } from '@shared/lib/types'
 import { useAppTheme } from '@shared/theme/hooks'
 import { useState } from 'react'
@@ -9,13 +9,14 @@ import { ListItemInfo } from './list-item-info'
 
 
 type Props = {
+    filterMode: RegularTasksFilterModeType,
     serialNumber: number
     item: RegularTaskModel
     columnsShow: RegularTaskColumnsShow
     onChange: (mode: ModificationType, itemId: number) => void
 }
 
-export const RegularTaskListItem = ({ serialNumber, item, columnsShow, onChange }: Props) => {
+export const RegularTaskListItem = ({ filterMode, serialNumber, item, columnsShow, onChange }: Props) => {
     const appTheme = useAppTheme()
     const { success, danger, primary, blue } = appTheme.colors
 
@@ -122,7 +123,7 @@ export const RegularTaskListItem = ({ serialNumber, item, columnsShow, onChange 
                                 createdAt:
                                 {dateHelper.dbStrDateToFormattedString(
                                     item.createdAt,
-                                    'DD/MM/YYYY hh:mm:ss',
+                                    'DD/MM/YYYY hh:mm:ss'
                                 )}{' '}
                             </Text>
                         </View>
@@ -133,18 +134,18 @@ export const RegularTaskListItem = ({ serialNumber, item, columnsShow, onChange 
                                 updateAt:
                                 {dateHelper.dbStrDateToFormattedString(
                                     item.updateAt,
-                                    'DD/MM/YYYY hh:mm:ss',
+                                    'DD/MM/YYYY hh:mm:ss'
                                 )}{' '}
                             </Text>
                         </View>
                     )}
-                    {!!columnsShow.deletedAt && !!item.deletedAt && (
+                    {(!!columnsShow.deletedAt && !!item.deletedAt) && (
                         <View style={styles.row}>
                             <Text>
                                 deletedAt:
                                 {dateHelper.dbStrDateToFormattedString(
                                     item.deletedAt,
-                                    'DD/MM/YYYY hh:mm:ss',
+                                    'DD/MM/YYYY hh:mm:ss'
                                 )}{' '}
                             </Text>
                         </View>
@@ -162,15 +163,32 @@ export const RegularTaskListItem = ({ serialNumber, item, columnsShow, onChange 
                                 onPress={openMenu}
                             />
                         }>
-                        <Menu.Item
-                            title='edit'
-                            leadingIcon='pencil'
-                            onPress={() => {
-                                onChange('edit', item.id)
-                                closeMenu()
-                            }}
-                        />
-                        <Divider style={styles.divider} />
+                        {!!(filterMode !== 'inTrash') && (
+                            <>
+                                <Menu.Item
+                                    title='edit'
+                                    leadingIcon='pencil'
+                                    onPress={() => {
+                                        onChange('edit', item.id)
+                                        closeMenu()
+                                    }}
+                                />
+                                <Divider style={styles.divider} />
+                            </>
+                        )}
+                        {!!(filterMode === 'inTrash') && (
+                            <>
+                                <Menu.Item
+                                    title='restore'
+                                    leadingIcon='delete-restore'
+                                    onPress={() => {
+                                        onChange('restore', item.id)
+                                        closeMenu()
+                                    }}
+                                />
+                                <Divider style={styles.divider} />
+                            </>
+                        )}
                         <Menu.Item
                             title={!!item.deletedAt ? 'remove' : 'move to trash'}
                             leadingIcon={!!item.deletedAt ? 'close-thick' : 'trash-can'}
@@ -182,7 +200,7 @@ export const RegularTaskListItem = ({ serialNumber, item, columnsShow, onChange 
                     </Menu>
                 </View>
             </View>
-        </View >
+        </View>
     )
 }
 

@@ -1,10 +1,14 @@
+import { RestoreFormModal } from '@/src/shared/ui/restore-form-modal'
 import {
     createRegTask, createRegTaskWeek, DEFAULT_REGULAR_TASK_MODEL, fetchRegTasks, filterModes,
+    recoverRegTaskWeek,
     RegularTask, RegularTaskColumnsShow,
     RegularTaskModel, RegularTaskPaging, RegularTasksFilterModeType,
-    removeRegTask, removeRegTaskWeek, setRegPaging, updateRegTask,
+    removeRegTask, removeRegTaskWeek, restoreRegTask,
+    setRegPaging, updateRegTask,
     updateRegTaskWeek
 } from '@entities/regular-tasks'
+import { RegularTaskViewExtendedRepository } from '@entities/regular-tasks/model/regular-task-view.extended.repository'
 import { RegularTaskWeekExtendedRepository } from '@entities/regular-tasks/model/regular-task-week.extended.repository'
 import { RegularTaskExtendedRepository } from '@entities/regular-tasks/model/regular-task.extended.repository'
 import { AppDispatchType } from '@shared/lib/hooks'
@@ -33,6 +37,7 @@ type StateType = {
 type PropsType = {
     appTheme: AppTheme
     regularTaskRep: RegularTaskExtendedRepository
+    regularTaskViewRep: RegularTaskViewExtendedRepository
     regularTaskWeekRep: RegularTaskWeekExtendedRepository
     dispatch: AppDispatchType
     paging: RegularTaskPaging
@@ -81,7 +86,7 @@ class RegularTaskListComponent extends Component<PropsType, StateType> {
     ) => {
         console.log(`fetchMore... fetchType:${fetchType}`)
 
-        const { regularTaskRep, regularTaskWeekRep, dispatch, paging } = { ...this.props }
+        const { regularTaskViewRep, regularTaskWeekRep, dispatch, paging } = { ...this.props }
         const { isLoading } = { ...this.state }
         const newHasNext = fetchType === 'fetchFromBegin' ? true : paging.hasNext
 
@@ -100,7 +105,7 @@ class RegularTaskListComponent extends Component<PropsType, StateType> {
         const timeout = window.setTimeout(async () => {
             dispatch(
                 await fetchRegTasks({
-                    regularTaskRep: regularTaskRep,
+                    regularTaskViewRep: regularTaskViewRep,
                     weekRep: regularTaskWeekRep,
                     paging,
                     fetchType,
@@ -139,13 +144,15 @@ class RegularTaskListComponent extends Component<PropsType, StateType> {
         this.fetchMore('fetchNext')
     };
 
-    onSaveTask = async (model: RegularTaskModel, withListReload: boolean) => {
+    onSaveRegTask = async (model: RegularTaskModel, withListReload: boolean) => {
         const { regularTaskRep, regularTaskWeekRep, dispatch } = { ...this.props }
+        const { item } = { ...this.state }
+        const oldWeekId = item.weekId
 
         const promise = !!model.id
             ? model.period === 'everyWeek'
-                ? dispatch(updateRegTaskWeek({ regularTaskWeekRep, model }))
-                : dispatch(updateRegTask({ regularTaskRep, model }))
+                ? dispatch(updateRegTaskWeek({ regularTaskWeekRep, regularTaskRep, model, oldWeekId }))
+                : dispatch(updateRegTask({ regularTaskRep, regularTaskWeekRep, model, oldWeekId }))
             : model.period === 'everyWeek'
                 ? dispatch(createRegTaskWeek({ regularTaskWeekRep, model }))
                 : dispatch(createRegTask({ regularTaskRep, model }))
@@ -156,19 +163,32 @@ class RegularTaskListComponent extends Component<PropsType, StateType> {
         })
     };
 
-    onDeleteTask = (id: number) => {
+    onDeleteRegTask = (id: number) => {
         const { regularTaskRep, regularTaskWeekRep, dispatch } = { ...this.props }
         const { item, mode } = { ...this.state }
 
         const promise = item.period === 'everyWeek'
             ? dispatch(removeRegTaskWeek({
-                regularTaskWeekRep, id: item.regularTaskWeekId!,
+                regularTaskWeekRep, id: item.weekId!,
                 softRemove: mode === 'softRemove'
             }))
             : dispatch(removeRegTask({
                 regularTaskRep: regularTaskRep, id,
                 softRemove: mode === 'softRemove'
             }))
+
+        promise.then(async () => {
+            this.changeMode()
+        })
+    };
+
+    onRestoreRegTask = (id: number) => {
+        const { regularTaskRep, regularTaskWeekRep, dispatch } = { ...this.props }
+        const { item } = { ...this.state }
+
+        const promise = item.period === 'everyWeek'
+            ? dispatch(recoverRegTaskWeek({ regularTaskWeekRep, id: item.weekId! }))
+            : dispatch(restoreRegTask({ regularTaskRep: regularTaskRep, id }))
 
         promise.then(async () => {
             this.changeMode()
@@ -198,6 +218,7 @@ class RegularTaskListComponent extends Component<PropsType, StateType> {
 
         return (
             <RegularTaskListItem
+                filterMode={paging.filter.mode}
                 serialNumber={itemInfo.index}
                 item={itemInfo.item}
                 columnsShow={paging.columnsShow}
@@ -275,25 +296,37 @@ class RegularTaskListComponent extends Component<PropsType, StateType> {
                 {mode === 'edit' &&
                     <RegularTaskEditFormModal
                         item={item}
-                        onChangeItem={this.onSaveTask}
+                        onChangeItem={this.onSaveRegTask}
                         onClose={this.changeMode}
                     />
                 }
                 {(mode === 'softRemove' || mode === 'remove') &&
                     <RemoveFormModal
-                        itemId={item.id}
+                        itemId={item.period === 'everyWeek' ? item.weekId! : item.id}
                         softRemove={mode === 'softRemove'}
                         questionText={
                             (mode === 'softRemove')
                                 ? item.period === 'everyWeek'
-                                    ? `Do you really want to move to trash regular task week '${item.title}' by id '${item.regularTaskWeekId}'?`
+                                    ? `Do you really want to move to trash regular task week '${item.title}' by weekId '${item.weekId}'?`
                                     : `Do you really want to move to trash regular task '${item.title}' by id '${item.id}'?`
 
                                 : item.period === 'everyWeek'
-                                    ? `Do you really want to delete regular task week '${item.title}' by id '${item.regularTaskWeekId}'?`
+                                    ? `Do you really want to delete regular task week '${item.title}' by weekId '${item.weekId}'?`
                                     : `Do you really want to delete regular task '${item.title}' by id '${item.id}'?`
                         }
-                        onDelete={this.onDeleteTask}
+                        onDelete={this.onDeleteRegTask}
+                        onClose={this.changeMode}
+                    />
+                }
+                {(mode === 'restore') &&
+                    <RestoreFormModal
+                        itemId={item.period === 'everyWeek' ? item.weekId! : item.id}
+                        questionText={
+                            item.period === 'everyWeek'
+                                ? `Do you really want to restore regular task week '${item.title}' by weekId '${item.weekId}'?`
+                                : `Do you really want to restore regular task '${item.title}' by id '${item.id}'?`
+                        }
+                        onRestore={this.onRestoreRegTask}
                         onClose={this.changeMode}
                     />
                 }
@@ -332,6 +365,7 @@ const mapDispatchToProps = (dispatch: AppDispatchType) => {
 
 type ownPropsType = {
     regularTaskRep: RegularTaskExtendedRepository
+    regularTaskViewRep: RegularTaskViewExtendedRepository
     regularTaskWeekRep: RegularTaskWeekExtendedRepository
 }
 

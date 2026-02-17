@@ -5,6 +5,7 @@ export * from './model/select-regular-tasks'
 
 //types
 export * from './types/regular-task-columns-show'
+export * from './types/regular-task-view.entity'
 export * from './types/regular-task-week.entity'
 export * from './types/regular-task.entity'
 export * from './types/regular-task.model'
@@ -15,3 +16,4 @@ export * from './types/regular-tasks-state'
 
 //constants
 export * from './constants'
+

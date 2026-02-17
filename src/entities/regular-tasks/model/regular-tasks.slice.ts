@@ -7,6 +7,7 @@ import { RegularTask } from '../types/regular-task.entity'
 import { RegularTaskModel } from '../types/regular-task.model'
 import { RegularTasksFilterModeType } from '../types/regular-tasks-filter-mode-type'
 import { RegularTaskPaging } from '../types/regular-tasks-paging'
+import { RegularTaskViewExtendedRepository } from './regular-task-view.extended.repository'
 import { RegularTaskWeekExtendedRepository } from './regular-task-week.extended.repository'
 import { RegularTaskExtendedRepository } from './regular-task.extended.repository'
 
@@ -80,22 +81,22 @@ export const regularTasksReducers = regularTasksSlice.reducer
 
 const fetchRegTasks = createAsyncThunk(
     'regularTasks/fetch',
-    async ({ regularTaskRep, weekRep, paging, fetchType, columnsShow, filter, }: {
-        regularTaskRep: RegularTaskExtendedRepository, weekRep: RegularTaskWeekExtendedRepository, paging: RegularTaskPaging, fetchType: FetchTasksTypes,
+    async ({ regularTaskViewRep, weekRep, paging, fetchType, columnsShow, filter, }: {
+        regularTaskViewRep: RegularTaskViewExtendedRepository, weekRep: RegularTaskWeekExtendedRepository, paging: RegularTaskPaging, fetchType: FetchTasksTypes,
         columnsShow: RegularTaskColumnsShow | null, filter: DbFilter<RegularTask, RegularTasksFilterModeType> | null
     }, thunkApi) => {
         console.log('regularTasks/fetch...')
 
-        const mp = regularTaskRep.mapPagingBefore(paging, fetchType, columnsShow, filter)
+        const mp = regularTaskViewRep.mapPagingBefore(paging, fetchType, columnsShow, filter)
         if (!mp.hasNext) {
             console.log(`regularTasks/fetch stopped (hasNext:${mp.hasNext})`)
             return
         }
 
-        const [models, modelCount] = await regularTaskRep.fetchRegTasks(weekRep, mp.paging)
+        const [models, modelCount] = await regularTaskViewRep.fetchRegTasks(weekRep, mp.paging)
 
 
-        const newP = regularTaskRep.mapPagingAfter(mp.paging, modelCount)
+        const newP = regularTaskViewRep.mapPagingAfter(mp.paging, modelCount)
 
         if (newP.fetchType === 'fetchFromBegin')
             thunkApi.dispatch(setRegTasks({ regularTasks: models, paging: newP }))
@@ -118,8 +119,8 @@ const createRegTask = createAsyncThunk(
 
 const updateRegTask = createAsyncThunk(
     'regularTasks/updateRegTask',
-    async ({ regularTaskRep, model }: { regularTaskRep: RegularTaskExtendedRepository, model: RegularTaskModel }, thunkApi) => {
-        const m = await regularTaskRep.updateRegTask(model)
+    async ({ regularTaskRep, regularTaskWeekRep, model, oldWeekId }: { regularTaskRep: RegularTaskExtendedRepository, regularTaskWeekRep: RegularTaskWeekExtendedRepository, model: RegularTaskModel, oldWeekId: number | null | undefined }, thunkApi) => {
+        const m = await regularTaskRep.updateRegTask(regularTaskWeekRep, model, oldWeekId)
         thunkApi.dispatch(update(m))
     },
 )
@@ -127,12 +128,23 @@ const updateRegTask = createAsyncThunk(
 const removeRegTask = createAsyncThunk(
     'regularTasks/removeRegTask',
     async ({ regularTaskRep, id, softRemove }: { regularTaskRep: RegularTaskExtendedRepository, id: number, softRemove: boolean }, thunkApi) => {
-        await regularTaskRep.removeRegTask(id, softRemove)
+        softRemove
+            ? await regularTaskRep.softRemoveRegTask(id)
+            : await regularTaskRep.removeRegTask(id)
+
         thunkApi.dispatch(remove(id))
     },
 )
 
-export { createRegTask, fetchRegTasks, removeRegTask, updateRegTask }
+const restoreRegTask = createAsyncThunk(
+    'regularTasks/restoreRegTask',
+    async ({ regularTaskRep, id }: { regularTaskRep: RegularTaskExtendedRepository, id: number }, thunkApi) => {
+        await regularTaskRep.restoreRegTask(id)
+        thunkApi.dispatch(remove(id))
+    },
+)
+
+export { createRegTask, fetchRegTasks, removeRegTask, restoreRegTask, updateRegTask }
 
 //--------------------------------------------------------
 
@@ -145,18 +157,31 @@ const createRegTaskWeek = createAsyncThunk(
 
 const updateRegTaskWeek = createAsyncThunk(
     'regularTasksWeek/updateRegTask',
-    async ({ regularTaskWeekRep, model }: { regularTaskWeekRep: RegularTaskWeekExtendedRepository, model: RegularTaskModel }, thunkApi) => {
-        await regularTaskWeekRep.updateRegTaskWeek(model)
+    async ({ regularTaskWeekRep, regularTaskRep, model, oldWeekId }: { regularTaskWeekRep: RegularTaskWeekExtendedRepository, regularTaskRep: RegularTaskExtendedRepository, model: RegularTaskModel, oldWeekId: number | null | undefined }, thunkApi) => {
+        await regularTaskWeekRep.updateRegTaskWeek(regularTaskRep, model, oldWeekId)
     },
 )
 
 const removeRegTaskWeek = createAsyncThunk(
     'regularTasksWeek/removeRegTask',
     async ({ regularTaskWeekRep, id, softRemove }: { regularTaskWeekRep: RegularTaskWeekExtendedRepository, id: number, softRemove: boolean }, thunkApi) => {
-        const [, regTaskIds] = await regularTaskWeekRep.removeRegTaskWeek(id, softRemove)
+
+        const [, regTaskIds] = softRemove
+            ? await regularTaskWeekRep.softRemoveRegTaskWeek(id)
+            : await regularTaskWeekRep.removeRegTaskWeek(id)
+
         thunkApi.dispatch(removeMany(regTaskIds))
     },
 )
 
-export { createRegTaskWeek, removeRegTaskWeek, updateRegTaskWeek }
+const recoverRegTaskWeek = createAsyncThunk(
+    'regularTasks/recoverRegTask',
+    async ({ regularTaskWeekRep, id }: { regularTaskWeekRep: RegularTaskWeekExtendedRepository, id: number }, thunkApi) => {
+        const [, regTaskIds] = await regularTaskWeekRep.recoverRegTaskWeek(id)
+
+        thunkApi.dispatch(removeMany(regTaskIds))
+    },
+)
+
+export { createRegTaskWeek, recoverRegTaskWeek, removeRegTaskWeek, updateRegTaskWeek }
 

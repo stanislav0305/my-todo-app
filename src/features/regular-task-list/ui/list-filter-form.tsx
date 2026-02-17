@@ -107,6 +107,9 @@ function convertToDbFilter(filter: RegularTasksFilter): DbFilter<RegularTask, Re
 
     if (filter.withDeleted === true) {
         newFilterElements['deletedAt'] = Not(IsNull())
+    } else {
+        //for view typeorm automatically not add this query part
+        newFilterElements['deletedAt'] = IsNull()
     }
 
     if (Object.keys(newFilterElements ?? {}).length > 0)
@@ -140,8 +143,7 @@ function onChangeFilterMode(
         }
         case 'today': {
             const date = new Date()
-
-            formik.setValues({
+            const values = {
                 ...formik.values,
                 mode: item.value as RegularTasksFilterModeType,
                 withDeleted: false,
@@ -155,7 +157,9 @@ function onChangeFilterMode(
                 ),
                 endDate0: undefined,
                 endDate1: undefined,
-            })
+            }
+
+            formik.setValues(values)
             break
         }
         case 'byPeriod': {
@@ -282,7 +286,7 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
                 <View style={sharedStyles.col}>
                     <Text variant='bodyMedium' style={{ marginLeft: 5 }}>From begin date</Text>
                     <AppDatePickerSingleModal
-                        date={formik.values.beginDate0 as CalendarDate}
+                        date={calendarDateHelper.toCalendarDate(formik.values.beginDate0)}
                         onConfirm={(params: { date: CalendarDate }) => {
                             formik.setFieldValue('beginDate0', calendarDateHelper.toFormattedStringOrEmpty(params.date, 'YYYY-MM-DD'))
                         }}
@@ -293,7 +297,7 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
                 <View style={sharedStyles.col}>
                     <Text variant='bodyMedium' style={{ marginLeft: 5 }}>To begin date</Text>
                     <AppDatePickerSingleModal
-                        date={formik.values.beginDate1 as CalendarDate}
+                        date={calendarDateHelper.toCalendarDate(formik.values.beginDate1)}
                         onConfirm={(params: { date: CalendarDate }) => {
                             formik.setFieldValue('beginDate1', calendarDateHelper.toFormattedStringOrEmpty(params.date, 'YYYY-MM-DD'))
                         }}
@@ -307,7 +311,7 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
                 <View style={sharedStyles.col}>
                     <Text variant='bodyMedium' style={{ marginLeft: 5 }}>From end date</Text>
                     <AppDatePickerSingleModal
-                        date={formik.values.endDate0 as CalendarDate}
+                        date={calendarDateHelper.toCalendarDate(formik.values.endDate0)}
                         onConfirm={(params: { date: CalendarDate }) => {
                             formik.setFieldValue('endDate0', calendarDateHelper.toFormattedStringOrEmpty(params.date, 'YYYY-MM-DD'))
                         }}
@@ -318,7 +322,7 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
                 <View style={sharedStyles.col}>
                     <Text variant='bodyMedium' style={{ marginLeft: 5 }}>To end date</Text>
                     <AppDatePickerSingleModal
-                        date={formik.values.endDate1 as CalendarDate}
+                        date={calendarDateHelper.toCalendarDate(formik.values.endDate1)}
                         onConfirm={(params: { date: CalendarDate }) => {
                             formik.setFieldValue('endDate1', calendarDateHelper.toFormattedStringOrEmpty(params.date, 'YYYY-MM-DD'))
                         }}

@@ -1,4 +1,5 @@
-import { Period, RegularTask, RegularTaskModel, RegularTaskWeek } from '@entities/regular-tasks'
+import { Period, RegularTask, RegularTaskModel, RegularTaskView } from '@entities/regular-tasks'
+
 
 function calcPeriodParam(period: Period, periodSize: number, beginDate?: string, dayOfWeekNum?: number): string {
     switch (period) {
@@ -21,6 +22,8 @@ function calcPeriodParam(period: Period, periodSize: number, beginDate?: string,
 
 export const mapper = {
     mapToModel(item: RegularTask): RegularTaskModel {
+        const weekDays = item.week?.weekDays
+
         return {
             id: item.id,
             time: item.time,
@@ -30,62 +33,80 @@ export const mapper = {
             periodParam: item.periodParam,
             periodSize: item.periodSize,
             title: item.title,
+            weekDay: item.weekDay,
             isImportant: item.isImportant,
             isUrgent: item.isUrgent,
             createdAt: item.createdAt,
             updateAt: item.updateAt,
             deletedAt: item.deletedAt,
-            regularTaskWeekId: item.week?.id,
-            su: item.week?.suRegularTaskId == null, //number | undefined | null,
-            mo: item.week?.moRegularTaskId == null, //number | undefined | null,
-            tu: item.week?.tuRegularTaskId == null, //number | undefined | null,
-            we: item.week?.weRegularTaskId == null, //number | undefined | null,
-            th: item.week?.thRegularTaskId == null, //number | undefined | null,
-            fr: item.week?.frRegularTaskId == null, //number | undefined | null,
-            sa: item.week?.saRegularTaskId == null, //number | undefined | null
+            weekId: item.week?.id,
+            su: !!weekDays ? weekDays.findIndex(i => i.weekDay === 0) >= 0 : false,
+            mo: !!weekDays ? weekDays.findIndex(i => i.weekDay === 1) >= 0 : false,
+            tu: !!weekDays ? weekDays.findIndex(i => i.weekDay === 2) >= 0 : false,
+            we: !!weekDays ? weekDays.findIndex(i => i.weekDay === 3) >= 0 : false,
+            th: !!weekDays ? weekDays.findIndex(i => i.weekDay === 4) >= 0 : false,
+            fr: !!weekDays ? weekDays.findIndex(i => i.weekDay === 5) >= 0 : false,
+            sa: !!weekDays ? weekDays.findIndex(i => i.weekDay === 6) >= 0 : false,
         } satisfies RegularTaskModel as RegularTaskModel
     },
-    mapToEntity(params: { model: RegularTaskModel, rt?: RegularTask, weekDay?: number }): RegularTask {
-        let rt = params.rt ?? new RegularTask()
-        const { model, weekDay } = params
+    mapRegTaskViewToModel(item: RegularTaskView): RegularTaskModel {
+        return {
+            id: item.id,
+            time: item.time,
+            beginDate: item.beginDate,
+            endDate: item.endDate,
+            period: item.period,
+            periodParam: item.periodParam,
+            periodSize: item.periodSize,
+            title: item.title,
+            weekDay: null,
+            isImportant: item.isImportant,
+            isUrgent: item.isUrgent,
+            createdAt: item.createdAt,
+            updateAt: item.updateAt,
+            deletedAt: item.deletedAt,
+            weekId: item.weekId,
+            su: item.su,
+            mo: item.mo,
+            tu: item.tu,
+            we: item.we,
+            th: item.th,
+            fr: item.fr,
+            sa: item.sa,
+        } satisfies RegularTaskModel as RegularTaskModel
+    },
+    mapToEntity(params: { model: RegularTaskModel, rt?: RegularTask }): RegularTask {
+        const { model } = params
+        let { rt } = params
+        rt = rt ?? new RegularTask()
 
         rt = {
             ...rt,
             ...model,
             id: rt.id,
+            weekId: model.period === 'everyWeek' ? model.weekId : null, //if not week then clear weekId
+            weekDay: model.period === 'everyWeek' ? model.weekDay : null, //if not week then clear weekDay
             periodParam: model.period === 'everyWeek'
-                ? calcPeriodParam(model.period, model.periodSize, model.beginDate, weekDay)
+                ? calcPeriodParam(model.period, model.periodSize, model.beginDate, model.weekDay!)
                 : calcPeriodParam(model.period, model.periodSize),
         } as RegularTask
 
         return rt
     },
-    mapToEntityWeekDay(weekDayIsActive: boolean, weekDay: number, model: RegularTaskModel, rt: RegularTask | null): RegularTask | null {
-        //need to remove
-        let entity: RegularTask | null = null
+    mapToEntityWeekDay(weekDayIsActive: boolean, weekDay: number, model: RegularTaskModel, oldWeekDays: RegularTask[],
+        newWeekDays: RegularTask[]): RegularTask[] {
+        const rt = oldWeekDays.find(i => i.weekDay === weekDay) ?? null
 
         if (!!weekDayIsActive && !!rt) {
             //need to update
-            entity = mapper.mapToEntity({ model, rt, weekDay })
+            newWeekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: weekDay }, rt }))
         }
         else if (!!weekDayIsActive && rt === null) {
             //need to create
-            entity = mapper.mapToEntity({ model, weekDay })
+            newWeekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: weekDay } }))
         }
+        //else need to remove, and its well be skipped
 
-        return entity
-    },
-    mapToIds(rtw: RegularTaskWeek): number[] {
-        let regTaskIds: number[] = []
-
-        !!rtw.su && regTaskIds.push(rtw.su.id)
-        !!rtw.mo && regTaskIds.push(rtw.mo.id)
-        !!rtw.tu && regTaskIds.push(rtw.tu.id)
-        !!rtw.we && regTaskIds.push(rtw.we.id)
-        !!rtw.th && regTaskIds.push(rtw.th.id)
-        !!rtw.fr && regTaskIds.push(rtw.fr.id)
-        !!rtw.sa && regTaskIds.push(rtw.sa.id)
-
-        return regTaskIds
+        return newWeekDays
     },
 }

@@ -1,70 +1,105 @@
 import { mapper } from '@entities/regular-tasks/mapper'
 import { FindOneOptions, FindOptionsWhere, Repository } from 'typeorm'
 import { RegularTaskWeek } from '../types/regular-task-week.entity'
+import { RegularTask } from '../types/regular-task.entity'
 import { RegularTaskModel } from '../types/regular-task.model'
+import type { RegularTaskExtendedRepository } from './regular-task.extended.repository'
 
 
 export interface RegularTaskWeekExtendedRepository extends Repository<RegularTaskWeek> {
     createRegTaskWeek(model: RegularTaskModel): Promise<RegularTaskWeek>
-    updateRegTaskWeek(model: RegularTaskModel): Promise<RegularTaskWeek>
-    removeRegTaskWeek(id: number, softRemove: boolean): Promise<[RegularTaskWeek, number[]]>
-    findOneRegTaskWeek(id: number, withDeleted: boolean): Promise<RegularTaskWeek>
+    updateRegTaskWeek(regularTaskRep: RegularTaskExtendedRepository, model: RegularTaskModel, oldWeekId: number | null | undefined): Promise<RegularTaskWeek>
+    softRemoveRegTaskWeek(id: number): Promise<[RegularTaskWeek, number[]]>
+    removeRegTaskWeek(id: number): Promise<[RegularTaskWeek, number[]]>
+    recoverRegTaskWeek(id: number): Promise<[RegularTaskWeek, number[]]>
+    findOneRegTaskWeek(id: number, withDeleted: boolean | undefined): Promise<RegularTaskWeek | null>
 }
 
 export const regularTaskWeekExtendedRepository: RegularTaskWeekExtendedRepository = {
     async createRegTaskWeek(model: RegularTaskModel): Promise<RegularTaskWeek> {
+        let rtw = this.create()
+        rtw.weekDays = []
+        model.su && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 0 } }))
+        model.mo && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 1 } }))
+        model.tu && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 2 } }))
+        model.we && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 3 } }))
+        model.th && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 4 } }))
+        model.fr && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 5 } }))
+        model.sa && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 6 } }))
 
-        let rtw = new RegularTaskWeek()
-        rtw = {
-            su: model.su ? mapper.mapToEntity({ model, weekDay: 0 }) : null,
-            mo: model.mo ? mapper.mapToEntity({ model, weekDay: 1 }) : null,
-            tu: model.tu ? mapper.mapToEntity({ model, weekDay: 2 }) : null,
-            we: model.we ? mapper.mapToEntity({ model, weekDay: 3 }) : null,
-            th: model.th ? mapper.mapToEntity({ model, weekDay: 4 }) : null,
-            fr: model.fr ? mapper.mapToEntity({ model, weekDay: 5 }) : null,
-            sa: model.sa ? mapper.mapToEntity({ model, weekDay: 6 }) : null
-        } as RegularTaskWeek
-
-        return await this.save(rtw)
+        return await this.save(rtw, { transaction: true })
     },
-    async updateRegTaskWeek(model: RegularTaskModel): Promise<RegularTaskWeek> {
-        let rtw = await this.findOneRegTaskWeek(model.regularTaskWeekId!, false)
+    async updateRegTaskWeek(regularTaskRep: RegularTaskExtendedRepository, model: RegularTaskModel,
+        oldWeekId: number | null | undefined): Promise<RegularTaskWeek> {
+        //can't update soft deleted
+        let result: RegularTaskWeek
 
-        rtw = {
-            ...rtw,
-            su: mapper.mapToEntityWeekDay(model.su, 0, model, rtw.su),
-            mo: mapper.mapToEntityWeekDay(model.mo, 1, model, rtw.mo),
-            tu: mapper.mapToEntityWeekDay(model.tu, 2, model, rtw.tu),
-            we: mapper.mapToEntityWeekDay(model.we, 3, model, rtw.we),
-            th: mapper.mapToEntityWeekDay(model.th, 4, model, rtw.th),
-            fr: mapper.mapToEntityWeekDay(model.fr, 5, model, rtw.fr),
-            sa: mapper.mapToEntityWeekDay(model.sa, 6, model, rtw.sa),
-        } as RegularTaskWeek
+        if (!!oldWeekId) {
+            //update week
+            let rtw = (await this.findOneRegTaskWeek(model.weekId!, false))!
+            const oldWeekDays = [...rtw.weekDays]
 
-        const regTaskWeek = await this.save(rtw)
-        return regTaskWeek
-    },
+            let newWeekDays: RegularTask[] = []
+            newWeekDays = mapper.mapToEntityWeekDay(model.su, 0, model, oldWeekDays, newWeekDays)
+            newWeekDays = mapper.mapToEntityWeekDay(model.mo, 1, model, oldWeekDays, newWeekDays)
+            newWeekDays = mapper.mapToEntityWeekDay(model.tu, 2, model, oldWeekDays, newWeekDays)
+            newWeekDays = mapper.mapToEntityWeekDay(model.we, 3, model, oldWeekDays, newWeekDays)
+            newWeekDays = mapper.mapToEntityWeekDay(model.th, 4, model, oldWeekDays, newWeekDays)
+            newWeekDays = mapper.mapToEntityWeekDay(model.fr, 5, model, oldWeekDays, newWeekDays)
+            newWeekDays = mapper.mapToEntityWeekDay(model.sa, 6, model, oldWeekDays, newWeekDays)
 
-    async removeRegTaskWeek(id: number, softRemove: boolean): Promise<[RegularTaskWeek, number[]]> {
-        const taskToRemove = await this.findOneRegTaskWeek(id, softRemove)
+            rtw.weekDays = newWeekDays
+            result = await this.save(rtw)
+        } else {
+            //convert daily, monthly or yearly regular task to week regular task
+            regularTaskRep.removeRegTask(model.id)
+            result = await this.createRegTaskWeek(model)
+        }
 
-        let regTaskIds: number[] = mapper.mapToIds(taskToRemove)
-
-        const regTaskWeek: RegularTaskWeek = softRemove
-            ? await this.softRemove(taskToRemove!)
-            : await this.remove(taskToRemove!)
-
-        const result: [RegularTaskWeek, number[]] = [regTaskWeek, regTaskIds]
         return result
     },
 
-    async findOneRegTaskWeek(id: number, withDeleted: boolean): Promise<RegularTaskWeek> {
-        const taskToRemove = (await this.findOne({
+    async softRemoveRegTaskWeek(id: number): Promise<[RegularTaskWeek, number[]]> {
+        //can remove only not soft deleted
+        const taskToRemove = (await this.findOneRegTaskWeek(id, false))!
+        const regTaskIds = taskToRemove.weekDays.map(i => i.id)
+
+        const regTaskWeek = await this.softRemove(taskToRemove!)
+
+        return [regTaskWeek, regTaskIds]
+    },
+
+    async removeRegTaskWeek(id: number): Promise<[RegularTaskWeek, number[]]> {
+        //can remove only soft deleted
+        //need restore week
+        let [taskForRemove, regTaskIds] = await this.recoverRegTaskWeek(id)
+
+        //remove days of week
+        taskForRemove.weekDays = []
+        taskForRemove = await this.save(taskForRemove)
+
+        //remove week
+        const regTaskWeek = await this.remove(taskForRemove)
+        return [regTaskWeek, regTaskIds]
+    },
+
+    async recoverRegTaskWeek(id: number): Promise<[RegularTaskWeek, number[]]> {
+        //can restore soft deleted and not
+        const taskToRemove = (await this.findOneRegTaskWeek(id, true))!
+        const regTaskIds = taskToRemove.weekDays.map(i => i.id)
+
+        const regTaskWeek: RegularTaskWeek = await this.recover(taskToRemove)
+
+        return [regTaskWeek, regTaskIds]
+    },
+
+    async findOneRegTaskWeek(id: number, withDeleted: boolean | undefined): Promise<RegularTaskWeek | null> {
+        const rtw = await this.findOne({
             where: { id } as FindOptionsWhere<RegularTaskWeek>,
             withDeleted: withDeleted,
-            relations: ['su', 'mo', 'tu', 'we', 'th', 'fr', 'sa'],
-        } as FindOneOptions<RegularTaskWeek>))!
+            relations: { weekDays: true },
+        } as FindOneOptions<RegularTaskWeek>)
 
-        return taskToRemove
+        return rtw
     }
 } as RegularTaskWeekExtendedRepository satisfies RegularTaskWeekExtendedRepository

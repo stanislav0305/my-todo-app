@@ -96,6 +96,7 @@ export function RegularTaskEditFormModal({ item, onChangeItem, onClose }: Props)
             const withListReload = !values.id || values.time !== item.time || values.beginDate !== item.beginDate
                 || values.endDate !== item.endDate
                 || (!!values.id && values.period === 'everyWeek')
+                || (!!values.id && (values.period === 'everyWeek' || item.period === 'everyWeek') && values.period !== item.period)
 
             onChangeItem(values, withListReload)
         }

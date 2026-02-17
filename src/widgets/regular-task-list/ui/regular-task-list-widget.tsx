@@ -5,7 +5,11 @@ import { RegularTaskList } from '@features/regular-task-list'
 export const RegularTaskListWidget = () => {
     return (
         <AppDataContext.Consumer>
-            {value => <RegularTaskList regularTaskWeekRep={value.regularTaskWeekRep} regularTaskRep={value.regularTaskRep} />}
+            {value => <RegularTaskList
+                regularTaskWeekRep={value.regularTaskWeekRep}
+                regularTaskViewRep={value.regularTaskViewRep}
+                regularTaskRep={value.regularTaskRep}
+            />}
         </AppDataContext.Consumer>
     )
 }

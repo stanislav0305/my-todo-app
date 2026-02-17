@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, Relation, UpdateDateColumn } from 'typeorm'
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, ForeignKey, JoinTable, ManyToOne, PrimaryGeneratedColumn, Relation, UpdateDateColumn } from 'typeorm'
 import type { RegularTaskWeek } from './regular-task-week.entity'
 
 
@@ -19,7 +19,6 @@ export class RegularTask {
 
     @Column('varchar', { length: 25, nullable: false, default: 'everyDay' })
     period: Period
-
     @Column('varchar', { length: 25, nullable: false, default: '+1 day' })
     periodParam: string
 
@@ -60,6 +59,20 @@ export class RegularTask {
     @Column('boolean', { nullable: false, default: false })
     isUrgent: boolean
 
+    @Column('integer', { nullable: true })
+    weekDay: number | null
+
+    @Column('integer', { nullable: true })
+    @ForeignKey<RegularTaskWeek>('RegularTaskWeek', 'id', { name: 'FK_week_id' })
+    weekId: number | null
+
+    @ManyToOne('RegularTaskWeek', (rtw: RegularTaskWeek) => rtw.weekDays, {
+        nullable: true, orphanedRowAction: "delete", // If this child is removed from the parent's children array, delete the child row
+    })
+    @JoinTable({ name: "weekId" })
+    week: Relation<RegularTaskWeek | null>
+
+
     @CreateDateColumn()
     createdAt: string
 
@@ -68,11 +81,4 @@ export class RegularTask {
 
     @DeleteDateColumn()
     deletedAt: string | null
-
-    @OneToMany('RegularTaskWeek', (regularTaskWeek: RegularTaskWeek) => {
-        const { su, mo, tu, we, th, fr, sa } = regularTaskWeek
-        return [su, mo, tu, we, th, fr, sa].find((day) => !!day) ?? null
-    },
-        { nullable: true, onUpdate: 'CASCADE', onDelete: 'CASCADE' })
-    week: Relation<RegularTaskWeek | null>
 }
