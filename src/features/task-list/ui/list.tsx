@@ -1,6 +1,6 @@
 import { filterModes } from '@entities/regular-tasks'
 import {
-    createTask, DEFAULT_TASK, fetchTasks, removeTask, setPaging, Task, TaskColumnsShow, TaskExtendedRepository, TaskPaging,
+    createTask, DEFAULT_TASK, fetchTasks, removeTask, restoreTask, setPaging, Task, TaskColumnsShow, TaskExtendedRepository, TaskPaging,
     TasksFilterModeType, TaskStatus, updateTask
 } from '@entities/tasks'
 import { TaskEditFormModal } from '@features/task-edit'
@@ -9,8 +9,7 @@ import { AppDispatchType } from '@shared/lib/hooks'
 import { DbFilter, FetchTasksTypes, ModificationType } from '@shared/lib/types'
 import { AppTheme } from '@shared/theme/lib'
 import { selectAppTheme } from '@shared/theme/model'
-import { ListFooter, ListNoData } from '@shared/ui'
-import { RemoveFormModal } from '@shared/ui/remove-form-modal'
+import { ListFooter, ListNoData, RemoveFormModal, RestoreFormModal } from '@shared/ui'
 import React, { Component } from 'react'
 import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native'
 import { Badge, Button, Divider, Icon, IconButton, Text } from 'react-native-paper'
@@ -203,6 +202,17 @@ class TaskListComponent extends Component<PropsType, StateType> {
 
     //--------------------------------------------------
 
+    onRestore = (id: number) => {
+        const { taskRep, dispatch } = { ...this.props }
+
+        const promise = dispatch(restoreTask({ taskRep, id }))
+        promise.then(async () => {
+            this.changeMode()
+        })
+    };
+
+    //--------------------------------------------------
+
     renderItem = (itemInfo: ListRenderItemInfo<Task>) => {
         const { items, paging } = { ...this.props }
         const showDayRow = !this.isSameDate(
@@ -213,6 +223,7 @@ class TaskListComponent extends Component<PropsType, StateType> {
 
         return (
             <TaskListItem
+                filterMode={paging.filter.mode}
                 serialNumber={itemInfo.index}
                 serialNumberInDay={itemInfo.index - this.lastStartIndex}
                 item={itemInfo.item}
@@ -232,13 +243,15 @@ class TaskListComponent extends Component<PropsType, StateType> {
         return (
             <>
                 <View style={styles.row}>
-                    <Button
-                        onPress={() => this.changeMode('edit')}
-                        icon={{ source: 'plus-thick', direction: 'ltr' }}
-                        mode="contained"
-                    >
-                        Add task
-                    </Button>
+                    {!!(paging.filter.mode !== 'inTrash') && (
+                        <Button
+                            onPress={() => this.changeMode('edit')}
+                            icon={{ source: 'plus-thick', direction: 'ltr' }}
+                            mode="contained"
+                        >
+                            Add task
+                        </Button>
+                    )}
                     <IconButton
                         style={{ margin: 0, marginLeft: 10 }}
                         onPress={() => this.changeMode('filter')}
@@ -310,6 +323,14 @@ class TaskListComponent extends Component<PropsType, StateType> {
                         onClose={this.changeMode}
                     />
                 )}
+                {(mode === 'restore') &&
+                    <RestoreFormModal
+                        itemId={item.id}
+                        questionText={`Do you really want to restore task '${item.title}' by id '${item.id}'?`}
+                        onRestore={this.onRestore}
+                        onClose={this.changeMode}
+                    />
+                }
                 {mode === 'filter' && (
                     <ListFilterForm
                         filter={paging.filter}

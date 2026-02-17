@@ -1,4 +1,4 @@
-import { Task, TaskColumnsShow, TaskStatus, taskStatusIconNames } from '@entities/tasks'
+import { Task, TaskColumnsShow, TasksFilterModeType, TaskStatus, taskStatusIconNames } from '@entities/tasks'
 import { dateHelper, stringHelper } from '@shared/lib/helpers'
 import { ModificationType } from '@shared/lib/types'
 import { sharedStyles } from '@shared/styles'
@@ -8,6 +8,7 @@ import { StyleSheet, View } from 'react-native'
 import { Chip, Divider, Icon, IconButton, Menu, Text } from 'react-native-paper'
 
 type Props = {
+    filterMode: TasksFilterModeType,
     serialNumber: number
     serialNumberInDay: number
     item: Task
@@ -17,15 +18,7 @@ type Props = {
     onChangeStatus: (itemId: number, status: TaskStatus) => void
 }
 
-const TaskListItemComponent = ({
-    serialNumber,
-    serialNumberInDay,
-    item,
-    showDayRow,
-    columnsShow,
-    onChange,
-    onChangeStatus,
-}: Props) => {
+const TaskListItemComponent = ({ filterMode, serialNumber, serialNumberInDay, item, showDayRow, columnsShow, onChange, onChangeStatus }: Props) => {
     const appTheme = useAppTheme()
     const { success, secondary, danger, primary, blue } = appTheme.colors
 
@@ -178,45 +171,63 @@ const TaskListItemComponent = ({
                                 />
                             }
                         >
-                            {item.status === 'done' && (
-                                <Menu.Item
-                                    title="to todo"
-                                    leadingIcon={taskStatusIconNames['todo']}
-                                    onPress={() => {
-                                        onChangeStatus(item.id, 'todo')
-                                        closeMenu()
-                                    }}
-                                />
+                            {!!(filterMode !== 'inTrash') && (
+                                <>
+                                    {item.status === 'done' && (
+                                        <Menu.Item
+                                            title="to todo"
+                                            leadingIcon={taskStatusIconNames['todo']}
+                                            onPress={() => {
+                                                onChangeStatus(item.id, 'todo')
+                                                closeMenu()
+                                            }}
+                                        />
+                                    )}
+                                    {item.status === 'todo' && (
+                                        <Menu.Item
+                                            title="to doing"
+                                            leadingIcon={taskStatusIconNames['doing']}
+                                            onPress={() => {
+                                                onChangeStatus(item.id, 'doing')
+                                                closeMenu()
+                                            }}
+                                        />
+                                    )}
+                                    {item.status === 'doing' && (
+                                        <Menu.Item
+                                            title="to done"
+                                            leadingIcon={taskStatusIconNames['done']}
+                                            onPress={() => {
+                                                onChangeStatus(item.id, 'done')
+                                                closeMenu()
+                                            }}
+                                        />
+                                    )}
+                                    <Divider style={styles.divider} />
+                                    <Menu.Item
+                                        title="edit"
+                                        leadingIcon="pencil"
+                                        onPress={() => {
+                                            onChange('edit', item.id)
+                                            closeMenu()
+                                        }}
+                                    />
+                                    <Divider style={styles.divider} />
+                                </>
                             )}
-                            {item.status === 'todo' && (
-                                <Menu.Item
-                                    title="to doing"
-                                    leadingIcon={taskStatusIconNames['doing']}
-                                    onPress={() => {
-                                        onChangeStatus(item.id, 'doing')
-                                        closeMenu()
-                                    }}
-                                />
+                            {!!(filterMode === 'inTrash') && (
+                                <>
+                                    <Menu.Item
+                                        title='restore'
+                                        leadingIcon='delete-restore'
+                                        onPress={() => {
+                                            onChange('restore', item.id)
+                                            closeMenu()
+                                        }}
+                                    />
+                                    <Divider style={styles.divider} />
+                                </>
                             )}
-                            {item.status === 'doing' && (
-                                <Menu.Item
-                                    title="to done"
-                                    leadingIcon={taskStatusIconNames['done']}
-                                    onPress={() => {
-                                        onChangeStatus(item.id, 'done')
-                                        closeMenu()
-                                    }}
-                                />
-                            )}
-                            <Menu.Item
-                                title="edit"
-                                leadingIcon="pencil"
-                                onPress={() => {
-                                    onChange('edit', item.id)
-                                    closeMenu()
-                                }}
-                            />
-                            <Divider style={styles.divider} />
                             <Menu.Item
                                 title={!!item.deletedAt ? 'remove' : 'move to trash'}
                                 leadingIcon={!!item.deletedAt ? 'close-thick' : 'trash-can'}

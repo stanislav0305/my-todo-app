@@ -1,5 +1,5 @@
 import { DbFilter, FetchTasksTypes } from '@shared/lib/types'
-import { FindManyOptions, FindOneOptions, FindOptionsWhere, Repository } from 'typeorm'
+import { FindManyOptions, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from 'typeorm'
 import { TASK_TAKE_ITEMS_COUNT } from '../constants'
 import { TaskColumnsShow } from '../types/task-columns-show'
 import { Task } from '../types/task.entity'
@@ -15,6 +15,7 @@ export interface TaskExtendedRepository extends Repository<Task> {
     createTask(this: Repository<Task>, item: Task): Promise<Task>
     updateTask(this: Repository<Task>, item: Task): Promise<Task>
     removeTask(this: Repository<Task>, id: number, softRemove: boolean): Promise<Task>
+    restoreRegTask(id: number): Promise<UpdateResult>
 }
 
 export const taskExtendedRepository: TaskExtendedRepository = {
@@ -91,5 +92,8 @@ export const taskExtendedRepository: TaskExtendedRepository = {
 
             return this.remove(taskToRemove!)
         }
-    }
+    },
+    async restoreRegTask(id: number): Promise<UpdateResult> {
+        return await this.restore(id)
+    },
 } as TaskExtendedRepository satisfies TaskExtendedRepository

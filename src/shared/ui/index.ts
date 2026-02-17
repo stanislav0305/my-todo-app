@@ -10,5 +10,6 @@ export * from './form-error-text'
 export * from './list-footer'
 export * from './list-no-data'
 export * from './remove-form-modal'
+export * from './restore-form-modal'
 export * from './themed-modal'
 

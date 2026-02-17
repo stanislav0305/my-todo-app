@@ -15,8 +15,7 @@ import { AppDispatchType } from '@shared/lib/hooks'
 import { DbFilter, FetchTasksTypes, ModificationType } from '@shared/lib/types'
 import { AppTheme } from '@shared/theme/lib'
 import { selectAppTheme } from '@shared/theme/model'
-import { ListFooter, ListNoData } from '@shared/ui'
-import { RemoveFormModal } from '@shared/ui/remove-form-modal'
+import { ListFooter, ListNoData, RemoveFormModal } from '@shared/ui'
 import React, { Component } from 'react'
 import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native'
 import { Badge, Button, Divider, Icon, IconButton, Text } from 'react-native-paper'
@@ -235,13 +234,15 @@ class RegularTaskListComponent extends Component<PropsType, StateType> {
         return (
             <>
                 <View style={styles.row}>
-                    <Button
-                        onPress={() => this.changeMode('edit')}
-                        icon={{ source: 'plus-thick', direction: 'ltr' }}
-                        mode="contained"
-                    >
-                        Add regular task
-                    </Button>
+                    {!!(paging.filter.mode !== 'inTrash') && (
+                        <Button
+                            onPress={() => this.changeMode('edit')}
+                            icon={{ source: 'plus-thick', direction: 'ltr' }}
+                            mode="contained"
+                        >
+                            Add regular task
+                        </Button>
+                    )}
                     <IconButton
                         style={{ margin: 0, marginLeft: 10 }}
                         onPress={() => this.changeMode('filter')}

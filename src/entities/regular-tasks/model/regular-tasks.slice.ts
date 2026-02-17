@@ -128,9 +128,8 @@ const updateRegTask = createAsyncThunk(
 const removeRegTask = createAsyncThunk(
     'regularTasks/removeRegTask',
     async ({ regularTaskRep, id, softRemove }: { regularTaskRep: RegularTaskExtendedRepository, id: number, softRemove: boolean }, thunkApi) => {
-        softRemove
-            ? await regularTaskRep.softRemoveRegTask(id)
-            : await regularTaskRep.removeRegTask(id)
+        softRemove && await regularTaskRep.softRemoveRegTask(id)
+        !softRemove && await regularTaskRep.removeRegTask(id)
 
         thunkApi.dispatch(remove(id))
     },

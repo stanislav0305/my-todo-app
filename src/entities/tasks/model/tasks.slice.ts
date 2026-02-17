@@ -114,5 +114,13 @@ const removeTask = createAsyncThunk(
     },
 )
 
-export { createTask, fetchTasks, removeTask, setPaging, updateTask }
+const restoreTask = createAsyncThunk(
+    'tasks/restoreTask',
+    async ({ taskRep, id }: { taskRep: TaskExtendedRepository, id: number }, thunkApi) => {
+        await taskRep.restoreRegTask(id)
+        thunkApi.dispatch(remove(id))
+    },
+)
+
+export { createTask, fetchTasks, removeTask, restoreTask, setPaging, updateTask }
 
