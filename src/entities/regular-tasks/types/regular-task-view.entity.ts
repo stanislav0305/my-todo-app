@@ -39,7 +39,7 @@ import { Period } from './regular-task.entity'
         MIN(r.id),
         r.time,
 
-        r.beginDate, 
+        IFNULL(rtw.beginDate, r.beginDate), 
         r.endDate,
 
         r.period, 
@@ -76,7 +76,7 @@ export class RegularTaskView {
     time: string
 
     @Column('varchar', { length: 10, nullable: false })
-    beginDate: string
+    beginDate: string //if period = 'everyWeek' then get data from regularTasksWeek table else from regularTasks
     @Column('varchar', { length: 10, nullable: true })
     endDate: string | null
 

@@ -15,25 +15,19 @@ export const tasksSlice = createSlice({
     extraReducers: builder =>
         builder.addCase(revertAll, () => INITIAL_TASKS_STATE),
     reducers: {
-        setTasks: (
-            draftState,
-            action: PayloadAction<{ tasks: Task[]; paging: TaskPaging }>,
-        ) => {
+        resetMany: (draftState, action: PayloadAction<{ tasks: Task[]; paging: TaskPaging }>) => {
             const { tasks, paging } = action.payload
 
             draftState.items = [...tasks]
             draftState.paging = paging
         },
-        appendTasks: (
-            draftState,
-            action: PayloadAction<{ tasks: Task[]; paging: TaskPaging }>,
-        ) => {
+        appendMany: (draftState, action: PayloadAction<{ tasks: Task[]; paging: TaskPaging }>) => {
             const { tasks, paging } = action.payload
 
             draftState.items = [...draftState.items, ...tasks]
             draftState.paging = paging
         },
-        setPaging: (draftState, action: PayloadAction<{ paging: TaskPaging }>) => {
+        resetPaging: (draftState, action: PayloadAction<{ paging: TaskPaging }>) => {
             const { paging } = action.payload
             draftState.paging = paging
         },
@@ -61,7 +55,7 @@ export const tasksSlice = createSlice({
     },
 })
 
-const { appendTasks, setTasks, setPaging, update, remove } = tasksSlice.actions
+const { appendMany, resetMany, resetPaging, update, remove } = tasksSlice.actions
 export const tasksReducers = tasksSlice.reducer
 
 const fetchTasks = createAsyncThunk(
@@ -82,9 +76,9 @@ const fetchTasks = createAsyncThunk(
         const newP = taskRep.mapPagingAfter(mp.paging, itemCount)
 
         if (newP.fetchType === 'fetchFromBegin')
-            thunkApi.dispatch(setTasks({ tasks: items, paging: newP }))
+            thunkApi.dispatch(resetMany({ tasks: items, paging: newP }))
         else if (newP.fetchType === 'fetchNext')
-            thunkApi.dispatch(appendTasks({ tasks: items, paging: newP }))
+            thunkApi.dispatch(appendMany({ tasks: items, paging: newP }))
 
 
         console.log(`fetchMore end (hasNext:${newP.hasNext}, skip:${newP.skip})`)
@@ -122,5 +116,5 @@ const restoreTask = createAsyncThunk(
     },
 )
 
-export { createTask, fetchTasks, removeTask, restoreTask, setPaging, updateTask }
+export { createTask, fetchTasks, removeTask, resetPaging, restoreTask, updateTask }
 

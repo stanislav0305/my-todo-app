@@ -4,7 +4,15 @@
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
   },
-  "cSpell.words": ["paperplane", "persistor", "segmentless", "Stas", "steiger"],
+  "cSpell.words": [
+    "infocircle",
+    "infocirlce",
+    "paperplane",
+    "persistor",
+    "segmentless",
+    "Stas",
+    "steiger"
+  ],
   "typescript.format.semicolons": "remove",
   "typescript.preferences.quoteStyle": "single"
 }

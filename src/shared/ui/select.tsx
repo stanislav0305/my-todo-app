@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 import { Dropdown } from 'react-native-element-dropdown'
 import { Text } from 'react-native-paper'
 import { useAppTheme } from '../theme/hooks'
@@ -15,6 +15,8 @@ type Props = {
     valueField?: string | number | symbol
     value?: any
     data: any[]
+    dropdownStyle?: StyleProp<ViewStyle>
+    itemsContainerStyle?: StyleProp<ViewStyle>
     onChange: (item: any) => void
     renderItemIcon?: (item: any, selected?: boolean | undefined) => React.JSX.Element
     //renderLeftIcon?: (isFocus: boolean, focusedColor: string | OpaqueColorValue | undefined, unFocusedColor: string | OpaqueColorValue | undefined) => React.JSX.Element
@@ -37,11 +39,15 @@ const renderLeftIcon = (isFocus: boolean,
 */
 
 export function Select({ maxHeight = 300, label, placeholder, search = false, searchPlaceholder, value, data, onChange,
-    labelField = 'label', valueField = 'value', renderItemIcon, renderLeftIcon }: Props) {
+    labelField = 'label', valueField = 'value', dropdownStyle, itemsContainerStyle, renderItemIcon, renderLeftIcon }: Props) {
     const appTheme = useAppTheme()
     const { primary, secondary, secondaryContainer, background } = appTheme.colors
 
     const [isFocus, setIsFocus] = useState(false)
+    const dropdownStyleFull: StyleProp<ViewStyle> = [styles.dropdown, dropdownStyle,
+    isFocus ? { borderColor: primary, borderWidth: 2 }
+        : { borderColor: secondary, borderWidth: 1 }
+    ]
 
     return (
         <View style={styles.container}>
@@ -54,10 +60,7 @@ export function Select({ maxHeight = 300, label, placeholder, search = false, se
                 </Text>
             }
             <Dropdown
-                style={[styles.dropdown,
-                isFocus ? { borderColor: primary, borderWidth: 2 }
-                    : { borderColor: secondary, borderWidth: 1 }
-                ]}
+                style={dropdownStyleFull}
                 maxHeight={maxHeight}
 
                 placeholder={!!placeholder ? (!isFocus ? placeholder : '...') : undefined}
@@ -83,7 +86,7 @@ export function Select({ maxHeight = 300, label, placeholder, search = false, se
                 }}
 
 
-                containerStyle={[styles.itemsContainer, { backgroundColor: background }]}
+                containerStyle={[styles.itemsContainer, { backgroundColor: background }, itemsContainerStyle]}
                 //itemContainerStyle
                 renderItem={(item: any, selected?: boolean | undefined) => {
                     return (
@@ -122,7 +125,7 @@ const styles = StyleSheet.create({
     container: {
         paddingTop: 16,
         paddingBottom: 0,
-        paddingHorizontal: 0
+        paddingHorizontal: 0,
     },
     label: {
         position: 'absolute',

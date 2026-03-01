@@ -1,4 +1,8 @@
-import { RegularTask, RegularTaskView, RegularTaskWeek } from '@entities/regular-tasks'
+import { ActualTaskPaging, ActualTaskView } from '@entities/actual-tasks'
+import { actualTaskPagingExtendedRepository, ActualTaskPagingExtendedRepository } from '@entities/actual-tasks/model/actual-task-paging.extended.repository'
+import { actualTaskViewExtendedRepository, ActualTaskViewExtendedRepository } from '@entities/actual-tasks/model/actual-task-view.extended.repository'
+import { RegularTask, RegularTaskResult, RegularTaskView, RegularTaskWeek } from '@entities/regular-tasks'
+import { regularTaskResultExtendedRepository, RegularTaskResultExtendedRepository } from '@entities/regular-tasks/model/regular-task-result.extended.repository'
 import { RegularTaskViewExtendedRepository, regularTaskViewExtendedRepository } from '@entities/regular-tasks/model/regular-task-view.extended.repository'
 import { regularTaskWeekExtendedRepository, RegularTaskWeekExtendedRepository } from '@entities/regular-tasks/model/regular-task-week.extended.repository'
 import { RegularTaskExtendedRepository, regularTaskExtendedRepository } from '@entities/regular-tasks/model/regular-task.extended.repository'
@@ -16,6 +20,9 @@ type AppDataContextValueType = {
     regularTaskRep: RegularTaskExtendedRepository
     regularTaskViewRep: RegularTaskViewExtendedRepository
     regularTaskWeekRep: RegularTaskWeekExtendedRepository
+    regularTaskResultRep: RegularTaskResultExtendedRepository
+    actualTaskViewRep: ActualTaskViewExtendedRepository
+    actualTaskPagingRep: ActualTaskPagingExtendedRepository
 }
 
 const db = SQLite.openDatabaseSync(SQLITE_DB_NAME)
@@ -25,7 +32,10 @@ export const AppDataContext = createContext<AppDataContextValueType>({
     taskRep: AppDataSource.getRepository(Task).extend(taskExtendedRepository),
     regularTaskRep: AppDataSource.getRepository(RegularTask).extend(regularTaskExtendedRepository),
     regularTaskViewRep: AppDataSource.getRepository(RegularTaskView).extend(regularTaskViewExtendedRepository),
-    regularTaskWeekRep: AppDataSource.getRepository(RegularTaskWeek).extend(regularTaskWeekExtendedRepository)
+    regularTaskWeekRep: AppDataSource.getRepository(RegularTaskWeek).extend(regularTaskWeekExtendedRepository),
+    regularTaskResultRep: AppDataSource.getRepository(RegularTaskResult).extend(regularTaskResultExtendedRepository),
+    actualTaskViewRep: AppDataSource.getRepository(ActualTaskView).extend(actualTaskViewExtendedRepository),
+    actualTaskPagingRep: AppDataSource.getRepository(ActualTaskPaging).extend(actualTaskPagingExtendedRepository),
 } satisfies AppDataContextValueType as AppDataContextValueType)
 
 
@@ -34,6 +44,7 @@ export const useAppData = () => {
     if (!context) {
         throw new Error('useAppDataContext must be used within a AppDataProvider')
     }
+
     return context
 }
 

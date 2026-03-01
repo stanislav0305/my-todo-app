@@ -1,6 +1,8 @@
-import { filterModes } from '@entities/regular-tasks'
 import {
-    createTask, DEFAULT_TASK, fetchTasks, removeTask, restoreTask, setPaging, Task, TaskColumnsShow, TaskExtendedRepository, TaskPaging,
+    createTask, DEFAULT_TASK, fetchTasks, filterModes, removeTask,
+    resetPaging,
+    restoreTask,
+    Task, TaskColumnsShow, TaskExtendedRepository, TaskPaging,
     TasksFilterModeType, TaskStatus, updateTask
 } from '@entities/tasks'
 import { TaskEditFormModal } from '@features/task-edit'
@@ -34,7 +36,6 @@ type PropsType = {
 }
 
 class TaskListComponent extends Component<PropsType, StateType> {
-    taskRep: TaskExtendedRepository
     callOnScrollEnd = true;
     lastStartIndex: number = 0;
     keyExtractor = (item: Task, index: number) =>
@@ -135,7 +136,7 @@ class TaskListComponent extends Component<PropsType, StateType> {
         let newPaging = Object.assign({}, paging)
         newPaging.columnsShow = columnsShow
 
-        dispatch(setPaging({ paging: newPaging }))
+        dispatch(resetPaging({ paging: newPaging }))
         this.changeMode()
     };
 

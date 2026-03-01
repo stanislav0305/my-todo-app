@@ -1,7 +1,9 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { revertAll } from '@shared/lib/actions'
 import { DbFilter, FetchTasksTypes } from '@shared/lib/types'
+import { update as updateActual } from '../../actual-tasks'
 import { INITIAL_REGULAR_TASKS_STATE } from '../constants'
+import { mapper } from '../mapper'
 import { RegularTaskColumnsShow } from '../types/regular-task-columns-show'
 import { RegularTask } from '../types/regular-task.entity'
 import { RegularTaskModel } from '../types/regular-task.model'
@@ -11,33 +13,25 @@ import { RegularTaskViewExtendedRepository } from './regular-task-view.extended.
 import { RegularTaskWeekExtendedRepository } from './regular-task-week.extended.repository'
 import { RegularTaskExtendedRepository } from './regular-task.extended.repository'
 
-
 export const regularTasksSlice = createSlice({
     name: 'regularTasksSlice',
     initialState: INITIAL_REGULAR_TASKS_STATE,
     extraReducers: builder =>
         builder.addCase(revertAll, () => INITIAL_REGULAR_TASKS_STATE),
     reducers: {
-        setRegTasks: (
-            draftState,
-            action: PayloadAction<{
-                regularTasks: RegularTaskModel[]
-                paging: RegularTaskPaging
-            }>,
-        ) => {
+        resetMany: (draftState, action: PayloadAction<{ regularTasks: RegularTaskModel[], paging: RegularTaskPaging }>) => {
             const { regularTasks, paging } = action.payload
 
             draftState.items = [...regularTasks]
             draftState.paging = paging
         },
-        appendRegTasks: (draftState, action: PayloadAction<{ regularTasks: RegularTaskModel[], paging: RegularTaskPaging }>,
-        ) => {
+        appendMany: (draftState, action: PayloadAction<{ regularTasks: RegularTaskModel[], paging: RegularTaskPaging }>) => {
             const { regularTasks, paging } = action.payload
 
             draftState.items = [...draftState.items, ...regularTasks]
             draftState.paging = paging
         },
-        setRegPaging: (draftState, action: PayloadAction<{ paging: RegularTaskPaging }>) => {
+        resetPaging: (draftState, action: PayloadAction<{ paging: RegularTaskPaging }>) => {
             const { paging } = action.payload
             draftState.paging = paging
         },
@@ -75,15 +69,21 @@ export const regularTasksSlice = createSlice({
     },
 })
 
-const { appendRegTasks, setRegTasks, setRegPaging, update, remove, removeMany } = regularTasksSlice.actions
-export { setRegPaging }
+const { appendMany, resetMany, resetPaging, update, remove, removeMany } = regularTasksSlice.actions
+export { resetPaging }
 export const regularTasksReducers = regularTasksSlice.reducer
+
+//--------------------------------------------------------
 
 const fetchRegTasks = createAsyncThunk(
     'regularTasks/fetch',
     async ({ regularTaskViewRep, weekRep, paging, fetchType, columnsShow, filter, }: {
-        regularTaskViewRep: RegularTaskViewExtendedRepository, weekRep: RegularTaskWeekExtendedRepository, paging: RegularTaskPaging, fetchType: FetchTasksTypes,
-        columnsShow: RegularTaskColumnsShow | null, filter: DbFilter<RegularTask, RegularTasksFilterModeType> | null
+        regularTaskViewRep: RegularTaskViewExtendedRepository,
+        weekRep: RegularTaskWeekExtendedRepository,
+        paging: RegularTaskPaging,
+        fetchType: FetchTasksTypes,
+        columnsShow: RegularTaskColumnsShow | null,
+        filter: DbFilter<RegularTask, RegularTasksFilterModeType> | null
     }, thunkApi) => {
         console.log('regularTasks/fetch...')
 
@@ -95,14 +95,12 @@ const fetchRegTasks = createAsyncThunk(
 
         const [models, modelCount] = await regularTaskViewRep.fetchRegTasks(weekRep, mp.paging)
 
-
         const newP = regularTaskViewRep.mapPagingAfter(mp.paging, modelCount)
 
         if (newP.fetchType === 'fetchFromBegin')
-            thunkApi.dispatch(setRegTasks({ regularTasks: models, paging: newP }))
+            thunkApi.dispatch(resetMany({ regularTasks: models, paging: newP }))
         else if (newP.fetchType === 'fetchNext')
-            thunkApi.dispatch(appendRegTasks({ regularTasks: models, paging: newP }))
-
+            thunkApi.dispatch(appendMany({ regularTasks: models, paging: newP }))
 
         console.log(`fetchMore end (hasNext:${newP.hasNext}, skip:${newP.skip})`)
     },
@@ -119,15 +117,27 @@ const createRegTask = createAsyncThunk(
 
 const updateRegTask = createAsyncThunk(
     'regularTasks/updateRegTask',
-    async ({ regularTaskRep, regularTaskWeekRep, model, oldWeekId }: { regularTaskRep: RegularTaskExtendedRepository, regularTaskWeekRep: RegularTaskWeekExtendedRepository, model: RegularTaskModel, oldWeekId: number | null | undefined }, thunkApi) => {
+    async ({ regularTaskRep, regularTaskWeekRep, model, oldWeekId }: {
+        regularTaskRep: RegularTaskExtendedRepository,
+        regularTaskWeekRep: RegularTaskWeekExtendedRepository,
+        model: RegularTaskModel,
+        oldWeekId: number | null | undefined
+    }, thunkApi) => {
         const m = await regularTaskRep.updateRegTask(regularTaskWeekRep, model, oldWeekId)
         thunkApi.dispatch(update(m))
+
+        const am = mapper.mapModelToActualTaskModel(m)
+        thunkApi.dispatch(updateActual(am))
     },
 )
 
 const removeRegTask = createAsyncThunk(
     'regularTasks/removeRegTask',
-    async ({ regularTaskRep, id, softRemove }: { regularTaskRep: RegularTaskExtendedRepository, id: number, softRemove: boolean }, thunkApi) => {
+    async ({ regularTaskRep, id, softRemove }: {
+        regularTaskRep: RegularTaskExtendedRepository,
+        id: number,
+        softRemove: boolean
+    }, thunkApi) => {
         softRemove && await regularTaskRep.softRemoveRegTask(id)
         !softRemove && await regularTaskRep.removeRegTask(id)
 
@@ -156,15 +166,23 @@ const createRegTaskWeek = createAsyncThunk(
 
 const updateRegTaskWeek = createAsyncThunk(
     'regularTasksWeek/updateRegTask',
-    async ({ regularTaskWeekRep, regularTaskRep, model, oldWeekId }: { regularTaskWeekRep: RegularTaskWeekExtendedRepository, regularTaskRep: RegularTaskExtendedRepository, model: RegularTaskModel, oldWeekId: number | null | undefined }, thunkApi) => {
+    async ({ regularTaskWeekRep, regularTaskRep, model, oldWeekId }: {
+        regularTaskWeekRep: RegularTaskWeekExtendedRepository,
+        regularTaskRep: RegularTaskExtendedRepository,
+        model: RegularTaskModel,
+        oldWeekId: number | null | undefined
+    }, thunkApi) => {
         await regularTaskWeekRep.updateRegTaskWeek(regularTaskRep, model, oldWeekId)
     },
 )
 
 const removeRegTaskWeek = createAsyncThunk(
     'regularTasksWeek/removeRegTask',
-    async ({ regularTaskWeekRep, id, softRemove }: { regularTaskWeekRep: RegularTaskWeekExtendedRepository, id: number, softRemove: boolean }, thunkApi) => {
-
+    async ({ regularTaskWeekRep, id, softRemove }: {
+        regularTaskWeekRep: RegularTaskWeekExtendedRepository,
+        id: number,
+        softRemove: boolean
+    }, thunkApi) => {
         const [, regTaskIds] = softRemove
             ? await regularTaskWeekRep.softRemoveRegTaskWeek(id)
             : await regularTaskWeekRep.removeRegTaskWeek(id)
@@ -177,7 +195,6 @@ const recoverRegTaskWeek = createAsyncThunk(
     'regularTasks/recoverRegTask',
     async ({ regularTaskWeekRep, id }: { regularTaskWeekRep: RegularTaskWeekExtendedRepository, id: number }, thunkApi) => {
         const [, regTaskIds] = await regularTaskWeekRep.recoverRegTaskWeek(id)
-
         thunkApi.dispatch(removeMany(regTaskIds))
     },
 )

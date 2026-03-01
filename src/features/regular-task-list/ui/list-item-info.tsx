@@ -1,5 +1,5 @@
-import { dateHelper } from "@/src/shared/lib/helpers"
 import { Period } from "@entities/regular-tasks"
+import { dateHelper } from "@shared/lib/helpers"
 import { View } from 'react-native'
 import { Text } from 'react-native-paper'
 

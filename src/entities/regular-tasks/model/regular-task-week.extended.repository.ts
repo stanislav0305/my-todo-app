@@ -1,7 +1,6 @@
 import { mapper } from '@entities/regular-tasks/mapper'
 import { FindOneOptions, FindOptionsWhere, Repository } from 'typeorm'
 import { RegularTaskWeek } from '../types/regular-task-week.entity'
-import { RegularTask } from '../types/regular-task.entity'
 import { RegularTaskModel } from '../types/regular-task.model'
 import type { RegularTaskExtendedRepository } from './regular-task.extended.repository'
 
@@ -18,14 +17,16 @@ export interface RegularTaskWeekExtendedRepository extends Repository<RegularTas
 export const regularTaskWeekExtendedRepository: RegularTaskWeekExtendedRepository = {
     async createRegTaskWeek(model: RegularTaskModel): Promise<RegularTaskWeek> {
         let rtw = this.create()
+
+        rtw.beginDate = model.beginDate
         rtw.weekDays = []
-        model.su && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 0 } }))
-        model.mo && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 1 } }))
-        model.tu && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 2 } }))
-        model.we && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 3 } }))
-        model.th && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 4 } }))
-        model.fr && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 5 } }))
-        model.sa && rtw.weekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: 6 } }))
+        rtw.weekDays = mapper.mapToEntityWeekDay(model.su, 0, model, [], rtw.weekDays)
+        rtw.weekDays = mapper.mapToEntityWeekDay(model.mo, 1, model, [], rtw.weekDays)
+        rtw.weekDays = mapper.mapToEntityWeekDay(model.tu, 2, model, [], rtw.weekDays)
+        rtw.weekDays = mapper.mapToEntityWeekDay(model.we, 3, model, [], rtw.weekDays)
+        rtw.weekDays = mapper.mapToEntityWeekDay(model.th, 4, model, [], rtw.weekDays)
+        rtw.weekDays = mapper.mapToEntityWeekDay(model.fr, 5, model, [], rtw.weekDays)
+        rtw.weekDays = mapper.mapToEntityWeekDay(model.sa, 6, model, [], rtw.weekDays)
 
         return await this.save(rtw, { transaction: true })
     },
@@ -39,16 +40,16 @@ export const regularTaskWeekExtendedRepository: RegularTaskWeekExtendedRepositor
             let rtw = (await this.findOneRegTaskWeek(model.weekId!, false))!
             const oldWeekDays = [...rtw.weekDays]
 
-            let newWeekDays: RegularTask[] = []
-            newWeekDays = mapper.mapToEntityWeekDay(model.su, 0, model, oldWeekDays, newWeekDays)
-            newWeekDays = mapper.mapToEntityWeekDay(model.mo, 1, model, oldWeekDays, newWeekDays)
-            newWeekDays = mapper.mapToEntityWeekDay(model.tu, 2, model, oldWeekDays, newWeekDays)
-            newWeekDays = mapper.mapToEntityWeekDay(model.we, 3, model, oldWeekDays, newWeekDays)
-            newWeekDays = mapper.mapToEntityWeekDay(model.th, 4, model, oldWeekDays, newWeekDays)
-            newWeekDays = mapper.mapToEntityWeekDay(model.fr, 5, model, oldWeekDays, newWeekDays)
-            newWeekDays = mapper.mapToEntityWeekDay(model.sa, 6, model, oldWeekDays, newWeekDays)
+            rtw.beginDate = model.beginDate
+            rtw.weekDays = []
+            rtw.weekDays = mapper.mapToEntityWeekDay(model.su, 0, model, oldWeekDays, rtw.weekDays)
+            rtw.weekDays = mapper.mapToEntityWeekDay(model.mo, 1, model, oldWeekDays, rtw.weekDays)
+            rtw.weekDays = mapper.mapToEntityWeekDay(model.tu, 2, model, oldWeekDays, rtw.weekDays)
+            rtw.weekDays = mapper.mapToEntityWeekDay(model.we, 3, model, oldWeekDays, rtw.weekDays)
+            rtw.weekDays = mapper.mapToEntityWeekDay(model.th, 4, model, oldWeekDays, rtw.weekDays)
+            rtw.weekDays = mapper.mapToEntityWeekDay(model.fr, 5, model, oldWeekDays, rtw.weekDays)
+            rtw.weekDays = mapper.mapToEntityWeekDay(model.sa, 6, model, oldWeekDays, rtw.weekDays)
 
-            rtw.weekDays = newWeekDays
             result = await this.save(rtw)
         } else {
             //convert daily, monthly or yearly regular task to week regular task

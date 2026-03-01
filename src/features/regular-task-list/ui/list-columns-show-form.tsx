@@ -5,6 +5,7 @@ import { useFormik } from 'formik'
 import { StyleSheet, View } from 'react-native'
 import { Button, Divider, Text } from 'react-native-paper'
 
+
 type Props = {
     columnsShow: RegularTaskColumnsShow
     onChangeColumnsShow: (columnsShow: RegularTaskColumnsShow) => void

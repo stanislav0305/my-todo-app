@@ -1,7 +1,7 @@
-import { mapper } from '@entities/regular-tasks/mapper'
 import { DbFilter, FetchTasksTypes } from '@shared/lib/types'
 import { FindManyOptions, Repository } from 'typeorm'
 import { REGULAR_TASK_TAKE_ITEMS_COUNT } from '../constants'
+import { mapper } from '../mapper'
 import { RegularTaskColumnsShow } from '../types/regular-task-columns-show'
 import { RegularTaskView } from '../types/regular-task-view.entity'
 import { RegularTask } from '../types/regular-task.entity'
@@ -63,7 +63,6 @@ export const regularTaskViewExtendedRepository: RegularTaskViewExtendedRepositor
             take: paging.take
         } as FindManyOptions<RegularTaskView>)
 
-        console.log('items:', JSON.stringify(items, null, "\t"))
         const models = items.map(item => {
             return mapper.mapRegTaskViewToModel(item)
         })

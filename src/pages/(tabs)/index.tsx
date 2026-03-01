@@ -1,11 +1,11 @@
-import { TaskListWidget } from '@/src/widgets/task-list'
 import ScreenLayout from '@pages/_screen-layout'
+import { ActualTaskListWidget } from '@widgets/actual-task-list'
 
 
-export default function TasksScreen() {
-  return (
-    <ScreenLayout>
-      <TaskListWidget />
-    </ScreenLayout>
-  )
+export default function ActualScreen() {
+    return (
+        <ScreenLayout>
+            <ActualTaskListWidget />
+        </ScreenLayout>
+    )
 }

@@ -1,3 +1,4 @@
+import { actualTasksReducers, ActualTasksState } from '@/src/entities/actual-tasks'
 import { regularTasksReducers, RegularTasksState } from '@entities/regular-tasks'
 import { settingsReducers, SettingsState } from '@entities/settings'
 import { tasksReducers, TasksState } from '@entities/tasks'
@@ -13,6 +14,7 @@ import {
     persistMigrations,
 } from './persist-migration-manifest'
 
+
 export let storageEngine: AsyncStorageStatic = AsyncStorage
 
 export type RootPersistStorage = {
@@ -20,6 +22,7 @@ export type RootPersistStorage = {
     settings: SettingsState
     tasks: TasksState
     regularTasks: RegularTasksState
+    actualTasks: ActualTasksState
 }
 
 type RootPersistStoragePartial = Partial<{
@@ -27,6 +30,7 @@ type RootPersistStoragePartial = Partial<{
     settings: SettingsState | undefined
     tasks: TasksState | undefined
     regularTasks: RegularTasksState | undefined
+    actualTasks: ActualTasksState | undefined
 }>
 
 const rootReducer = combineReducers({
@@ -34,6 +38,7 @@ const rootReducer = combineReducers({
     settings: settingsReducers,
     tasks: tasksReducers,
     regularTasks: regularTasksReducers,
+    actualTasks: actualTasksReducers,
 }) as Reducer<RootPersistStorage, UnknownAction, RootPersistStoragePartial>
 
 const persistConfig: PersistConfig<RootPersistStorage, any, any, any> = {
@@ -41,7 +46,7 @@ const persistConfig: PersistConfig<RootPersistStorage, any, any, any> = {
     version: PERSIST_MIGRATION_NEW_VERSION,
     storage: storageEngine,
     whitelist: ['theme', 'settings'], // Optional: Persist only this slices of the state
-    blacklist: ['tasks', 'regularTasks'], // Optional: Prevent certain slices from being persisted
+    blacklist: ['tasks', 'regularTasks', 'actualTasks'], // Optional: Prevent certain slices from being persisted
     migrate: createMigrate(persistMigrations, { debug: __DEV__ }),
     timeout: 100,
 } as PersistConfig<RootPersistStorage, any, any, any>

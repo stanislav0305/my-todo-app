@@ -2,7 +2,7 @@ import { DropDownItems } from "@/src/shared/lib/types"
 
 
 export type TasksFilterModeType = 'all' | 'today' | 'byPeriod' | 'inTrash'
-const filterModes: Record<TasksFilterModeType, DropDownItems> = {
+export const filterModes: Record<TasksFilterModeType, DropDownItems> = {
     'all': { label: 'all', value: 'all', iconType: 'MaterialDesignIcons', icon: 'all-inclusive' },
     'today': { label: 'today', value: 'today', iconType: 'MaterialDesignIcons', icon: 'calendar-today' },
     'byPeriod': { label: 'by period', value: 'byPeriod', iconType: 'MaterialDesignIcons', icon: 'calendar-multiselect' },

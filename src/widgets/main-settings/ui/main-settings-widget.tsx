@@ -42,40 +42,37 @@ export const MainSettingsWidget = () => {
                     fieldValue={mainSettings.wordsLearningPartSize}
                     onSave={onChangeMainSettingsField}
                 />
-
-                {__DEV__ &&
-                    <Card.Actions>
-                        <Button
-                            onPress={async () => {
-                                console.log('Clear DB')
-                                await appData.dataManager.clear()
-                                dispatch(revertAll())
-                                await runMigrations()
-                            }}
-                            mode='outlined'
-                        >
-                            Clear all
-                        </Button>
-                        <Button
-                            onPress={async () => {
-                                console.log('Import DB')
-                                await appData.dataManager.restore()
-                            }}
-                            mode='outlined'
-                        >
-                            Import DB
-                        </Button>
-                        <Button
-                            onPress={async () => {
-                                console.log('Export DB')
-                                await appData.dataManager.backup()
-                            }}
-                            mode='outlined'
-                        >
-                            Export DB
-                        </Button>
-                    </Card.Actions>
-                }
+                <Card.Actions>
+                    <Button
+                        onPress={async () => {
+                            console.log('Clear DB')
+                            await appData.dataManager.clear()
+                            dispatch(revertAll())
+                            await runMigrations()
+                        }}
+                        mode='outlined'
+                    >
+                        Clear all
+                    </Button>
+                    <Button
+                        onPress={async () => {
+                            console.log('Import DB')
+                            await appData.dataManager.restore()
+                        }}
+                        mode='outlined'
+                    >
+                        Import DB
+                    </Button>
+                    <Button
+                        onPress={async () => {
+                            console.log('Export DB')
+                            await appData.dataManager.backup()
+                        }}
+                        mode='outlined'
+                    >
+                        Export DB
+                    </Button>
+                </Card.Actions>
             </Card.Content>
         </Card>
     )

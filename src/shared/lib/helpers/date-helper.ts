@@ -138,4 +138,66 @@ export const dateHelper = {
         const dayNum = dateHelper.getWeekDayNumOrNull(dateStr)
         return dayNum == null ? '' : weekDayNames[dayNum]
     },
+    //----------------------------------------------------------------
+    getNearestDate: (dateStr: string, nearestWeekDay: number): string => {
+        //get nearest next date
+        const d = dateHelper.dbStrDateToDate(dateStr as string)
+        const bdWeekDay = dateHelper.getWeekDayNumOrNull(dateStr)!
+        const shift = dateHelper.getNearestDateShift(bdWeekDay, nearestWeekDay)
+
+        d.setDate(d.getDate() + shift)
+        return dateHelper.toFormattedString(d, 'YYYY-MM-DD')
+    },
+    getNearestDateShift: (dateWeekDay: number, nearestWeekDay: number): number => {
+        return (dateWeekDay <= nearestWeekDay) ? nearestWeekDay - dateWeekDay : 7 - (dateWeekDay - nearestWeekDay)
+    },
+    //----------------------------------------------------------------
+    getWeekBeginAndEndDates: (dateStr: string) => {
+        const weekEndStr = dateHelper.getNearestDate(dateStr, 6)
+        const weekEnd = dateHelper.dbStrDateToDate(weekEndStr)
+
+        const weekBegin = new Date(weekEnd)
+        weekBegin.setDate(weekBegin.getDate() - 6)
+
+        return { weekBegin, weekEnd }
+    },
+    //----------------------------------------------------------------
+    getBeginOfMonth: (date: Date) => {
+        return new Date(date.getFullYear(), date.getMonth(), 1)
+    },
+    getEndOfMonth: (date: Date) => {
+        return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+    },
+    getMonthBeginAndEndDates: (dateStr: string) => {
+        const date = dateHelper.dbStrDateToDate(dateStr)
+        const monthBegin = dateHelper.getBeginOfMonth(date)
+        const monthEnd = dateHelper.getEndOfMonth(date)
+
+        return { monthBegin, monthEnd }
+    },
+    //----------------------------------------------------------------
+    getRangeOrTemplateString: (startDateStr: string | null | undefined, endDateStr: string | null | undefined, format: DateFormatType) => {
+        const startDateText = stringHelper.isEmpty(startDateStr)
+            ? dateHelper.getTemplate('DD/MM/YYYY')
+            : dateHelper.toFormattedString(dateHelper.dbStrDateToDate(startDateStr!), format)
+
+        const endDateText = stringHelper.isEmpty(endDateStr)
+            ? dateHelper.getTemplate('DD/MM/YYYY')
+            : dateHelper.toFormattedString(dateHelper.dbStrDateToDate(endDateStr!), format)
+
+        return `${startDateText} - ${endDateText}`
+    },
+    //----------------------------------------------------------------
+    addDays: (dateStr: string, shift: number) => {
+        const date = dateHelper.dbStrDateToDate(dateStr)
+        date.setDate(date.getDate() + shift)
+
+        return date
+    },
+    changeMonth: (dateStr: string, increaseOne: boolean) => {
+        const date = dateHelper.dbStrDateToDate(dateStr)
+        date.setMonth(date.getMonth() + (increaseOne ? 1 : (-1)))
+
+        return date
+    }
 }

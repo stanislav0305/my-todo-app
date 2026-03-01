@@ -1,4 +1,4 @@
-import { CreateDateColumn, DeleteDateColumn, Entity, JoinTable, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinTable, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
 import type { RegularTask } from './regular-task.entity'
 
 
@@ -6,6 +6,9 @@ import type { RegularTask } from './regular-task.entity'
 export class RegularTaskWeek {
     @PrimaryGeneratedColumn('increment')
     id: number
+
+    @Column('varchar', { length: 10, nullable: false })
+    beginDate: string
 
     @OneToMany('RegularTask', (rt: RegularTask) => rt.week, {
         nullable: true, cascade: ["insert", "update", "remove", "soft-remove", "recover"]

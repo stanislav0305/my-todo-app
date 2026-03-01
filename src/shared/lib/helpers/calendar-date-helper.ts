@@ -27,4 +27,15 @@ export const calendarDateHelper = {
 
         return dateHelper.toFormattedString(date as Date, format)
     },
+    getRangeOrTemplateString: (startDate: CalendarDate, endDate: CalendarDate, format: DateFormatType) => {
+        const startDateText = typeof startDate === 'undefined'
+            ? dateHelper.getTemplate('DD/MM/YYYY')
+            : dateHelper.toFormattedString(startDate as Date, format)
+
+        const endDateText = typeof endDate === 'undefined'
+            ? dateHelper.getTemplate('DD/MM/YYYY')
+            : dateHelper.toFormattedString(endDate as Date, format)
+
+        return `${startDateText} - ${endDateText}`
+    },
 }

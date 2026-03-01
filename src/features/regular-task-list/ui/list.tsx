@@ -1,21 +1,22 @@
-import { RestoreFormModal } from '@/src/shared/ui/restore-form-modal'
 import {
     createRegTask, createRegTaskWeek, DEFAULT_REGULAR_TASK_MODEL, fetchRegTasks, filterModes,
     recoverRegTaskWeek,
     RegularTask, RegularTaskColumnsShow,
+    RegularTaskExtendedRepository,
     RegularTaskModel, RegularTaskPaging, RegularTasksFilterModeType,
-    removeRegTask, removeRegTaskWeek, restoreRegTask,
-    setRegPaging, updateRegTask,
+    RegularTaskViewExtendedRepository,
+    RegularTaskWeekExtendedRepository,
+    removeRegTask, removeRegTaskWeek,
+    resetPaging,
+    restoreRegTask,
+    updateRegTask,
     updateRegTaskWeek
 } from '@entities/regular-tasks'
-import { RegularTaskViewExtendedRepository } from '@entities/regular-tasks/model/regular-task-view.extended.repository'
-import { RegularTaskWeekExtendedRepository } from '@entities/regular-tasks/model/regular-task-week.extended.repository'
-import { RegularTaskExtendedRepository } from '@entities/regular-tasks/model/regular-task.extended.repository'
 import { AppDispatchType } from '@shared/lib/hooks'
 import { DbFilter, FetchTasksTypes, ModificationType } from '@shared/lib/types'
 import { AppTheme } from '@shared/theme/lib'
 import { selectAppTheme } from '@shared/theme/model'
-import { ListFooter, ListNoData, RemoveFormModal } from '@shared/ui'
+import { ListFooter, ListNoData, RemoveFormModal, RestoreFormModal } from '@shared/ui'
 import React, { Component } from 'react'
 import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native'
 import { Badge, Button, Divider, Icon, IconButton, Text } from 'react-native-paper'
@@ -104,7 +105,7 @@ class RegularTaskListComponent extends Component<PropsType, StateType> {
         const timeout = window.setTimeout(async () => {
             dispatch(
                 await fetchRegTasks({
-                    regularTaskViewRep: regularTaskViewRep,
+                    regularTaskViewRep,
                     weekRep: regularTaskWeekRep,
                     paging,
                     fetchType,
@@ -129,7 +130,7 @@ class RegularTaskListComponent extends Component<PropsType, StateType> {
         let newPaging = Object.assign({}, paging)
         newPaging.columnsShow = columnsShow
 
-        dispatch(setRegPaging({ paging: newPaging }))
+        dispatch(resetPaging({ paging: newPaging }))
         this.changeMode()
     };
 

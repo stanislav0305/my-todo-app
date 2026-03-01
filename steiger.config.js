@@ -1,56 +1,63 @@
-import fsd from "@feature-sliced/steiger-plugin";
-import { defineConfig } from "steiger";
+import fsd from '@feature-sliced/steiger-plugin';
+import { defineConfig } from 'steiger';
 
 export default defineConfig([
   ...fsd.configs.recommended,
   {
-    files: ["./src/app/type-orm-database/data-source-for-migration.ts"],
+    files: ['./src/app/**'],
     rules: {
-      "fsd/no-public-api-sidestep":
-        "off" /* Forbidden sidestep of public API when importing from "../../entities/tasks/types/task". 
+      'fsd/no-public-api-sidestep': 'off' /* 
+      Forbidden sidestep of public API when importing from "../../entities/tasks/types/task". 
       In src\app\type-orm-database\data-source-for-migration.ts
       TypeORM migration can work only with that paths formats ("../../entities/tasks/types/task")
+      ┌ src\app\providers\app-data-provider.tsx
+      ⚠ Forbidden sidestep of public API when importing from "@entities/actual-tasks/model/actual-task-view.extended.repository".
+      └ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+      ┌ src\app\providers\app-data-provider.tsx
+      ⚠ Forbidden sidestep of public API when importing from "@entities/actual-tasks/model/actual-task-view.extended.repository".
+      └ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
       */,
     },
   },
   {
-    files: ["./src/pages/**"],
+    files: ['./src/pages/**'],
     rules: {
-      "fsd/no-segmentless-slices": "off",
-      "fsd/forbidden-imports": "off", //Forbidden import from higher layer "app".
+      'fsd/no-segmentless-slices': 'off',
+      'fsd/forbidden-imports': 'off', //Forbidden import from higher layer "app".
     },
   },
   {
-    files: ["./src/widgets/**"],
+    files: ['./src/widgets/**'],
     rules: {
-      "fsd/no-public-api-sidestep": "off", //Forbidden sidestep of public API when importing from "@/src/app/providers/app-data-provider".
-      "fsd/forbidden-imports": "off", //Forbidden import from higher layer "app".
-      "fsd/insignificant-slice": "off", //This slice has only one reference in slice "widgets\word-list". Consider merging them.
+      'fsd/no-public-api-sidestep': 'off', //Forbidden sidestep of public API when importing from "@/src/app/providers/app-data-provider".
+      'fsd/forbidden-imports': 'off', //Forbidden import from higher layer "app".
+      'fsd/insignificant-slice': 'off', //This slice has only one reference in slice "widgets\word-list". Consider merging them.
     },
   },
   {
-    files: ["./src/features/**"],
+    files: ['./src/features/**'],
     rules: {
-      "fsd/forbidden-imports": "off", //Forbidden import from higher layer "app".
-      "fsd/insignificant-slice": "off", //This slice has only one reference in slice "widgets\word-list". Consider merging them.
-      "fsd/segments-by-purpose": "off", //This segment's name should describe the purpose of its contents, not what the contents are.
-      "fsd/repetitive-naming": "off", //Repetitive word "task" in slice names.
+      'fsd/forbidden-imports': 'off', //Forbidden import from higher layer "app".
+      'fsd/insignificant-slice': 'off', //This slice has only one reference in slice "widgets\word-list". Consider merging them.
+      'fsd/segments-by-purpose': 'off', //This segment's name should describe the purpose of its contents, not what the contents are.
+      'fsd/repetitive-naming': 'off', //Repetitive word "task" in slice names.
     },
   },
   {
-    files: ["./src/entities/**"],
+    files: ['./src/entities/**'],
     rules: {
-      "fsd/inconsistent-naming": "off",
-      "fsd/segments-by-purpose": "off", //This segment's name should describe the purpose of its contents, not what the contents are.
+      'fsd/inconsistent-naming': 'off',
+      'fsd/segments-by-purpose': 'off', //This segment's name should describe the purpose of its contents, not what the contents are.
+      'fsd/forbidden-imports': 'off', //Forbidden cross-import from slice "actual-tasks".
     },
   },
   {
-    files: ["./src/shared/**"],
+    files: ['./src/shared/**'],
     rules: {
-      "fsd/public-api": "off", //This segment is missing a public API.
-      "fsd/no-reserved-folder-names": "off", //Having a folder with the name "lib" inside a segment could be confusing because that name is commonly used for segments. Consider renaming it.
-      "fsd/no-public-api-sidestep": "off", //Forbidden sidestep of public API when importing from "@/src/shared/theme/model"
-      "fsd/forbidden-imports": "off", //Forbidden import from higher layer "app".
+      'fsd/public-api': 'off', //This segment is missing a public API.
+      'fsd/no-reserved-folder-names': 'off', //Having a folder with the name "lib" inside a segment could be confusing because that name is commonly used for segments. Consider renaming it.
+      'fsd/no-public-api-sidestep': 'off', //Forbidden sidestep of public API when importing from "@/src/shared/theme/model"
+      'fsd/forbidden-imports': 'off', //Forbidden import from higher layer "app".
     },
   },
 ]);

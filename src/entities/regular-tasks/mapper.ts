@@ -1,19 +1,24 @@
-import { Period, RegularTask, RegularTaskModel, RegularTaskView } from '@entities/regular-tasks'
+
+import { dateHelper } from '@shared/lib/helpers'
+import { ActualTaskModel } from '../actual-tasks'
+import { RegularTaskView } from './types/regular-task-view.entity'
+import { Period, RegularTask } from './types/regular-task.entity'
+import { RegularTaskModel } from './types/regular-task.model'
 
 
-function calcPeriodParam(period: Period, periodSize: number, beginDate?: string, dayOfWeekNum?: number): string {
+function calcPeriodParam(period: Period, periodSize: number): string {
     switch (period) {
         case 'everyDay': {
-            return `+ ${periodSize} day`
+            return `+${periodSize} day`
         }
         case 'everyWeek': {
-            return `+ (${periodSize} * 7 - strftime('%w', ${beginDate}) + ${dayOfWeekNum}) day`
+            return `+7 day`
         }
         case 'everyMonth': {
-            return `+ ${periodSize} month`
+            return `+${periodSize} month`
         }
         case 'everyYear': {
-            return `+ ${periodSize} year`
+            return `+${periodSize} year`
         }
         default:
             throw new Error(`No case for period ${period}`)
@@ -76,6 +81,7 @@ export const mapper = {
         } satisfies RegularTaskModel as RegularTaskModel
     },
     mapToEntity(params: { model: RegularTaskModel, rt?: RegularTask }): RegularTask {
+        //only for days, months and years
         const { model } = params
         let { rt } = params
         rt = rt ?? new RegularTask()
@@ -84,29 +90,81 @@ export const mapper = {
             ...rt,
             ...model,
             id: rt.id,
-            weekId: model.period === 'everyWeek' ? model.weekId : null, //if not week then clear weekId
-            weekDay: model.period === 'everyWeek' ? model.weekDay : null, //if not week then clear weekDay
-            periodParam: model.period === 'everyWeek'
-                ? calcPeriodParam(model.period, model.periodSize, model.beginDate, model.weekDay!)
-                : calcPeriodParam(model.period, model.periodSize),
+            weekId: null,
+            weekDay: null,
+            beginDate: model.beginDate,
+            periodParam: calcPeriodParam(model.period, model.periodSize),
         } as RegularTask
 
         return rt
     },
+    mapWeekDayToEntity(model: RegularTaskModel, weekDay: number, rt?: RegularTask): RegularTask {
+        //only for weeks
+        let r = rt ?? new RegularTask()
+
+        r = {
+            ...r,
+            ...model,
+            id: r.id,
+            weekId: model.weekId,
+            weekDay: weekDay,
+            beginDate: dateHelper.getNearestDate(model.beginDate, weekDay), //calculated for each week day (and week beginDate saved in RegularTasksWeek table)
+            periodParam: calcPeriodParam(model.period, model.periodSize),
+        } as RegularTask
+
+        return r
+    },
     mapToEntityWeekDay(weekDayIsActive: boolean, weekDay: number, model: RegularTaskModel, oldWeekDays: RegularTask[],
         newWeekDays: RegularTask[]): RegularTask[] {
+        //only for weeks, change regularTaskWeek.weekDays
         const rt = oldWeekDays.find(i => i.weekDay === weekDay) ?? null
 
         if (!!weekDayIsActive && !!rt) {
             //need to update
-            newWeekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: weekDay }, rt }))
+            newWeekDays.push(mapper.mapWeekDayToEntity(model, weekDay, rt))
         }
         else if (!!weekDayIsActive && rt === null) {
             //need to create
-            newWeekDays.push(mapper.mapToEntity({ model: { ...model, weekDay: weekDay } }))
+            newWeekDays.push(mapper.mapWeekDayToEntity(model, weekDay))
         }
         //else need to remove, and its well be skipped
 
         return newWeekDays
+    },
+
+    //-----------------------------------------------------------
+    mapModelToActualTaskModel(model: RegularTaskModel): ActualTaskModel {
+        return {
+            id: `0-${model.id}-0-${model.beginDate}`,
+            isFirstGen: `true ${model.period}`,
+
+            time: model.time,
+            date: model.beginDate,
+
+            title: model.title,
+
+            regularTaskId: model.id,
+            taskId: null,
+            regularTasksResultId: null,
+
+            weekDay: model.weekDay,
+            periodParam: model.periodParam,
+            period: model.period,
+            periodSize: model.periodSize,
+
+            isImportant: model.isImportant,
+            isUrgent: model.isUrgent,
+
+            createdAt: model.createdAt,
+            updateAt: model.updateAt,
+            deletedAt: model.deletedAt,
+
+            beginDate: null,
+            endDate: null,
+
+            status: 'todo',
+            pagingDateFrom: null,
+            pagingDateTo: null
+        } as ActualTaskModel satisfies ActualTaskModel
     },
 }

@@ -20,7 +20,7 @@ export const AppText = ({ iconType, textColor, children }: Props) => {
             {(iconType === 'info' || iconType === 'warning') && (
                 <>
                     <AntDesign
-                        name={iconType === 'info' ? 'info-circle' : 'warning'}
+                        name={iconType === 'info' ? 'infocirlce' : 'warning'}
                         size={20}
                         color={color}
                     />
