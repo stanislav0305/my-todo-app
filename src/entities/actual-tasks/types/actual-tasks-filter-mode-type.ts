@@ -2,14 +2,15 @@ import { DropDownItems } from '@/src/shared/lib/types'
 
 
 export type ActualTasksFilterModeType =
-    | 'today'
+    | 'byDay'
     | 'byWeek'
     | 'byMonth'
+    | 'inTrash'
 
 export const filterModes: Record<ActualTasksFilterModeType, DropDownItems> = {
-    today: {
-        label: 'today',
-        value: 'today',
+    byDay: {
+        label: 'by day',
+        value: 'byDay',
         iconType: 'MaterialDesignIcons',
         icon: 'calendar-today',
     },
@@ -25,6 +26,12 @@ export const filterModes: Record<ActualTasksFilterModeType, DropDownItems> = {
         iconType: 'MaterialDesignIcons',
         icon: 'calendar-multiselect',
     },
+    inTrash: {
+        label: 'in trash',
+        value: 'inTrash',
+        iconType: 'MaterialDesignIcons',
+        icon: 'trash-can',
+    }
 }
 
 export const filterModesDropDownItems = Object.entries(filterModes).map(

@@ -1,6 +1,8 @@
 import { ActualTaskPeriod, ActualTaskStatus } from './actual-task-view.entity'
 
 
+export type ActualTaskType = 'Task' | 'RegularTask'
+
 export class ActualTaskModel {
     id: string
 
@@ -13,8 +15,11 @@ export class ActualTaskModel {
 
     regularTaskId: number | null
     taskId: number | null
+    taskType: ActualTaskType
+
     regularTasksResultId: number | null
 
+    weekId: number | null
     weekDay: number | null
     periodParam: string
     period: ActualTaskPeriod | null

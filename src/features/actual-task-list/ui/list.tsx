@@ -1,30 +1,38 @@
-import { DEFAULT_TASK, Task, TaskStatus } from '@/src/entities/tasks'
 import {
-    ActualTaskColumnsShow,
-    ActualTaskPagingExtendedRepository, actualTaskPagingInit, ActualTaskPagingModel, ActualTaskPagingPeriodModel, actualTaskPagingUpdate, ActualTasksFilterModeType, ActualTaskView,
+    ActualTaskColumnsShow, ActualTaskModel, ActualTaskPagingExtendedRepository, actualTaskPagingInit, ActualTaskPagingModel,
+    ActualTaskPagingPeriodModel, actualTaskPagingUpdate, ActualTaskPeriod, ActualTasksFilterModeType, ActualTaskType, ActualTaskView,
     ActualTaskViewExtendedRepository, fetchActualTasks,
-    filterModes,
     resetPaging
 } from '@entities/actual-tasks'
-import { DEFAULT_REGULAR_TASK_MODEL, RegularTaskModel } from '@entities/regular-tasks'
+import { Period, RegularTaskExtendedRepository, RegularTaskModel, RegularTaskViewExtendedRepository, RegularTaskWeekExtendedRepository, removeRegTask, removeRegTaskWeek } from '@entities/regular-tasks'
+import { removeTask, Task, TaskExtendedRepository, TaskStatus, updateTask } from '@entities/tasks'
 import { stringHelper } from '@shared/lib/helpers'
 import { AppDispatchType } from '@shared/lib/hooks'
 import { DbFilter, FetchTasksTypes, ModificationType } from '@shared/lib/types'
 import { AppTheme } from '@shared/theme/lib'
 import { selectAppTheme } from '@shared/theme/model'
-import { ListFooter, ListNoData } from '@shared/ui'
+import { ListFooter, ListNoData, RemoveFormModal } from '@shared/ui'
 import React, { Component } from 'react'
 import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native'
-import { Divider, Icon, Text } from 'react-native-paper'
+import { Badge, Button, Divider, IconButton, Text } from 'react-native-paper'
 import { connect } from 'react-redux'
+import { RegularTaskEditFormModal } from '../../regular-task-edit'
+import { TaskEditFormModal } from '../../task-edit'
 import { mapper } from '../mapper'
-import { ActualTaskListItem, ActualTaskType } from './list-item'
+import { ListColumnsShowForm } from './list-columns-show-form'
+import { ListFilterForm } from './list-filter-form'
+import { ActualTaskListItem } from './list-item'
 import { ListPeriodFilter } from './list-period-filter'
 
 
 type StateType = {
     mode: ModificationType
-    item: Task | RegularTaskModel
+    taskId: number
+    regularTaskId: number
+    weekId: number
+    title: string
+    itemType: ActualTaskType
+    period: ActualTaskPeriod | null
     isLoading: boolean
     isRefreshing: boolean
 }
@@ -33,15 +41,17 @@ type PropsType = {
     appTheme: AppTheme
     actualTaskPagingRep: ActualTaskPagingExtendedRepository
     actualTaskViewRep: ActualTaskViewExtendedRepository
+    regularTaskRep: RegularTaskExtendedRepository
+    regularTaskViewRep: RegularTaskViewExtendedRepository
+    regularTaskWeekRep: RegularTaskWeekExtendedRepository
+    taskRep: TaskExtendedRepository
     dispatch: AppDispatchType
     paging: ActualTaskPagingModel
     pagingPeriod: ActualTaskPagingPeriodModel
-    items: ActualTaskView[]
+    items: ActualTaskModel[]
 }
 
 class ActualTaskListComponent extends Component<PropsType, StateType> {
-    actualTaskPagingRep: ActualTaskPagingExtendedRepository
-    actualTaskViewRep: ActualTaskViewExtendedRepository
     callOnScrollEnd = true;
     lastStartIndex: number = 0;
     keyExtractor = (item: ActualTaskView, index: number) =>
@@ -52,7 +62,12 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
 
         this.state = {
             mode: 'none',
-            item: { ...DEFAULT_TASK } as Task,
+            itemType: 'Task',
+            taskId: 0,
+            regularTaskId: 0,
+            weekId: 0,
+            title: '',
+            period: null,
             isLoading: false,
             isRefreshing: false,
         }
@@ -64,29 +79,22 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
         this.fetchMore('fetchFromBegin')
     }
 
-    changeMode = (itemType: ActualTaskType = 'Task', mode: ModificationType = 'none', itemId: string = '') => {
-        const { items } = { ...this.props }
-
-        let item: Task | RegularTaskModel
-        if (itemType === 'Task') {
-            item = stringHelper.isEmpty(itemId)
-                ? { ...DEFAULT_TASK } as Task
-                : mapper.mapActualTaskViewToTask(items.find(i => i.id === itemId)!)
-        }
-        else if (itemType === 'RegularTaskModel') {
-            item = stringHelper.isEmpty(itemId)
-                ? ({ ...DEFAULT_REGULAR_TASK_MODEL } as RegularTaskModel)
-                : mapper.mapActualTaskViewToRegularTaskModel(items.find(i => i.id === itemId)!)
-        } else {
-            throw new Error(`ChangeMode method not implemented case. itemType=${itemType} itemId=${itemId}`)
-        }
+    changeMode = (mode: ModificationType = 'none', itemType: ActualTaskType = 'Task', taskId: number = 0,
+        regularTaskId: number = 0, weekId: number = 0, title: string = '', period: ActualTaskPeriod | null = null) => {
+        console.log(`changeMode with params mode=${mode},  itemType=${itemType}, taskId=${taskId} regularTaskId=${regularTaskId} 
+            weekId=${weekId} period=${period}`)
 
         this.setState({
             ...this.state,
-            mode: mode,
-            item: { ...item },
+            mode,
+            itemType,
+            taskId,
+            regularTaskId,
+            weekId,
+            title,
+            period,
         })
-    };
+    }
 
     isSameDate = (currentItem: ActualTaskView, prevItem: ActualTaskView) => {
         return (
@@ -127,33 +135,28 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
         })
 
         const timeout = window.setTimeout(async () => {
-            dispatch(
-                await fetchActualTasks({
-                    actualTaskViewRep: actualTaskViewRep,
-                    paging,
-                    fetchType,
-                    columnsShow,
-                    filter,
-                }),
-            ).then(() => {
-                this.setState({
-                    ...this.state,
-                    isLoading: false,
-                })
+            await dispatch(fetchActualTasks({
+                actualTaskViewRep: actualTaskViewRep,
+                paging, fetchType, columnsShow, filter
+            }))
 
-                window.clearTimeout(timeout)
+            this.setState({
+                ...this.state,
+                isLoading: false,
             })
+
+            window.clearTimeout(timeout)
         }, 1000)
     }
 
-    onChangeColumnsShow = (columnsShow: ActualTaskColumnsShow) => {
+    onChangeColumnsShow = async (columnsShow: ActualTaskColumnsShow) => {
         console.log('onChangeColumnsShow...')
         const { dispatch, paging } = { ...this.props }
 
         let newPaging = Object.assign({}, paging)
         newPaging.columnsShow = columnsShow
 
-        dispatch(resetPaging({ paging: newPaging }))
+        await dispatch(resetPaging({ paging: newPaging }))
         this.changeMode()
     }
 
@@ -174,39 +177,36 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
         this.fetchMore('fetchNext')
     }
 
-    onChangeTaskStatus = (itemId: number, status: TaskStatus) => {
-        /* const { taskRep, dispatch, items } = { ...this.props }
-     
-         const item = { ...items.find(item => item.id === itemId)! }
-         item.status = status
-         dispatch(updateTask({ taskRep, item })) */
+    onChangeTaskStatus = async (itemId: string, status: TaskStatus) => {
+        const { taskRep, actualTaskViewRep, dispatch, items } = { ...this.props }
+        const actualTaskItem = { ...items.find(item => item.id === itemId)! }
+
+        if (actualTaskItem.taskType === 'Task') {
+            const item = mapper.mapActualTaskViewToTask(actualTaskItem)
+            item.status = status
+
+            await dispatch(updateTask({ taskRep, actualTaskViewRep, item }))
+        } else if (actualTaskItem.taskType === 'RegularTask') {
+            throw new Error('Not implemented code')
+        }
     }
 
-    onSaveTask = async (item: Task, withListReload: boolean) => {
-        /*  const { taskRep, dispatch } = { ...this.props }
-     
-          const promise = !!item.id
-              ? dispatch(updateTask({ taskRep, item }))
-              : dispatch(createTask({ taskRep, item }))
-     
-          promise.then(async () => {
-              if (withListReload) await this.fetchMore('fetchFromBegin')
-              this.changeMode()
-          }) */
-    }
+    onDeleteTask = async (itemType: ActualTaskType, taskId: number, regularTaskId: number, weekId: number, period: Period) => {
+        //id - taskId or regularTaskId or WeekId 
+        const { taskRep, actualTaskViewRep, regularTaskRep, regularTaskViewRep, regularTaskWeekRep, dispatch } = { ...this.props }
+        const { mode } = { ...this.state }
 
-    onDeleteTask = (id: number) => {
-        /*  const { taskRep, dispatch } = { ...this.props }
-          const { mode } = { ...this.state }
-     
-          dispatch(
-              removeTask({
-                  taskRep,
-                  id,
-                  softRemove: mode === 'softRemove',
-              }),
-          )
-          this.changeMode() */
+        if (itemType === 'RegularTask') {
+            if (period === 'everyWeek')
+                await dispatch(removeRegTaskWeek({ regularTaskWeekRep, regularTaskViewRep, actualTaskViewRep, weekId, softRemove: mode === 'softRemove' }))
+            else
+                await dispatch(removeRegTask({ regularTaskRep, regularTaskViewRep, actualTaskViewRep, id: regularTaskId, softRemove: mode === 'softRemove' }))
+        }
+        else if (itemType === 'Task') {
+            await dispatch(removeTask({ taskRep, actualTaskViewRep, id: taskId, softRemove: mode === 'softRemove' }))
+        }
+
+        this.changeMode()
     }
 
     // Refreshing--------------------------------------
@@ -217,7 +217,7 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
             isRefreshing: true,
         })
 
-        this.fetchMore('fetchFromBegin', null, null)
+        this.fetchMore('fetchFromBegin')
 
         this.setState({
             ...this.state,
@@ -227,18 +227,7 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
 
     //--------------------------------------------------
 
-    onRestore = (id: number) => {
-        /*  const { taskRep, dispatch } = { ...this.props }
-     
-          const promise = dispatch(restoreTask({ taskRep, id }))
-          promise.then(async () => {
-              this.changeMode()
-          }) */
-    }
-
-    //--------------------------------------------------
-
-    renderItem = (itemInfo: ListRenderItemInfo<ActualTaskView>) => {
+    renderItem = (itemInfo: ListRenderItemInfo<ActualTaskModel>) => {
         const { items, paging } = { ...this.props }
         const showDayRow = !this.isSameDate(
             items[itemInfo.index],
@@ -261,21 +250,33 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
     }
 
     render() {
-        const { isLoading, isRefreshing } = { ...this.state }
-        const { paging, pagingPeriod, items, appTheme } = { ...this.props }
+        const { isLoading, isRefreshing, mode, itemType, taskId, regularTaskId, weekId, title, period } = { ...this.state }
+        const { paging, pagingPeriod, items, appTheme, regularTaskRep, regularTaskViewRep,
+            regularTaskWeekRep, actualTaskViewRep, taskRep } = { ...this.props }
         const { primary } = { ...appTheme.colors }
+
+        console.log(`mode:${mode} itemType:${itemType} taskId:${taskId} regularTaskId:${regularTaskId} 
+            weekId:${weekId} title:${title} period:${period}`)
 
         return (
             <>
                 <View style={styles.row}>
-                    {/* 
                     {!!(paging.filter.mode !== 'inTrash') && (
                         <Button
-                            onPress={() => this.changeMode('edit')}
+                            onPress={() => this.changeMode('edit', 'Task')}
                             icon={{ source: 'plus-thick', direction: 'ltr' }}
                             mode="contained"
                         >
                             Add task
+                        </Button>
+                    )}
+                    {!!(paging.filter.mode !== 'inTrash') && (
+                        <Button
+                            onPress={() => this.changeMode('edit', 'RegularTask')}
+                            icon={{ source: 'plus-thick', direction: 'ltr' }}
+                            mode="contained"
+                        >
+                            Add regular task
                         </Button>
                     )}
                     <IconButton
@@ -295,20 +296,19 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
                         mode="contained"
                         size={20}
                     ></IconButton>
-                    */}
-                    <ListPeriodFilter
-                        model={pagingPeriod}
-                        onChange={this.onChangePagingPeriod}
-                    />
                 </View>
+                <ListPeriodFilter
+                    model={pagingPeriod}
+                    onChange={this.onChangePagingPeriod}
+                />
                 <View style={styles.row2}>
                     <View style={styles.row2Col1}>
-                        <Text variant="labelLarge" style={{ flexWrap: 'wrap' }}>
+                        {/* <Text variant="labelLarge" style={{ flexWrap: 'wrap' }}>
                             <Icon source={filterModes[paging.filter.mode].icon} size={20} />
                         </Text>
                         <Text variant="labelLarge" style={{ flexWrap: 'wrap' }}>
                             {` ${filterModes[paging.filter.mode].label} `}
-                        </Text>
+                        </Text>*/}
                     </View>
                     <View style={styles.row2Col2}>
                         <Text variant="labelMedium" style={styles.row2Col2Text}>
@@ -334,35 +334,56 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
                     ListEmptyComponent={ListNoData}
                     ListFooterComponent={ListFooter({ isLoading, color: primary })}
                 />
-                {/* 
-                {mode === 'edit' && (
+                {mode === 'edit' && itemType === 'Task' && (
                     <TaskEditFormModal
-                        item={item}
-                        onChangeItem={this.onSaveTask}
+                        taskRep={taskRep}
+                        actualTaskViewRep={actualTaskViewRep}
+                        id={taskId}
+                        onSavedItem={(item: Task) => this.changeMode()}
                         onClose={this.changeMode}
                     />
                 )}
-                {(mode === 'softRemove' || mode === 'remove') && (
-                    <RemoveFormModal
-                        itemId={item.id}
-                        softRemove={mode === 'softRemove'}
-                        questionText={
-                            mode === 'softRemove'
-                                ? `Do you really want to move to trash task '${item.title}' by id '${item.id}'?`
-                                : `Do you really want to remove task '${item.title}' by id '${item.id}'?`
-                        }
-                        onDelete={this.onDeleteTask}
-                        onClose={this.changeMode}
-                    />
-                )}
-                {(mode === 'restore') &&
-                    <RestoreFormModal
-                        itemId={item.id}
-                        questionText={`Do you really want to restore task '${item.title}' by id '${item.id}'?`}
-                        onRestore={this.onRestore}
+                {mode === 'edit' && itemType === 'RegularTask' &&
+                    <RegularTaskEditFormModal
+                        actualTaskViewRep={actualTaskViewRep}
+                        regularTaskRep={regularTaskRep}
+                        regularTaskViewRep={regularTaskViewRep}
+                        regularTaskWeekRep={regularTaskWeekRep}
+                        id={regularTaskId}
+                        onSavedItem={(item: RegularTaskModel) => this.changeMode()}
                         onClose={this.changeMode}
                     />
                 }
+                {mode === 'softRemove' && (
+                    <RemoveFormModal
+                        itemId={
+                            itemType === 'Task'
+                                ? taskId
+                                : itemType === 'RegularTask'
+                                    ? period === 'everyWeek'
+                                        ? weekId
+                                        : regularTaskId
+                                    : -1 //'Not implemented code.'
+                        }
+                        softRemove={true}
+                        questionText={
+                            //only soft remove
+                            itemType === 'Task'
+                                ? `Do you really want to move to trash task '${title}' by id '${taskId}'?`
+                                : itemType === 'RegularTask'
+                                    ? `Do you really want to move to trash regular task '${title}' ${period === 'everyWeek'
+                                        ? ` by weekId '${weekId}'`
+                                        : ` by id '${regularTaskId}'`}?`
+                                    : 'Not implemented code.'
+                        }
+                        onDelete={(id: number) => this.onDeleteTask(itemType,
+                            itemType === 'Task' ? id : 0,
+                            (itemType === 'RegularTask' && period !== 'everyWeek') ? id : 0,
+                            (itemType === 'RegularTask' && period === 'everyWeek') ? id : 0,
+                            period!)}
+                        onClose={this.changeMode}
+                    />
+                )}
                 {mode === 'filter' && (
                     <ListFilterForm
                         filter={paging.filter}
@@ -377,7 +398,6 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
                         onClose={this.changeMode}
                     />
                 )}
-                    */}
             </>
         )
     }
@@ -401,6 +421,10 @@ const mapDispatchToProps = (dispatch: AppDispatchType) => {
 type ownPropsType = {
     actualTaskPagingRep: ActualTaskPagingExtendedRepository
     actualTaskViewRep: ActualTaskViewExtendedRepository
+    regularTaskRep: RegularTaskExtendedRepository
+    regularTaskViewRep: RegularTaskViewExtendedRepository
+    regularTaskWeekRep: RegularTaskWeekExtendedRepository
+    taskRep: TaskExtendedRepository
 }
 
 function mergeProps(

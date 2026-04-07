@@ -43,6 +43,7 @@ export const DEFAULT_REGULAR_TASK_PAGING = {
 export const INITIAL_REGULAR_TASKS_STATE = {
     paging: DEFAULT_REGULAR_TASK_PAGING,
     items: [] as RegularTaskModel[],
+    currentItem: { ...DEFAULT_REGULAR_TASK_MODEL } as RegularTaskModel,
 } satisfies RegularTasksState as RegularTasksState
 
 const periodNames: Record<Period, string> = {

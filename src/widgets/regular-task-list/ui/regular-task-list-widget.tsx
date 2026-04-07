@@ -6,6 +6,7 @@ export const RegularTaskListWidget = () => {
     return (
         <AppDataContext.Consumer>
             {value => <RegularTaskList
+                actualTaskViewRep={value.actualTaskViewRep}
                 regularTaskWeekRep={value.regularTaskWeekRep}
                 regularTaskViewRep={value.regularTaskViewRep}
                 regularTaskRep={value.regularTaskRep}

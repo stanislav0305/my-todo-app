@@ -1,10 +1,10 @@
-import { ONE_DAY_IN_MILLISECONDS } from '@/src/shared/lib/constants'
 import { filterModesDropDownItems, Task, TasksFilter, TasksFilterModeType, taskStatusIconNames } from '@entities/tasks'
 import { calendarDateHelper, stringHelper, timeHelper } from '@shared/lib/helpers'
 import { DbFilter, DropDownItems } from '@shared/lib/types'
 import { sharedStyles } from '@shared/styles'
 import { useAppTheme } from '@shared/theme/hooks'
-import { AppDatePickerSingleModal, AppTimePickerModal, ThemedModal } from '@shared/ui'
+import { AppTimePickerModal, ThemedModal } from '@shared/ui'
+import { AppDatePickerRangeModal } from '@shared/ui/app-date-picker-range-modal'
 import { Select } from '@shared/ui/select'
 import { FormikProps, useFormik } from 'formik'
 import { Keyboard, StyleSheet, View } from 'react-native'
@@ -127,45 +127,6 @@ function onChangeFilterMode(
             })
             break
         }
-        case 'today': {
-            const date = new Date()
-
-            formik.setValues({
-                ...formik.values,
-                mode: item.value as TasksFilterModeType,
-                withDeleted: false,
-                date0: calendarDateHelper.toFormattedStringOrEmpty(
-                    date as CalendarDate,
-                    'YYYY-MM-DD',
-                ),
-                date1: calendarDateHelper.toFormattedStringOrEmpty(
-                    date as CalendarDate,
-                    'YYYY-MM-DD',
-                ),
-            })
-            break
-        }
-        case 'byPeriod': {
-            const date0 = new Date()
-            const date1 = new Date(
-                new Date().getTime() + ONE_DAY_IN_MILLISECONDS * 7,
-            )
-
-            formik.setValues({
-                ...formik.values,
-                mode: item.value as TasksFilterModeType,
-                withDeleted: false,
-                date0: calendarDateHelper.toFormattedStringOrEmpty(
-                    date0 as CalendarDate,
-                    'YYYY-MM-DD',
-                ),
-                date1: calendarDateHelper.toFormattedStringOrEmpty(
-                    date1 as CalendarDate,
-                    'YYYY-MM-DD',
-                ),
-            })
-            break
-        }
         case 'inTrash': {
             formik.setValues({
                 ...formik.values,
@@ -195,7 +156,7 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
             onChangeFilter(newFilter)
         },
         onSubmit: (values: TasksFilter) => {
-            console.log('Form submit:', values)
+            console.log('Form submit:', JSON.stringify(values, null, 2))
 
             let newFilter = convertToDbFilter(values)
             console.log('Form submit converted:', newFilter)
@@ -262,7 +223,9 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
             />
 
             <Divider style={styles.divider0} />
-
+            <Text variant="labelMedium" style={{ marginLeft: 5 }}>
+                Time:
+            </Text>
             <AppTimePickerModal
                 use24HourClock={true}
                 hours={timeHelper.getHoursFromStringOrUndefined(formik.values.time)}
@@ -282,40 +245,28 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
             <View style={sharedStyles.row}>
                 <View style={sharedStyles.col}>
                     <Text variant="labelMedium" style={{ marginLeft: 5 }}>
-                        Date from:
+                        Date:
                     </Text>
-                    <AppDatePickerSingleModal
-                        date={calendarDateHelper.toCalendarDate(formik.values.date0)}
-                        onConfirm={(params: { date: CalendarDate }) => {
-                            formik.setFieldValue(
-                                'date0',
-                                calendarDateHelper.toFormattedStringOrEmpty(
-                                    params.date,
-                                    'YYYY-MM-DD',
-                                ),
-                            )
-                        }}
+                    <AppDatePickerRangeModal
+                        startDate={calendarDateHelper.toCalendarDate(formik.values.date0)}
+                        endDate={calendarDateHelper.toCalendarDate(formik.values.date1)}
                         locale="ru"
-                        mode="single"
-                    />
-                </View>
-                <View style={sharedStyles.col}>
-                    <Text variant="labelMedium" style={{ marginLeft: 5 }}>
-                        Date to:
-                    </Text>
-                    <AppDatePickerSingleModal
-                        date={calendarDateHelper.toCalendarDate(formik.values.date1)}
-                        onConfirm={(params: { date: CalendarDate }) => {
-                            formik.setFieldValue(
-                                'date1',
-                                calendarDateHelper.toFormattedStringOrEmpty(
-                                    params.date,
-                                    'YYYY-MM-DD',
-                                ),
-                            )
+                        startLabel='# From date'
+                        endLabel='# To date'
+                        onConfirm={(startDate: CalendarDate, endDate: CalendarDate) => {
+                            formik.setValues({
+                                ...formik.values,
+                                date0: calendarDateHelper.toFormattedStringOrEmpty(startDate, 'YYYY-MM-DD'),
+                                date1: calendarDateHelper.toFormattedStringOrEmpty(endDate, 'YYYY-MM-DD')
+                            })
                         }}
-                        locale="ru"
-                        mode="single"
+                        onDismiss={() => {
+                            formik.setValues({
+                                ...formik.values,
+                                date0: undefined,
+                                date1: undefined
+                            })
+                        }}
                     />
                 </View>
             </View>

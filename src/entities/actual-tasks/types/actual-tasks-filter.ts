@@ -6,8 +6,8 @@ export interface ActualTasksFilter {
     withDeleted?: boolean | undefined
     id?: string | undefined
     time?: string
-    Date0?: string
-    Date1?: string
+    date0?: string
+    date1?: string
     title?: string
     isImportant?: boolean
     isUrgent?: boolean

@@ -6,7 +6,7 @@ import { Period, RegularTask } from './types/regular-task.entity'
 import { RegularTaskModel } from './types/regular-task.model'
 
 
-function calcPeriodParam(period: Period, periodSize: number): string {
+export function calcPeriodParam(period: Period, periodSize: number): string {
     switch (period) {
         case 'everyDay': {
             return `+${periodSize} day`
@@ -32,18 +32,24 @@ export const mapper = {
         return {
             id: item.id,
             time: item.time,
-            beginDate: item.beginDate,
+
+            beginDate: !!item.week?.id ? item.week?.beginDate : item.beginDate,
             endDate: item.endDate,
+
             period: item.period,
             periodParam: item.periodParam,
             periodSize: item.periodSize,
             title: item.title,
+
             weekDay: item.weekDay,
+
             isImportant: item.isImportant,
             isUrgent: item.isUrgent,
-            createdAt: item.createdAt,
-            updateAt: item.updateAt,
-            deletedAt: item.deletedAt,
+
+            createdAt: !!item.week?.id ? item.week?.createdAt : item.createdAt,
+            updateAt: !!item.week?.id ? item.week?.updateAt : item.updateAt,
+            deletedAt: !!item.week?.id ? item.week?.deletedAt : item.deletedAt,
+
             weekId: item.week?.id,
             su: !!weekDays ? weekDays.findIndex(i => i.weekDay === 0) >= 0 : false,
             mo: !!weekDays ? weekDays.findIndex(i => i.weekDay === 1) >= 0 : false,
@@ -147,6 +153,7 @@ export const mapper = {
             taskId: null,
             regularTasksResultId: null,
 
+            weekId: model.weekId,
             weekDay: model.weekDay,
             periodParam: model.periodParam,
             period: model.period,

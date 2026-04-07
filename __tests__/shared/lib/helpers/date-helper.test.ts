@@ -1,4 +1,4 @@
-import { dateHelper } from './date-helper'
+import { dateHelper } from '@shared/lib/helpers'
 
 
 describe('getNearestDateShift', () => {

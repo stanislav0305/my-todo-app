@@ -1,9 +1,7 @@
+import { ActualTaskViewExtendedRepository } from '@/src/entities/actual-tasks'
 import {
-    createTask, DEFAULT_TASK, fetchTasks, filterModes, removeTask,
-    resetPaging,
-    restoreTask,
-    Task, TaskColumnsShow, TaskExtendedRepository, TaskPaging,
-    TasksFilterModeType, TaskStatus, updateTask
+    fetchTasks, filterModes, removeTask, resetPaging, restoreTask, Task, TaskColumnsShow,
+    TaskExtendedRepository, TaskPaging, TasksFilterModeType, TaskStatus, updateTask
 } from '@entities/tasks'
 import { TaskEditFormModal } from '@features/task-edit'
 import { stringHelper } from '@shared/lib/helpers'
@@ -22,7 +20,7 @@ import { TaskListItem } from './list-item'
 
 type StateType = {
     mode: ModificationType
-    item: Task
+    id: number
     isLoading: boolean
     isRefreshing: boolean
 }
@@ -30,23 +28,24 @@ type StateType = {
 type PropsType = {
     appTheme: AppTheme
     taskRep: TaskExtendedRepository
+    actualTaskViewRep: ActualTaskViewExtendedRepository
     dispatch: AppDispatchType
     paging: TaskPaging
     items: Task[]
 }
 
 class TaskListComponent extends Component<PropsType, StateType> {
-    callOnScrollEnd = true;
-    lastStartIndex: number = 0;
+    callOnScrollEnd = true
+    lastStartIndex: number = 0
     keyExtractor = (item: Task, index: number) =>
-        `${item.deletedAt == null ? '' : 'deleted-'}task-${item.id}`;
+        `${item.deletedAt == null ? '' : 'deleted-'}task-${item.id}`
 
     constructor(props: PropsType) {
         super(props)
 
         this.state = {
             mode: 'none',
-            item: { ...DEFAULT_TASK } as Task,
+            id: 0,
             isLoading: false,
             isRefreshing: false,
         }
@@ -56,20 +55,13 @@ class TaskListComponent extends Component<PropsType, StateType> {
         this.fetchMore('fetchFromBegin')
     }
 
-    changeMode = (mode: ModificationType = 'none', itemId: number = 0) => {
-        const { items } = { ...this.props }
-
-        const item =
-            itemId === 0
-                ? ({ ...DEFAULT_TASK } as Task)
-                : items.find(i => i.id === itemId)!
-
+    changeMode = (mode: ModificationType = 'none', id: number = 0) => {
         this.setState({
             ...this.state,
-            mode: mode,
-            item: { ...item },
+            mode,
+            id
         })
-    };
+    }
 
     isSameDate = (currentItem: Task, prevItem: Task) => {
         return (
@@ -81,7 +73,7 @@ class TaskListComponent extends Component<PropsType, StateType> {
                     !stringHelper.isEmpty(prevItem.date) &&
                     currentItem.date === prevItem.date))
         )
-    };
+    }
 
     fetchMore = (
         fetchType: FetchTasksTypes,
@@ -110,80 +102,53 @@ class TaskListComponent extends Component<PropsType, StateType> {
         })
 
         const timeout = window.setTimeout(async () => {
-            dispatch(
-                await fetchTasks({
-                    taskRep: taskRep,
-                    paging,
-                    fetchType,
-                    columnsShow,
-                    filter,
-                }),
-            ).then(() => {
-                this.setState({
-                    ...this.state,
-                    isLoading: false,
-                })
+            await dispatch(fetchTasks({ taskRep: taskRep, paging, fetchType, columnsShow, filter }))
 
-                window.clearTimeout(timeout)
+            this.setState({
+                ...this.state,
+                isLoading: false,
             })
-        }, 1000)
-    };
 
-    onChangeColumnsShow = (columnsShow: TaskColumnsShow) => {
+            window.clearTimeout(timeout)
+        }, 1000)
+    }
+
+    onChangeColumnsShow = async (columnsShow: TaskColumnsShow) => {
         console.log('onChangeColumnsShow...')
         const { dispatch, paging } = { ...this.props }
 
         let newPaging = Object.assign({}, paging)
         newPaging.columnsShow = columnsShow
 
-        dispatch(resetPaging({ paging: newPaging }))
+        await dispatch(resetPaging({ paging: newPaging }))
         this.changeMode()
-    };
+    }
 
     onChangeFilter = (filter: DbFilter<Task, TasksFilterModeType>) => {
         this.fetchMore('fetchFromBegin', null, filter)
         this.changeMode()
-    };
+    }
 
     onEndReached = () => {
         console.log('onEndReached...')
         this.fetchMore('fetchNext')
-    };
+    }
 
-    onChangeTaskStatus = (itemId: number, status: TaskStatus) => {
-        const { taskRep, dispatch, items } = { ...this.props }
+    onChangeTaskStatus = async (itemId: number, status: TaskStatus) => {
+        const { taskRep, actualTaskViewRep, dispatch, items } = { ...this.props }
 
         const item = { ...items.find(item => item.id === itemId)! }
         item.status = status
-        dispatch(updateTask({ taskRep, item }))
-    };
+        await dispatch(updateTask({ taskRep, actualTaskViewRep, item }))
+    }
 
-    onSaveTask = async (item: Task, withListReload: boolean) => {
-        const { taskRep, dispatch } = { ...this.props }
-
-        const promise = !!item.id
-            ? dispatch(updateTask({ taskRep, item }))
-            : dispatch(createTask({ taskRep, item }))
-
-        promise.then(async () => {
-            if (withListReload) await this.fetchMore('fetchFromBegin')
-            this.changeMode()
-        })
-    };
-
-    onDeleteTask = (id: number) => {
-        const { taskRep, dispatch } = { ...this.props }
+    onDeleteTask = async (id: number) => {
+        const { taskRep, actualTaskViewRep, dispatch } = { ...this.props }
         const { mode } = { ...this.state }
 
-        dispatch(
-            removeTask({
-                taskRep,
-                id,
-                softRemove: mode === 'softRemove',
-            }),
-        )
+        await dispatch(removeTask({ taskRep, actualTaskViewRep, id, softRemove: mode === 'softRemove' }))
         this.changeMode()
-    };
+    }
 
     // Refreshing--------------------------------------
 
@@ -193,24 +158,22 @@ class TaskListComponent extends Component<PropsType, StateType> {
             isRefreshing: true,
         })
 
-        this.fetchMore('fetchFromBegin', null, null)
+        this.fetchMore('fetchFromBegin')
 
         this.setState({
             ...this.state,
             isRefreshing: false,
         })
-    };
+    }
 
     //--------------------------------------------------
 
-    onRestore = (id: number) => {
-        const { taskRep, dispatch } = { ...this.props }
+    onRestore = async (id: number) => {
+        const { taskRep, actualTaskViewRep, dispatch } = { ...this.props }
 
-        const promise = dispatch(restoreTask({ taskRep, id }))
-        promise.then(async () => {
-            this.changeMode()
-        })
-    };
+        await dispatch(restoreTask({ taskRep, actualTaskViewRep, id }))
+        this.changeMode()
+    }
 
     //--------------------------------------------------
 
@@ -234,12 +197,14 @@ class TaskListComponent extends Component<PropsType, StateType> {
                 onChangeStatus={this.onChangeTaskStatus}
             />
         )
-    };
+    }
 
     render() {
-        const { mode, item, isLoading, isRefreshing } = { ...this.state }
+        const { mode, id, isLoading, isRefreshing } = { ...this.state }
         const { paging, items, appTheme } = { ...this.props }
         const { primary } = { ...appTheme.colors }
+        const item = ['softRemove', 'remove', 'restore'].includes(mode) ? items.find(i => i.id === id) : null
+        console.log(`mode: ${mode} item: ${item}`)
 
         return (
             <>
@@ -306,28 +271,32 @@ class TaskListComponent extends Component<PropsType, StateType> {
                 />
                 {mode === 'edit' && (
                     <TaskEditFormModal
-                        item={item}
-                        onChangeItem={this.onSaveTask}
+                        taskRep={this.props.taskRep}
+                        actualTaskViewRep={this.props.actualTaskViewRep}
+                        id={id}
+                        onSavedItem={(item: Task) => this.changeMode()}
                         onClose={this.changeMode}
                     />
                 )}
+
                 {(mode === 'softRemove' || mode === 'remove') && (
                     <RemoveFormModal
-                        itemId={item.id}
+                        itemId={id}
                         softRemove={mode === 'softRemove'}
                         questionText={
                             mode === 'softRemove'
-                                ? `Do you really want to move to trash task '${item.title}' by id '${item.id}'?`
-                                : `Do you really want to remove task '${item.title}' by id '${item.id}'?`
+                                ? `Do you really want to move to trash task '${item?.title}' by id '${id}'?`
+                                : `Do you really want to remove task '${item?.title}' by id '${id}'?`
                         }
                         onDelete={this.onDeleteTask}
                         onClose={this.changeMode}
                     />
                 )}
+
                 {(mode === 'restore') &&
                     <RestoreFormModal
-                        itemId={item.id}
-                        questionText={`Do you really want to restore task '${item.title}' by id '${item.id}'?`}
+                        itemId={id}
+                        questionText={`Do you really want to restore task '${item?.title}' by id '${id}'?`}
                         onRestore={this.onRestore}
                         onClose={this.changeMode}
                     />
@@ -367,6 +336,7 @@ const mapDispatchToProps = (dispatch: AppDispatchType) => {
 
 type ownPropsType = {
     taskRep: TaskExtendedRepository
+    actualTaskViewRep: ActualTaskViewExtendedRepository
 }
 
 function mergeProps(

@@ -3,6 +3,7 @@ import { TaskPaging } from './tasks-paging'
 
 
 export interface TasksState {
-    paging: TaskPaging,
-    items: Task[],
+    paging: TaskPaging
+    items: Task[]
+    currentItem: Task
 }

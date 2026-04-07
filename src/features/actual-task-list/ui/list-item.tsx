@@ -1,35 +1,34 @@
-//import { Task, TaskColumnsShow, TasksFilterModeType, TaskStatus, taskStatusIconNames } from '@entities/tasks'
-import { ActualTaskColumnsShow, ActualTasksFilterModeType, ActualTaskView } from '@/src/entities/actual-tasks'
-import { TaskStatus, taskStatusIconNames } from '@/src/entities/tasks'
+import { ActualTaskColumnsShow, ActualTaskModel, ActualTaskPeriod, ActualTasksFilterModeType, ActualTaskType } from '@entities/actual-tasks'
+import { TaskStatus, taskStatusIconNames } from '@entities/tasks'
 import { dateHelper, stringHelper } from '@shared/lib/helpers'
 import { ModificationType } from '@shared/lib/types'
 import { sharedStyles } from '@shared/styles'
 import { useAppTheme } from '@shared/theme/hooks'
-import React from 'react'
+import React, { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { Chip, Icon, Text } from 'react-native-paper'
+import { Chip, Divider, Icon, IconButton, Menu, Text } from 'react-native-paper'
 
-
-export type ActualTaskType = 'Task' | 'RegularTaskModel'
 
 type Props = {
     filterMode: ActualTasksFilterModeType,
     serialNumber: number
     serialNumberInDay: number
-    item: ActualTaskView
+    item: ActualTaskModel
     showDayRow: boolean
     columnsShow: ActualTaskColumnsShow
-    onChange: (itemType: ActualTaskType, mode: ModificationType, itemId: string) => void
-    onChangeStatus: (itemId: number, status: TaskStatus) => void
+    onChange: (mode?: ModificationType, itemType?: ActualTaskType, taskId?: number, regularTaskId?: number,
+        weekId?: number, title?: string, period?: ActualTaskPeriod | null) => void
+    onChangeStatus: (itemId: string, status: TaskStatus) => void
 }
 
-const ActualTaskListItemComponent = ({ filterMode, serialNumber, serialNumberInDay, item, showDayRow, columnsShow, onChange, onChangeStatus }: Props) => {
+const ActualTaskListItemComponent = ({ filterMode, serialNumber, serialNumberInDay,
+    item, showDayRow, columnsShow, onChange, onChangeStatus }: Props) => {
     const appTheme = useAppTheme()
     const { success, secondary, danger, primary, blue } = appTheme.colors
 
-    //const [visible, setVisible] = useState(false)
-    //const openMenu = () => setVisible(true)
-    //const closeMenu = () => setVisible(false)
+    const [visible, setVisible] = useState(false)
+    const openMenu = () => setVisible(true)
+    const closeMenu = () => setVisible(false)
 
     return (
         <>
@@ -96,7 +95,7 @@ const ActualTaskListItemComponent = ({ filterMode, serialNumber, serialNumberInD
                                     variant="bodyMedium"
                                     style={{ color: blue, marginRight: 10 }}
                                 >
-                                    id: {item.id}
+                                    id: {item.id} {!!item.weekId ? `weekId:${item.weekId}` : ''}
                                 </Text>
                             )}
                             {!!item.time && (
@@ -164,7 +163,6 @@ const ActualTaskListItemComponent = ({ filterMode, serialNumber, serialNumberInD
                         )}
                     </View>
                     <View style={styles.column3}>
-                        {/*
                         <Menu
                             visible={visible}
                             onDismiss={closeMenu}
@@ -180,54 +178,50 @@ const ActualTaskListItemComponent = ({ filterMode, serialNumber, serialNumberInD
                             {!!(filterMode !== 'inTrash') && (
                                 <>
                                     {item.status === 'done' && (
-                                        <Menu.Item
-                                            title="to todo"
-                                            leadingIcon={taskStatusIconNames['todo']}
-                                            onPress={() => {
-                                                onChangeStatus(item.id, 'todo')
-                                                closeMenu()
-                                            }}
-                                        />
+                                        <>
+                                            <Menu.Item
+                                                title="to todo"
+                                                leadingIcon={taskStatusIconNames['todo']}
+                                                onPress={() => {
+                                                    onChangeStatus(item.id, 'todo')
+                                                    closeMenu()
+                                                }}
+                                            />
+                                            <Divider style={styles.divider} />
+                                        </>
                                     )}
                                     {item.status === 'todo' && (
-                                        <Menu.Item
-                                            title="to doing"
-                                            leadingIcon={taskStatusIconNames['doing']}
-                                            onPress={() => {
-                                                onChangeStatus(item.id, 'doing')
-                                                closeMenu()
-                                            }}
-                                        />
+                                        <>
+                                            <Menu.Item
+                                                title="to doing"
+                                                leadingIcon={taskStatusIconNames['doing']}
+                                                onPress={() => {
+                                                    onChangeStatus(item.id, 'doing')
+                                                    closeMenu()
+                                                }}
+                                            />
+                                            <Divider style={styles.divider} />
+                                        </>
                                     )}
                                     {item.status === 'doing' && (
-                                        <Menu.Item
-                                            title="to done"
-                                            leadingIcon={taskStatusIconNames['done']}
-                                            onPress={() => {
-                                                onChangeStatus(item.id, 'done')
-                                                closeMenu()
-                                            }}
-                                        />
+                                        <>
+                                            <Menu.Item
+                                                title="to done"
+                                                leadingIcon={taskStatusIconNames['done']}
+                                                onPress={() => {
+                                                    onChangeStatus(item.id, 'done')
+                                                    closeMenu()
+                                                }}
+                                            />
+                                            <Divider style={styles.divider} />
+                                        </>
                                     )}
-                                    <Divider style={styles.divider} />
                                     <Menu.Item
                                         title="edit"
                                         leadingIcon="pencil"
                                         onPress={() => {
-                                            onChange('edit', item.id)
-                                            closeMenu()
-                                        }}
-                                    />
-                                    <Divider style={styles.divider} />
-                                </>
-                            )}
-                            {!!(filterMode === 'inTrash') && (
-                                <>
-                                    <Menu.Item
-                                        title='restore'
-                                        leadingIcon='delete-restore'
-                                        onPress={() => {
-                                            onChange('restore', item.id)
+                                            onChange('edit', item.taskType, item.taskId ?? 0, item.regularTaskId ?? 0, item.weekId ?? 0,
+                                                item.title, item.period)
                                             closeMenu()
                                         }}
                                     />
@@ -235,15 +229,15 @@ const ActualTaskListItemComponent = ({ filterMode, serialNumber, serialNumberInD
                                 </>
                             )}
                             <Menu.Item
-                                title={!!item.deletedAt ? 'remove' : 'move to trash'}
-                                leadingIcon={!!item.deletedAt ? 'close-thick' : 'trash-can'}
+                                title={'move to trash'}
+                                leadingIcon={'trash-can'}
                                 onPress={() => {
-                                    onChange(!!item.deletedAt ? 'remove' : 'softRemove', item.id)
+                                    onChange('softRemove', item.taskType, item.taskId ?? 0, item.regularTaskId ?? 0, item.weekId ?? 0,
+                                        item.title, item.period)
                                     closeMenu()
                                 }}
                             />
                         </Menu>
-                        */}
                     </View>
                 </View>
             </View>

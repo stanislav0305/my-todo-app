@@ -8,14 +8,13 @@ import { RegularTask } from '../types/regular-task.entity'
 import { RegularTaskModel } from '../types/regular-task.model'
 import { RegularTasksFilterModeType } from '../types/regular-tasks-filter-mode-type'
 import { RegularTaskPaging } from '../types/regular-tasks-paging'
-import { RegularTaskWeekExtendedRepository } from './regular-task-week.extended.repository'
 
 
 export interface RegularTaskViewExtendedRepository extends Repository<RegularTask> {
     mapPagingBefore(paging: RegularTaskPaging, fetchType: FetchTasksTypes, columnsShow: RegularTaskColumnsShow | null,
         filter: DbFilter<RegularTask, RegularTasksFilterModeType> | null): { paging: RegularTaskPaging, hasNext: boolean }
     mapPagingAfter(paging: RegularTaskPaging, itemCount: number): RegularTaskPaging
-    fetchRegTasks(weekRep: RegularTaskWeekExtendedRepository, paging: RegularTaskPaging): Promise<[RegularTaskModel[], number]>
+    fetchRegTasks(paging: RegularTaskPaging): Promise<[RegularTaskModel[], number]>
 }
 
 export const regularTaskViewExtendedRepository: RegularTaskViewExtendedRepository = {
@@ -50,12 +49,12 @@ export const regularTaskViewExtendedRepository: RegularTaskViewExtendedRepositor
 
         return p
     },
-    async fetchRegTasks(this: Repository<RegularTaskView>, weekRep: RegularTaskWeekExtendedRepository, paging: RegularTaskPaging)
+    async fetchRegTasks(this: Repository<RegularTaskView>, paging: RegularTaskPaging)
         : Promise<[RegularTaskModel[], number]> {
         console.log('paging', paging)
 
         console.log('-------------------------')
-        const [items] = await this.findAndCount({
+        const [items, itemCount] = await this.findAndCount({
             where: paging.filter.where,
             withDeleted: paging.filter.withDeleted,
             order: paging.order,
@@ -68,7 +67,7 @@ export const regularTaskViewExtendedRepository: RegularTaskViewExtendedRepositor
         })
         console.log('-------------------------')
 
-        const result: [RegularTaskModel[], number] = [models, models.length]
+        const result: [RegularTaskModel[], number] = [models, itemCount]
         return result
     }
 } as RegularTaskViewExtendedRepository satisfies RegularTaskViewExtendedRepository

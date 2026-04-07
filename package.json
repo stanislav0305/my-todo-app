@@ -4,12 +4,14 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
+    "android": "expo run:android",
+    "android1": "expo start --android",
     "android2": "npx expo start --tunnel",
     "web": "expo start --web",
     "lint": "expo lint",
-    "steiger": "npx steiger ./src --watch",
-    "test": "jest --watchAll --silent=false",
+    "steiger:run": "npx steiger ./src --watch",
+    "test": "jest --watchAll --silent=false --runInBand",
+    "test:coverage": "jest --coverage",
     "migrate:create-empty": "cd src/app/type-orm-database     && npx ts-node --project ./tsconfig-for-type-orm-migration.json ../../../node_modules/typeorm/cli.js migration:create migrations/next-migration",
     "migrate:generate": "cd src/app/type-orm-database     && npx ts-node --project ./tsconfig-for-type-orm-migration.json ../../../node_modules/typeorm/cli.js migration:generate migrations/next-migration -d ./data-source-for-migration.ts",
     "migrate:run": "cd src/app/type-orm-database     && npx ts-node --project ./tsconfig-for-type-orm-migration.json ../../../node_modules/typeorm/cli.js migration:run -d ./data-source-for-migration.ts",
@@ -19,7 +21,30 @@
     "migrate:fresh": "cd src/app/type-orm-database && npm run migrate:drop-all-objects-in-db && npm run migrate:run"
   },
   "jest": {
-    "preset": "jest-expo"
+    "verbose": true,
+    "preset": "jest-expo",
+    "globals": {
+      "transform": {
+        "tsconfig": [
+          "ts-jest",
+          {
+            "tsconfig": "<rootDir>/just.tsconfig.json"
+          }
+        ]
+      }
+    },
+    "transformIgnorePatterns": [],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/__tests__/test-utils",
+      "/__tests__/tests-types.d.ts"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx"
+    ]
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -68,6 +93,7 @@
     "redux-persist": "^6.0.0",
     "reflect-metadata": "^0.2.2",
     "sqlite3": "^5.1.7",
+    "ts-jest": "^29.4.9",
     "typeorm": "^0.3.27",
     "yup": "^1.7.1"
   },

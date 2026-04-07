@@ -14,7 +14,7 @@ export interface ActualTaskViewExtendedRepository extends Repository<ActualTaskV
     mapPagingBefore(paging: ActualTaskPagingModel, fetchType: FetchTasksTypes, columnsShow: ActualTaskColumnsShow | null,
         filter: DbFilter<ActualTaskView, ActualTasksFilterModeType> | null): { paging: ActualTaskPagingModel, hasNext: boolean }
     mapPagingAfter(paging: ActualTaskPagingModel, itemCount: number): ActualTaskPagingModel
-    fetchRegTasks(paging: ActualTaskPagingModel): Promise<[ActualTaskModel[], number]>
+    fetchActualTasks(paging: ActualTaskPagingModel): Promise<[ActualTaskModel[], number]>
 }
 
 export const actualTaskViewExtendedRepository: ActualTaskViewExtendedRepository = {
@@ -49,12 +49,12 @@ export const actualTaskViewExtendedRepository: ActualTaskViewExtendedRepository 
 
         return p
     },
-    async fetchRegTasks(this: Repository<ActualTaskView>, paging: ActualTaskPagingModel)
+    async fetchActualTasks(this: Repository<ActualTaskView>, paging: ActualTaskPagingModel)
         : Promise<[ActualTaskModel[], number]> {
         console.log('paging', paging)
 
         console.log('-------------------------')
-        const [items] = await this.findAndCount({
+        const [items, itemCount] = await this.findAndCount({
             where: paging.filter.where,
             withDeleted: paging.filter.withDeleted,
             order: paging.order,
@@ -67,7 +67,7 @@ export const actualTaskViewExtendedRepository: ActualTaskViewExtendedRepository 
         })
         console.log('-------------------------')
 
-        const result: [ActualTaskModel[], number] = [models, models.length]
+        const result: [ActualTaskModel[], number] = [models, itemCount]
         return result
     }
 } as ActualTaskViewExtendedRepository satisfies ActualTaskViewExtendedRepository

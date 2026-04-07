@@ -72,7 +72,7 @@ export const RegularTaskListItem = ({ filterMode, serialNumber, item, columnsSho
                                 variant="bodyMedium"
                                 style={{ color: blue, marginRight: 10 }}
                             >
-                                id: {item.id}
+                                id: {item.id} {!!item.weekId ? `weekId: ${item.weekId}` : ''}
                             </Text>
                         )}
                         {!!item.time &&

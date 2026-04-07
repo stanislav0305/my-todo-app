@@ -19,7 +19,7 @@ export const DEFAULT_ACTUAL_TASK_PAGING = {
     hasNext: true,
     hasPrevious: false,
     filter: {
-        mode: 'today',
+        mode: 'byDay',
         count: 0,
         //for view typeorm automatically not add this query part
         where: { deletedAt: IsNull() } as FindOptionsWhere<ActualTaskView> | undefined,

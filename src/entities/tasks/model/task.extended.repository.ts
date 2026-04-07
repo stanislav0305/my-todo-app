@@ -12,10 +12,12 @@ export interface TaskExtendedRepository extends Repository<Task> {
         filter: DbFilter<Task, TasksFilterModeType> | null): { paging: TaskPaging, hasNext: boolean }
     mapPagingAfter(paging: TaskPaging, itemCount: number): TaskPaging
     fetchTasks(paging: TaskPaging): Promise<[Task[], number]>
-    createTask(this: Repository<Task>, item: Task): Promise<Task>
-    updateTask(this: Repository<Task>, item: Task): Promise<Task>
-    removeTask(this: Repository<Task>, id: number, softRemove: boolean): Promise<Task>
-    restoreRegTask(id: number): Promise<UpdateResult>
+    findOneTask(id: number, withDeleted: boolean | undefined): Promise<Task>
+    createTask(item: Task): Promise<Task>
+    updateTask(item: Task): Promise<[boolean, Task]>
+    softRemoveTask(id: number): Promise<Task>
+    removeTask(id: number): Promise<Task>
+    restoreTask(id: number): Promise<UpdateResult>
 }
 
 export const taskExtendedRepository: TaskExtendedRepository = {
@@ -59,7 +61,15 @@ export const taskExtendedRepository: TaskExtendedRepository = {
             take: paging.take,
         } as FindManyOptions<Task>)
     },
-    createTask(this: Repository<Task>, item: Task): Promise<Task> {
+    async findOneTask(id: number, withDeleted: boolean | undefined): Promise<Task> {
+        const t = await this.findOne({
+            where: { id } as FindOptionsWhere<Task>,
+            withDeleted: withDeleted,
+        } as FindOneOptions<Task>)
+
+        return t!
+    },
+    createTask(item: Task): Promise<Task> { //this: Repository<Task>,
         let t = new Task()
         t = {
             ...t,
@@ -69,31 +79,31 @@ export const taskExtendedRepository: TaskExtendedRepository = {
 
         return this.save(t)
     },
-    async updateTask(this: Repository<Task>, item: Task): Promise<Task> {
+    async updateTask(item: Task): Promise<[boolean, Task]> {
         let t = await this.findOneBy({ id: item.id })
+        const needListReload = t == null || !item.id || item.time !== t.time || item.date !== t.date
+
         t = {
             ...t,
             ...item,
         }
 
-        return this.save(t)
+        return [needListReload, await this.save(t)]
     },
-    async removeTask(this: Repository<Task>, id: number, softRemove: boolean): Promise<Task> {
-        const findOpts = { id } as FindOptionsWhere<Task>
 
-        if (softRemove) {
-            const taskToRemove = await this.findOneBy(findOpts)
-            return this.softRemove(taskToRemove!)
-        } else {
-            const taskToRemove = await this.findOne({
-                where: findOpts,
-                withDeleted: true,
-            } as FindOneOptions<Task>)
-
-            return this.remove(taskToRemove!)
-        }
+    async softRemoveTask(id: number): Promise<Task> {
+        //can remove only not soft removed
+        const taskToRemove = await this.findOneTask(id, false)
+        return await this.softRemove(taskToRemove!)
     },
-    async restoreRegTask(id: number): Promise<UpdateResult> {
+
+    async removeTask(id: number): Promise<Task> {
+        //can remove soft removed and not
+        const taskToRemove = await this.findOneTask(id, true)
+        return await this.remove(taskToRemove!)
+    },
+
+    async restoreTask(id: number): Promise<UpdateResult> {
         return await this.restore(id)
     },
 } as TaskExtendedRepository satisfies TaskExtendedRepository

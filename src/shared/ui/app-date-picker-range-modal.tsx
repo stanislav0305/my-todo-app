@@ -14,20 +14,20 @@ type Props = {
     onConfirm?: (startDate: CalendarDate, endDate: CalendarDate) => void
     onDismiss?: () => any
     locale: string
+    startLabel?: string
+    endLabel?: string
 }
 type State = {
     visible: boolean
 }
 
-export function AppDatePickerRangeModal({ onConfirm, onDismiss, locale, withDateRemoveBtn = true, ...rest }: Props) {
+export function AppDatePickerRangeModal({ onConfirm, onDismiss, locale, startLabel = 'start', endLabel = 'end', withDateRemoveBtn = true, ...rest }: Props) {
     const appTheme = useAppTheme()
     const { primary } = appTheme.colors
-    const [state, setSate] = useState<State>({
-        visible: false
-    } as State)
+    const [state, setState] = useState<State>({ visible: false } as State)
 
     const setStateData = (visible: boolean) => {
-        setSate(prev => {
+        setState(prev => {
             return {
                 ...prev,
                 visible
@@ -35,25 +35,21 @@ export function AppDatePickerRangeModal({ onConfirm, onDismiss, locale, withDate
         })
     }
 
-    const onConfirmDatePicker = useCallback(
-        (params: { startDate: CalendarDate, endDate: CalendarDate }) => {
-            rest.startDate = params.startDate
-            rest.endDate = params.endDate
-            console.log(`selected period: ${rest.startDate}-${rest.endDate}`)
+    const onConfirmDatePicker = useCallback((params: { startDate: CalendarDate, endDate: CalendarDate }) => {
+        rest.startDate = params.startDate
+        rest.endDate = params.endDate
+        console.log(`selected period: ${rest.startDate}-${rest.endDate}`)
 
-            setStateData(false)
-            onConfirm && onConfirm(rest.startDate, rest.endDate)
-        },
-        [rest, onConfirm]
-    )
+        setStateData(false)
+        onConfirm && onConfirm(rest.startDate, rest.endDate)
+    },
+        [rest, onConfirm])
 
-    const onDismissDatePicker = useCallback(
-        () => {
-            setStateData(false)
-            onDismiss && onDismiss()
-        },
-        [onDismiss]
-    )
+    const onDismissDatePicker = useCallback(() => {
+        setStateData(false)
+        onDismiss && onDismiss()
+    },
+        [onDismiss])
 
     const rangeString = calendarDateHelper.getRangeOrTemplateString(rest.startDate, rest.endDate, 'DD/MM/YYYY')
 
@@ -87,18 +83,20 @@ export function AppDatePickerRangeModal({ onConfirm, onDismiss, locale, withDate
                         mode='contained'
                         icon='calendar-remove'
                         size={22}
-                        onPress={() => onConfirmDatePicker({ startDate: rest.startDate, endDate: rest.endDate })}
+                        onPress={() => onConfirmDatePicker({ startDate: undefined, endDate: undefined })}
                     />
                 }
             </View>
             <DatePickerModal
-                visible={state.visible}
                 mode='range'
+                visible={state.visible}
                 startDate={rest.startDate}
                 endDate={rest.endDate}
                 onConfirm={onConfirmDatePicker}
                 onDismiss={onDismissDatePicker}
                 locale={locale}
+                startLabel={startLabel}
+                endLabel={endLabel}
             /* validRange={{
                 startDate: today, // Optional: minimum selectable date
                 endDate: maxDate, // Optional: maximum selectable date (7 days later)

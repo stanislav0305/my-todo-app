@@ -24,7 +24,7 @@ export function ListColumnsShowForm({
             onChangeColumnsShow(DEFAULT_REGULAR_TASK_PAGING.columnsShow)
         },
         onSubmit: (values: RegularTaskColumnsShow) => {
-            console.log('Form submit:', values)
+            console.log('Form submit:', JSON.stringify(values, null, 2))
             onChangeColumnsShow(values)
         },
     })

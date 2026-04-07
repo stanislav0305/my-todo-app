@@ -1,4 +1,4 @@
-import { DEFAULT_TASK_PAGING, TaskColumnsShow } from '@entities/tasks'
+import { ActualTaskColumnsShow, DEFAULT_ACTUAL_TASK_PAGING } from '@/src/entities/actual-tasks'
 import { sharedStyles } from '@shared/styles'
 import { CustomCheckbox, ThemedModal } from '@shared/ui'
 import { useFormik } from 'formik'
@@ -6,12 +6,12 @@ import { StyleSheet, View } from 'react-native'
 import { Button, Divider, SegmentedButtons, Text } from 'react-native-paper'
 
 type Props = {
-    columnsShow: TaskColumnsShow
-    onChangeColumnsShow: (columnsShow: TaskColumnsShow) => void
+    columnsShow: ActualTaskColumnsShow
+    onChangeColumnsShow: (columnsShow: ActualTaskColumnsShow) => void
     onClose: () => void
 }
 
-function getSerialNumberType(values: TaskColumnsShow) {
+function getSerialNumberType(values: ActualTaskColumnsShow) {
     return values.serialNumber
         ? 'serialNumber'
         : values.serialNumberInDay
@@ -26,12 +26,12 @@ export function ListColumnsShowForm({
 }: Props) {
     const formik = useFormik({
         initialValues: columnsShow,
-        onReset: (values: TaskColumnsShow) => {
+        onReset: (values: ActualTaskColumnsShow) => {
             console.log('Form reset, old data:', values)
-            onChangeColumnsShow(DEFAULT_TASK_PAGING.columnsShow)
+            onChangeColumnsShow(DEFAULT_ACTUAL_TASK_PAGING.columnsShow)
         },
-        onSubmit: (values: TaskColumnsShow) => {
-            console.log('Form submit:', values)
+        onSubmit: (values: ActualTaskColumnsShow) => {
+            console.log('Form submit:', JSON.stringify(values, null, 2))
             onChangeColumnsShow(values)
         },
     })

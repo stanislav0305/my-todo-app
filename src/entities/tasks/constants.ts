@@ -45,6 +45,7 @@ export const DEFAULT_TASK_PAGING = {
 export const INITIAL_TASKS_STATE = {
     paging: Object.assign({}, DEFAULT_TASK_PAGING),
     items: [] as Task[],
+    currentItem: { ...DEFAULT_TASK } as Task,
 } satisfies TasksState as TasksState
 
 export const taskStatusIconNames = {

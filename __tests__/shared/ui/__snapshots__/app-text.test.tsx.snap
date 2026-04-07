@@ -1,0 +1,106 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AppText can change icon and color 1`] = `
+<Text
+  style={
+    [
+      {
+        "textAlign": "left",
+      },
+      {
+        "color": "rgba(28, 27, 31, 1)",
+        "fontFamily": "System",
+        "fontWeight": "400",
+        "letterSpacing": 0,
+      },
+      {
+        "writingDirection": "ltr",
+      },
+      {
+        "color": "#016e00ff",
+      },
+    ]
+  }
+>
+  <Text
+    color="#016e00ff"
+    id="icon"
+    name="infocirlce"
+    size={20}
+  >
+    infocirlce
+  </Text>
+    
+  ZZZ2
+</Text>
+`;
+
+exports[`AppText can change icon and color 2`] = `
+<Text
+  style={
+    [
+      {
+        "textAlign": "left",
+      },
+      {
+        "color": "rgba(28, 27, 31, 1)",
+        "fontFamily": "System",
+        "fontWeight": "400",
+        "letterSpacing": 0,
+      },
+      {
+        "writingDirection": "ltr",
+      },
+      {
+        "color": "#c2d000ff",
+      },
+    ]
+  }
+>
+  <Text
+    color="#c2d000ff"
+    id="icon"
+    name="warning"
+    size={20}
+  >
+    warning
+  </Text>
+    
+  ZZZ2
+</Text>
+`;
+
+exports[`AppText should rended AppText with icon 1`] = `
+<Text
+  style={
+    [
+      {
+        "textAlign": "left",
+      },
+      {
+        "color": "rgba(28, 27, 31, 1)",
+        "fontFamily": "System",
+        "fontWeight": "400",
+        "letterSpacing": 0,
+      },
+      {
+        "writingDirection": "ltr",
+      },
+      {
+        "color": "#016e00ff",
+      },
+    ]
+  }
+>
+  <Text
+    color="#016e00ff"
+    id="icon"
+    name="infocirlce"
+    size={20}
+  >
+    infocirlce
+  </Text>
+    
+  ZZZ2
+</Text>
+`;

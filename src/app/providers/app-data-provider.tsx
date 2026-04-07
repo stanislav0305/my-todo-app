@@ -38,7 +38,6 @@ export const AppDataContext = createContext<AppDataContextValueType>({
     actualTaskPagingRep: AppDataSource.getRepository(ActualTaskPaging).extend(actualTaskPagingExtendedRepository),
 } satisfies AppDataContextValueType as AppDataContextValueType)
 
-
 export const useAppData = () => {
     const context = useContext(AppDataContext)
     if (!context) {

@@ -1,16 +1,19 @@
-import { sharedStyles } from '@/src/shared/styles'
-import { useAppTheme } from '@/src/shared/theme/hooks'
-import { Task, taskStatusIconNames } from '@entities/tasks'
+import { ActualTaskViewExtendedRepository } from '@/src/entities/actual-tasks'
+import { AppDispatchType } from '@/src/shared/lib/hooks'
+import { selectAppTheme } from '@/src/shared/theme/model'
+import { createTask, findOneTask, Task, TaskExtendedRepository, taskStatusIconNames, updateTask } from '@entities/tasks'
 import { calendarDateHelper, dateHelper, timeHelper } from '@shared/lib/helpers'
-import {
-    AppDatePickerSingleModal, AppTimePickerModal, CustomCheckbox, FormErrorText,
-    ThemedModal
-} from '@shared/ui'
-import { useFormik } from 'formik'
+import { sharedStyles } from '@shared/styles'
+import { AppTheme } from '@shared/theme/lib'
+import { AppDatePickerSingleModal, AppTimePickerModal, CustomCheckbox, FormErrorText, ThemedModal } from '@shared/ui'
+import { FormikBag, FormikProps, withFormik } from 'formik'
+import { PureComponent } from 'react'
 import { Keyboard, StyleSheet, View } from 'react-native'
 import { Button, Divider, Icon, SegmentedButtons, Text, TextInput } from 'react-native-paper'
 import { CalendarDate } from 'react-native-paper-dates/lib/typescript/Date/Calendar'
+import { connect } from 'react-redux'
 import * as Yup from 'yup'
+
 
 const taskEditSchema = Yup.object().shape({
     title: Yup.string()
@@ -19,170 +22,247 @@ const taskEditSchema = Yup.object().shape({
         .required('This is required'),
 })
 
-type Props = {
+
+interface Props {
+    appTheme: AppTheme
+    taskRep: TaskExtendedRepository
+    actualTaskViewRep: ActualTaskViewExtendedRepository
+    dispatch: AppDispatchType
+    id: number
     item: Task
-    onChangeItem: (task: Task, withListReload: boolean) => void
+    onSavedItem: (task: Task) => void
     onClose: () => void
 }
 
-export function TaskEditFormModal({ item, onChangeItem, onClose }: Props) {
-    const onConfirmTimePicker = (hoursAndMinutes: {
-        hours: number | undefined
-        minutes: number | undefined
-    }) => {
-        const timeStr = timeHelper.toFormattedStringOrEmpty(hoursAndMinutes, 'hh:mm')
-        console.log('selected time in form:', timeStr)
-        formik.setFieldValue('time', timeStr)
+export class TaskEditForm extends PureComponent<Props & FormikProps<Task>> {
+    taskRep: TaskExtendedRepository
+    actualTaskViewRep: ActualTaskViewExtendedRepository
+
+    /* constructor(props: Props & FormikProps<Task>) {
+         super(props)
+     }*/
+
+    componentDidMount(): void {
+        const { dispatch, id, taskRep } = this.props
+        console.log('------------------')
+        console.log('id', id)
+        dispatch(findOneTask({ taskRep, id }))
+        console.log('------------------')
     }
 
-    const formik = useFormik({
-        initialValues: item,
-        validationSchema: taskEditSchema,
-        onSubmit: (values: Task) => {
-            console.log('Form submit:', values)
-            const withListReload = !values.id || values.time !== item.time || values.date !== item.date
+    onConfirmTimePicker(hoursAndMinutes: {
+        hours: number | undefined
+        minutes: number | undefined
+    }) {
+        const { setFieldValue } = this.props
+        const timeStr = timeHelper.toFormattedStringOrEmpty(hoursAndMinutes, 'hh:mm')
+        console.log('selected time in form:', timeStr)
+        setFieldValue('time', timeStr)
+    }
 
-            onChangeItem(values, withListReload)
-        },
-    })
+    render() {
+        const { handleSubmit, setFieldValue, handleBlur, handleChange, isValid,
+            errors, values, onClose, appTheme } = this.props
 
-    const appTheme = useAppTheme()
-    const { success, danger } = appTheme.colors
+        const { success, danger } = appTheme.colors
 
-    return (
-        <ThemedModal
-            title={!!formik.values.id ? 'Update task' : 'Add task'}
-            isVisible={true}
-            onClose={onClose}
-        >
-            {!!formik.values.id && (
-                <View style={sharedStyles.row}>
-                    <Text variant="labelMedium">id:</Text>
-                    <Text variant="labelMedium">{formik.values.id}</Text>
-                </View>
-            )}
-            <Divider style={styles.divider0} />
-            <AppTimePickerModal
-                use24HourClock={true}
-                hours={timeHelper.getHoursFromStringOrUndefined(formik.values.time)}
-                minutes={timeHelper.getMinutesFromStringOrUndefined(formik.values.time)}
-                onConfirm={hoursAndMinutes => onConfirmTimePicker(hoursAndMinutes)}
-                locale="ru"
-            />
-            <Divider style={styles.divider0} />
-            <AppDatePickerSingleModal
-                date={calendarDateHelper.toCalendarDate(formik.values.date)}
-                onConfirm={(params: { date: CalendarDate }) => {
-                    formik.setFieldValue(
-                        'date',
-                        calendarDateHelper.toFormattedStringOrEmpty(
-                            params.date,
-                            'YYYY-MM-DD',
-                        ),
-                    )
-                }}
-                locale="ru"
-                mode="single"
-            />
-            <Divider style={styles.divider0} />
-            <TextInput
-                multiline={true}
-                numberOfLines={5}
-                onChangeText={formik.handleChange('title')}
-                onBlur={formik.handleBlur('title')}
-                value={formik.values.title ?? ''}
-                label='title'
-                placeholder='title'
-                mode='outlined'
-                dense={true}
-                onSubmitEditing={Keyboard.dismiss}
-            />
-            {!!formik.errors.title && (
-                <FormErrorText>{formik.errors.title}</FormErrorText>
-            )}
-            <Divider style={styles.divider0} />
-            <SegmentedButtons
-                value={formik.values.status}
-                onValueChange={formik.handleChange('status')}
-                buttons={[
-                    {
-                        value: 'todo',
-                        icon: taskStatusIconNames['todo'],
-                        label: 'Todo',
-                    },
-                    {
-                        value: 'doing',
-                        icon: taskStatusIconNames['doing'],
-                        label: 'Doing',
-                    },
-                    {
-                        value: 'done',
-                        icon: taskStatusIconNames['done'],
-                        label: 'Done',
-                    },
-                ]}
-            />
-            {!!formik.errors.status && (
-                <FormErrorText>{formik.errors.status}</FormErrorText>
-            )}
-            <Divider style={styles.divider0} />
-            <CustomCheckbox
-                checkBoxState={formik.values.isImportant ? 'checked' : 'unchecked'}
-                onPress={() =>
-                    formik.setFieldValue('isImportant', !formik.values.isImportant)
-                }
+        return (
+            <ThemedModal
+                title={!!values.id ? 'Update task' : 'Add task'}
+                isVisible={true}
+                onClose={onClose}
             >
-                <Text variant="labelMedium">is important</Text>
-                <Icon source="chevron-double-up" size={20} color={success} />
-            </CustomCheckbox>
-            <Divider style={styles.divider0} />
-            <CustomCheckbox
-                checkBoxState={formik.values.isUrgent ? 'checked' : 'unchecked'}
-                onPress={() =>
-                    formik.setFieldValue('isUrgent', !formik.values.isUrgent)
-                }
-            >
-                <Text variant="labelMedium">is urgent</Text>
-                <Icon source="fire" size={20} color={danger} />
-            </CustomCheckbox>
-
-            <Divider style={styles.divider1} />
-
-            <View style={sharedStyles.row}>
-                <Text variant="labelMedium">created at:</Text>
-                <Text variant="labelMedium">{dateHelper.dbStrDateToFormattedString(formik.values.createdAt, 'DD/MM/YYYY hh:mm:ss')}
-                </Text>
-            </View>
-            <View style={sharedStyles.row}>
-                <Text variant='labelMedium'>update at:</Text>
-                <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(formik.values.updateAt, 'DD/MM/YYYY hh:mm:ss')}
-                </Text>
-            </View>
-            <View style={sharedStyles.row}>
-                <Text variant='labelMedium'>deleted at:</Text>
-                <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(formik.values.deletedAt, 'DD/MM/YYYY hh:mm:ss')}
-                </Text>
-            </View>
-
-            <View style={sharedStyles.btnRow}>
-                <Button
-                    onPress={() => formik.handleSubmit()}
-                    disabled={!formik.isValid}
-                    icon={{
-                        source: !!formik.values.id ? 'pencil' : 'plus-thick',
-                        direction: 'ltr',
+                {!!values.id && (
+                    <View style={sharedStyles.row}>
+                        <Text variant="labelMedium">id:</Text>
+                        <Text variant="labelMedium">{values.id}</Text>
+                    </View>
+                )}
+                <Divider style={styles.divider0} />
+                <AppTimePickerModal
+                    use24HourClock={true}
+                    hours={timeHelper.getHoursFromStringOrUndefined(values.time)}
+                    minutes={timeHelper.getMinutesFromStringOrUndefined(values.time)}
+                    onConfirm={hoursAndMinutes => this.onConfirmTimePicker(hoursAndMinutes)}
+                    locale="ru"
+                />
+                <Divider style={styles.divider0} />
+                <AppDatePickerSingleModal
+                    date={calendarDateHelper.toCalendarDate(values.date)}
+                    onConfirm={(params: { date: CalendarDate }) => {
+                        setFieldValue(
+                            'date',
+                            calendarDateHelper.toFormattedStringOrEmpty(
+                                params.date,
+                                'YYYY-MM-DD',
+                            ),
+                        )
                     }}
-                    mode="contained"
+                    locale="ru"
+                    mode="single"
+                />
+                <Divider style={styles.divider0} />
+                <TextInput
+                    multiline={true}
+                    numberOfLines={5}
+                    onChangeText={handleChange('title')}
+                    onBlur={handleBlur('title')}
+                    value={values.title ?? ''}
+                    label='title'
+                    placeholder='title'
+                    mode='outlined'
+                    dense={true}
+                    onSubmitEditing={Keyboard.dismiss}
+                />
+                {!!errors.title && (
+                    <FormErrorText>{errors.title}</FormErrorText>
+                )}
+                <Divider style={styles.divider0} />
+                <SegmentedButtons
+                    value={values.status}
+                    onValueChange={handleChange('status')}
+                    buttons={[
+                        {
+                            value: 'todo',
+                            icon: taskStatusIconNames['todo'],
+                            label: 'Todo',
+                        },
+                        {
+                            value: 'doing',
+                            icon: taskStatusIconNames['doing'],
+                            label: 'Doing',
+                        },
+                        {
+                            value: 'done',
+                            icon: taskStatusIconNames['done'],
+                            label: 'Done',
+                        },
+                    ]}
+                />
+                {!!errors.status && (
+                    <FormErrorText>{errors.status}</FormErrorText>
+                )}
+                <Divider style={styles.divider0} />
+                <CustomCheckbox
+                    checkBoxState={values.isImportant ? 'checked' : 'unchecked'}
+                    onPress={() =>
+                        setFieldValue('isImportant', !values.isImportant)
+                    }
                 >
-                    Save
-                </Button>
-                <Button onPress={onClose} mode="outlined">
-                    Cancel
-                </Button>
-            </View>
-        </ThemedModal>
-    )
+                    <Text variant="labelMedium">is important</Text>
+                    <Icon source="chevron-double-up" size={20} color={success} />
+                </CustomCheckbox>
+                <Divider style={styles.divider0} />
+                <CustomCheckbox
+                    checkBoxState={values.isUrgent ? 'checked' : 'unchecked'}
+                    onPress={() =>
+                        setFieldValue('isUrgent', !values.isUrgent)
+                    }
+                >
+                    <Text variant="labelMedium">is urgent</Text>
+                    <Icon source="fire" size={20} color={danger} />
+                </CustomCheckbox>
+
+                <Divider style={styles.divider1} />
+
+                <View style={sharedStyles.row}>
+                    <Text variant="labelMedium">created at:</Text>
+                    <Text variant="labelMedium">{dateHelper.dbStrDateToFormattedString(values.createdAt, 'DD/MM/YYYY hh:mm:ss')}
+                    </Text>
+                </View>
+                <View style={sharedStyles.row}>
+                    <Text variant='labelMedium'>update at:</Text>
+                    <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(values.updateAt, 'DD/MM/YYYY hh:mm:ss')}
+                    </Text>
+                </View>
+                <View style={sharedStyles.row}>
+                    <Text variant='labelMedium'>deleted at:</Text>
+                    <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(values.deletedAt, 'DD/MM/YYYY hh:mm:ss')}
+                    </Text>
+                </View>
+
+                <View style={sharedStyles.btnRow}>
+                    <Button
+                        onPress={() => handleSubmit()}
+                        disabled={!isValid}
+                        icon={{
+                            source: !!values.id ? 'pencil' : 'plus-thick',
+                            direction: 'ltr',
+                        }}
+                        mode="contained"
+                    >
+                        Save
+                    </Button>
+                    <Button onPress={onClose} mode="outlined">
+                        Cancel
+                    </Button>
+                </View>
+            </ThemedModal >
+        )
+    }
 }
+
+//--------------------------------------------------
+
+const TaskEditFormModalComponent = withFormik<Props, Task>({
+    enableReinitialize: true,
+    mapPropsToValues: ({ item }) => {
+        return item
+    },
+    validate: () => undefined,
+    validationSchema: taskEditSchema,
+    handleSubmit: async (values: Task, formikBag: FormikBag<Props, Task>) => {
+        console.log('Form submit:', JSON.stringify(values, null, 2))
+
+        const { item, onSavedItem, taskRep, actualTaskViewRep, dispatch } = formikBag.props
+        await dispatch(!!item.id
+            ? updateTask({ taskRep, actualTaskViewRep, item: values, })
+            : createTask({ taskRep, actualTaskViewRep, item: values })
+        )
+
+        !!onSavedItem && onSavedItem(values)
+    }
+})(TaskEditForm)
+
+//--------------------------------------------------
+
+const mapStateToProps = (state: RootState, ownProps: ownPropsType) => {
+    return {
+        appTheme: selectAppTheme(state),
+        item: state.tasks.currentItem,
+    } as Props & FormikProps<Task>
+}
+
+const mapDispatchToProps = (dispatch: AppDispatchType) => {
+    return {
+        dispatch: dispatch,
+    } as Props
+}
+
+type ownPropsType = {
+    taskRep: TaskExtendedRepository
+    actualTaskViewRep: ActualTaskViewExtendedRepository
+    id: number
+    onSavedItem: (task: Task) => void
+    onClose: () => void
+}
+
+function mergeProps(
+    stateProps: Props & FormikProps<Task>,
+    dispatchProps: Props,
+    ownProps: ownPropsType,
+) {
+    return Object.assign({}, ownProps, stateProps, dispatchProps)
+}
+
+export const TaskEditFormModal = connect(
+    mapStateToProps,
+    mapDispatchToProps,
+    mergeProps,
+
+)(TaskEditFormModalComponent)
+
+//--------------------------------------------------
 
 const styles = StyleSheet.create({
     divider0: {

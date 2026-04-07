@@ -1,5 +1,4 @@
 import { filterModesDropDownItems, RegularTask, RegularTasksFilter, RegularTasksFilterModeType } from '@entities/regular-tasks'
-import { ONE_DAY_IN_MILLISECONDS } from '@shared/lib/constants'
 import { calendarDateHelper, stringHelper, timeHelper } from '@shared/lib/helpers'
 import { DbFilter, DropDownItems } from '@shared/lib/types'
 import { sharedStyles } from '@shared/styles'
@@ -141,48 +140,6 @@ function onChangeFilterMode(
             })
             break
         }
-        case 'today': {
-            const date = new Date()
-            const values = {
-                ...formik.values,
-                mode: item.value as RegularTasksFilterModeType,
-                withDeleted: false,
-                beginDate0: calendarDateHelper.toFormattedStringOrEmpty(
-                    date as CalendarDate,
-                    'YYYY-MM-DD',
-                ),
-                beginDate1: calendarDateHelper.toFormattedStringOrEmpty(
-                    date as CalendarDate,
-                    'YYYY-MM-DD',
-                ),
-                endDate0: undefined,
-                endDate1: undefined,
-            }
-
-            formik.setValues(values)
-            break
-        }
-        case 'byPeriod': {
-            const date0 = new Date()
-            const date1 = new Date(
-                new Date().getTime() + ONE_DAY_IN_MILLISECONDS * 7,
-            )
-
-            formik.setValues({
-                ...formik.values,
-                mode: item.value as RegularTasksFilterModeType,
-                withDeleted: undefined,
-                beginDate0: calendarDateHelper.toFormattedStringOrEmpty(
-                    date0 as CalendarDate,
-                    'YYYY-MM-DD',
-                ),
-                beginDate1: calendarDateHelper.toFormattedStringOrEmpty(
-                    date1 as CalendarDate,
-                    'YYYY-MM-DD',
-                ),
-            })
-            break
-        }
         case 'inTrash': {
             formik.setValues({
                 ...formik.values,
@@ -202,7 +159,7 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
     const appTheme = useAppTheme()
     const { success, danger } = appTheme.colors
 
-    const formik = useFormik({
+    const formik: FormikProps<RegularTasksFilter> = useFormik<RegularTasksFilter>({
         initialValues: convertToRegularTaskFilter(filter),
         onReset: (values: RegularTasksFilter) => {
             console.log('Form reset, old data:', values)
@@ -214,9 +171,10 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
             onChangeFilter(newFilter)
         },
         onSubmit: (values: RegularTasksFilter) => {
-            console.log('Form submit:', values)
+            console.log('Form submit:', JSON.stringify(values, null, 2))
 
             let newFilter = convertToDbFilter(values)
+            console.log('Form submit converted:', newFilter)
             onChangeFilter(newFilter)
         }
     })
@@ -398,7 +356,7 @@ export function ListFilterForm({ filter, onChangeFilter, onClose }: Props) {
 
             <View style={sharedStyles.row}>
                 <Button
-                    onPress={(e) => formik.handleReset(e)}
+                    onPress={() => formik.handleReset()}
                     disabled={!formik.isValid}
                     mode='contained'
                 >

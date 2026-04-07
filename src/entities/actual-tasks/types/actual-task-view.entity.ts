@@ -20,6 +20,7 @@ WITH RECURSIVE dates (
     taskId,
     regularTasksResultId,
 
+    weekId,
     weekDay,
     periodParam, 
     period, 
@@ -54,6 +55,7 @@ AS (
         NULL AS taskId,
         rtr.id AS regularTasksResultId,
 
+        rt.weekId,
         rt.weekDay,
         rt.periodParam,
         rt.period, 
@@ -104,6 +106,7 @@ AS (
         d.taskId,
         rtr.id AS regularTasksResultId,
 
+        d.weekId,
         d.weekDay,
         d.periodParam,
         d.period, 
@@ -144,6 +147,7 @@ SELECT
     d.taskId,
     d.regularTasksResultId,
 
+    d.weekId,
     d.weekDay,
     d.periodParam,
     d.period, 
@@ -183,6 +187,7 @@ SELECT
     t.id AS taskId,
     NULL AS regularTasksResultId,
 
+    NULL AS weekId,
     NULL AS weekDay,
     NULL AS periodParam,
     NULL AS period, 
@@ -234,6 +239,8 @@ export class ActualTaskView {
     @Column('integer', { nullable: true })
     regularTasksResultId: number | null
 
+    @Column('integer', { nullable: true })
+    weekId: number | null
     @Column('integer', { nullable: true })
     weekDay: number | null
     @Column('varchar', { length: 25, nullable: true })
