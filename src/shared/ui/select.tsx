@@ -7,6 +7,7 @@ import { useAppTheme } from '../theme/hooks'
 
 type Props = {
     maxHeight?: number | undefined
+    disable?: boolean | undefined
     label?: string | undefined
     placeholder?: string | undefined
     search?: boolean
@@ -38,7 +39,7 @@ const renderLeftIcon = (isFocus: boolean,
 }
 */
 
-export function Select({ maxHeight = 300, label, placeholder, search = false, searchPlaceholder, value, data, onChange,
+export function Select({ maxHeight = 300, disable = false, label, placeholder, search = false, searchPlaceholder, value, data, onChange,
     labelField = 'label', valueField = 'value', dropdownStyle, itemsContainerStyle, renderItemIcon, renderLeftIcon }: Props) {
     const appTheme = useAppTheme()
     const { primary, secondary, secondaryContainer, background } = appTheme.colors
@@ -61,6 +62,7 @@ export function Select({ maxHeight = 300, label, placeholder, search = false, se
             }
             <Dropdown
                 style={dropdownStyleFull}
+                disable={disable}
                 maxHeight={maxHeight}
 
                 placeholder={!!placeholder ? (!isFocus ? placeholder : '...') : undefined}
@@ -72,7 +74,8 @@ export function Select({ maxHeight = 300, label, placeholder, search = false, se
                     backgroundColor: background,
                 }]}
 
-                selectedTextStyle={[styles.selectedTextStyle, { color: secondary }]}
+                selectedTextStyle={[styles.selectedTextStyle,
+                disable ? { color: secondary, backgroundColor: secondaryContainer } : { color: secondary }]}
 
                 labelField={labelField}
                 valueField={valueField}

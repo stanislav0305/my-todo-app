@@ -7,15 +7,16 @@ import { Surface, Text } from 'react-native-paper'
 type Props = {
     day: string,
     dayValue: boolean,
+    disabled?: boolean,
     onPress: (event: GestureResponderEvent) => void
 }
 
-export const WeekDayButton = ({ day, dayValue, onPress }: Props) => {
+export const WeekDayButton = ({ day, dayValue, disabled = false, onPress }: Props) => {
     const appTheme = useAppTheme()
     const { primary, onPrimary, secondaryContainer, primaryContainer } = appTheme.colors
 
     return (
-        <Pressable onPress={onPress}>
+        <Pressable onPress={onPress} disabled={disabled}>
             <Surface elevation={4}
                 style={[styles.weekDay,
                 (dayValue)

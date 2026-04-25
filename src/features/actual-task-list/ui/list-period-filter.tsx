@@ -103,7 +103,7 @@ export function ListPeriodFilter(props: Props) {
             <View style={styles.col2}>
                 <Text
                     style={[{ 'color': primary }, styles.date]}
-                    variant='titleMedium'
+                    variant='titleSmall'
                 >
                     {rangeString}
                 </Text>

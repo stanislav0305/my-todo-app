@@ -14,7 +14,7 @@ import { selectAppTheme } from '@shared/theme/model'
 import { ListFooter, ListNoData, RemoveFormModal } from '@shared/ui'
 import React, { Component } from 'react'
 import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native'
-import { Badge, Button, Divider, IconButton, Text } from 'react-native-paper'
+import { Badge, Divider, Icon, IconButton, Menu, Text } from 'react-native-paper'
 import { connect } from 'react-redux'
 import { RegularTaskEditFormModal } from '../../regular-task-edit'
 import { TaskEditFormModal } from '../../task-edit'
@@ -35,6 +35,7 @@ type StateType = {
     period: ActualTaskPeriod | null
     isLoading: boolean
     isRefreshing: boolean
+    isAddTaskMenuVisible: boolean
 }
 
 type PropsType = {
@@ -70,6 +71,7 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
             period: null,
             isLoading: false,
             isRefreshing: false,
+            isAddTaskMenuVisible: false
         }
     }
 
@@ -93,6 +95,7 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
             weekId,
             title,
             period,
+            isAddTaskMenuVisible: false
         })
     }
 
@@ -249,11 +252,22 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
         )
     }
 
+    //-------------------------------------------------------------
+
+    toggleAddTaskMenu() {
+        this.setState({
+            ...this.state,
+            isAddTaskMenuVisible: !this.state.isAddTaskMenuVisible,
+        })
+    }
+
+    //-------------------------------------------------------------
+
     render() {
-        const { isLoading, isRefreshing, mode, itemType, taskId, regularTaskId, weekId, title, period } = { ...this.state }
+        const { isLoading, isRefreshing, mode, itemType, taskId, regularTaskId, weekId, title, period, isAddTaskMenuVisible } = { ...this.state }
         const { paging, pagingPeriod, items, appTheme, regularTaskRep, regularTaskViewRep,
             regularTaskWeekRep, actualTaskViewRep, taskRep } = { ...this.props }
-        const { primary } = { ...appTheme.colors }
+        const { primary, onPrimary } = { ...appTheme.colors }
 
         console.log(`mode:${mode} itemType:${itemType} taskId:${taskId} regularTaskId:${regularTaskId} 
             weekId:${weekId} title:${title} period:${period}`)
@@ -262,22 +276,46 @@ class ActualTaskListComponent extends Component<PropsType, StateType> {
             <>
                 <View style={styles.row}>
                     {!!(paging.filter.mode !== 'inTrash') && (
-                        <Button
-                            onPress={() => this.changeMode('edit', 'Task')}
-                            icon={{ source: 'plus-thick', direction: 'ltr' }}
-                            mode="contained"
-                        >
-                            Add task
-                        </Button>
-                    )}
-                    {!!(paging.filter.mode !== 'inTrash') && (
-                        <Button
-                            onPress={() => this.changeMode('edit', 'RegularTask')}
-                            icon={{ source: 'plus-thick', direction: 'ltr' }}
-                            mode="contained"
-                        >
-                            Add regular task
-                        </Button>
+                        <Menu
+                            visible={isAddTaskMenuVisible}
+                            onDismiss={() => this.toggleAddTaskMenu()}
+                            anchor={
+                                <IconButton
+                                    style={{ margin: 0, marginLeft: 10 }}
+                                    iconColor={onPrimary}
+                                    containerColor={primary}
+                                    onPress={() => this.toggleAddTaskMenu()}
+                                    icon="plus-thick"
+                                    mode="contained"
+                                    size={20}
+                                ></IconButton>
+                            }>
+                            <Menu.Item
+                                title='Add task'
+                                leadingIcon={({ size, color }) => (
+                                    <Icon
+                                        source='plus-thick'
+                                        size={20}
+                                        color={primary}
+                                    />
+                                )}
+                                titleStyle={{ color: primary, fontWeight: 'bold' }}
+                                onPress={() => { this.changeMode('edit', 'Task') }}
+                            />
+                            <Divider style={[styles.divider, { backgroundColor: primary }]} />
+                            <Menu.Item
+                                title='Add regular task'
+                                leadingIcon={({ size, color }) => (
+                                    <Icon
+                                        source='plus-thick'
+                                        size={20}
+                                        color={primary}
+                                    />
+                                )}
+                                titleStyle={{ color: primary, fontWeight: 'bold' }}
+                                onPress={() => { this.changeMode('edit', 'RegularTask') }}
+                            />
+                        </Menu>
                     )}
                     <IconButton
                         style={{ margin: 0, marginLeft: 10 }}

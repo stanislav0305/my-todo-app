@@ -12,7 +12,7 @@ import { selectAppTheme } from '@shared/theme/model'
 import { ListFooter, ListNoData, RemoveFormModal, RestoreFormModal } from '@shared/ui'
 import React, { Component } from 'react'
 import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native'
-import { Badge, Button, Divider, Icon, IconButton, Text } from 'react-native-paper'
+import { Badge, Divider, Icon, IconButton, Text } from 'react-native-paper'
 import { connect } from 'react-redux'
 import { ListColumnsShowForm } from './list-columns-show-form'
 import { ListFilterForm } from './list-filter-form'
@@ -202,7 +202,7 @@ class TaskListComponent extends Component<PropsType, StateType> {
     render() {
         const { mode, id, isLoading, isRefreshing } = { ...this.state }
         const { paging, items, appTheme } = { ...this.props }
-        const { primary } = { ...appTheme.colors }
+        const { primary, onPrimary } = { ...appTheme.colors }
         const item = ['softRemove', 'remove', 'restore'].includes(mode) ? items.find(i => i.id === id) : null
         console.log(`mode: ${mode} item: ${item}`)
 
@@ -210,13 +210,15 @@ class TaskListComponent extends Component<PropsType, StateType> {
             <>
                 <View style={styles.row}>
                     {!!(paging.filter.mode !== 'inTrash') && (
-                        <Button
+                        <IconButton
+                            style={{ margin: 0, marginLeft: 10 }}
+                            iconColor={onPrimary}
+                            containerColor={primary}
                             onPress={() => this.changeMode('edit')}
-                            icon={{ source: 'plus-thick', direction: 'ltr' }}
+                            icon="plus-thick"
                             mode="contained"
-                        >
-                            Add task
-                        </Button>
+                            size={20}
+                        ></IconButton>
                     )}
                     <IconButton
                         style={{ margin: 0, marginLeft: 10 }}

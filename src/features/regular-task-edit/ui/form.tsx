@@ -128,7 +128,7 @@ export class RegularTaskEditForm extends PureComponent<Props & FormikProps<Regul
         const { id, handleSubmit, setFieldValue, handleBlur, handleChange, isValid,
             errors, values, onClose, appTheme, setValues } = this.props
 
-        const { success, danger, secondary, primary, background } = appTheme.colors
+        const { success, danger, secondary, secondaryContainer, primary, background } = appTheme.colors
 
         return (
             <ThemedModal
@@ -241,6 +241,7 @@ export class RegularTaskEditForm extends PureComponent<Props & FormikProps<Regul
                     searchPlaceholder='Search period...'
                     value={values.period}
                     data={periodNamesDropDownItems}
+                    disable={!!id}
                     onChange={(item: any) => {
                         setFieldValue('period', item.value)
                     }}
@@ -270,10 +271,17 @@ export class RegularTaskEditForm extends PureComponent<Props & FormikProps<Regul
                     </Surface>
                     <TextInput
                         mode='outlined'
-                        style={[styles.periodSizeTextInput, {
-                            backgroundColor: background,
+                        disabled={!!id}
+                        style={[styles.periodSizeTextInput,
+                        !!id ? {
+                            backgroundColor: secondaryContainer,
                             borderColor: secondary,
-                        }]}
+                        }
+                            : {
+                                backgroundColor: background,
+                                borderColor: secondary,
+                            }]
+                        }
                         maxLength={3}
                         keyboardType='number-pad'
                         onBlur={handleBlur('periodSize')}
@@ -306,36 +314,43 @@ export class RegularTaskEditForm extends PureComponent<Props & FormikProps<Regul
                         <View style={[sharedStyles.btnRow, { marginTop: 0 }]}>
                             <WeekDayButton
                                 day='mo'
+                                disabled={!!id}
                                 dayValue={values.mo!}
                                 onPress={() => { setFieldValue('mo', !values.mo) }}
                             />
                             <WeekDayButton
                                 day='tu'
+                                disabled={!!id}
                                 dayValue={values.tu!}
                                 onPress={() => { setFieldValue('tu', !values.tu) }}
                             />
                             <WeekDayButton
                                 day='we'
+                                disabled={!!id}
                                 dayValue={values.we!}
                                 onPress={() => { setFieldValue('we', !values.we) }}
                             />
                             <WeekDayButton
                                 day='th'
+                                disabled={!!id}
                                 dayValue={values.th!}
                                 onPress={() => { setFieldValue('th', !values.th) }}
                             />
                             <WeekDayButton
                                 day='fr'
+                                disabled={!!id}
                                 dayValue={values.fr!}
                                 onPress={() => { setFieldValue('fr', !values.fr) }}
                             />
                             <WeekDayButton
                                 day='sa'
+                                disabled={!!id}
                                 dayValue={values.sa!}
                                 onPress={() => { setFieldValue('sa', !values.sa) }}
                             />
                             <WeekDayButton
                                 day='su'
+                                disabled={!!id}
                                 dayValue={values.su!}
                                 onPress={() => { setFieldValue('su', !values.su) }}
                             />
@@ -370,18 +385,24 @@ export class RegularTaskEditForm extends PureComponent<Props & FormikProps<Regul
                     />
                 </CustomCheckbox>
                 <Divider style={styles.divider1} />
-                <View style={sharedStyles.row}>
-                    <Text variant='labelMedium'>created at:</Text>
-                    <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(values.createdAt, 'DD/MM/YYYY hh:mm:ss')}</Text>
-                </View>
-                <View style={sharedStyles.row}>
-                    <Text variant='labelMedium'>update at:</Text>
-                    <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(values.updateAt, 'DD/MM/YYYY hh:mm:ss')}</Text>
-                </View>
-                <View style={sharedStyles.row}>
-                    <Text variant='labelMedium'>deleted at:</Text>
-                    <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(values.deletedAt, 'DD/MM/YYYY hh:mm:ss')}</Text>
-                </View>
+                {!!values.id &&
+                    <View>
+                        <View style={sharedStyles.row}>
+                            <Text variant='labelMedium'>created at:</Text>
+                            <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(values.createdAt, 'DD/MM/YYYY hh:mm:ss')}</Text>
+                        </View>
+                        <View style={sharedStyles.row}>
+                            <Text variant='labelMedium'>update at:</Text>
+                            <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(values.updateAt, 'DD/MM/YYYY hh:mm:ss')}</Text>
+                        </View>
+                        {!!values.deletedAt &&
+                            <View style={sharedStyles.row}>
+                                <Text variant='labelMedium'>deleted at:</Text>
+                                <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(values.deletedAt, 'DD/MM/YYYY hh:mm:ss')}</Text>
+                            </View>
+                        }
+                    </View>
+                }
 
                 <View style={sharedStyles.btnRow}>
                     <Button

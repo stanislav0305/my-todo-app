@@ -12,7 +12,7 @@ import { selectAppTheme } from '@shared/theme/model'
 import { ListFooter, ListNoData, RemoveFormModal, RestoreFormModal } from '@shared/ui'
 import React, { Component } from 'react'
 import { FlatList, ListRenderItemInfo, StyleSheet, View } from 'react-native'
-import { Badge, Button, Divider, Icon, IconButton, Text } from 'react-native-paper'
+import { Badge, Divider, Icon, IconButton, Text } from 'react-native-paper'
 import { connect } from 'react-redux'
 import { RegularTaskEditFormModal } from '../../regular-task-edit'
 import { ListColumnsShowForm } from './list-columns-show-form'
@@ -189,7 +189,7 @@ class RegularTaskListComponent extends Component<PropsType, StateType> {
     render() {
         const { id, mode, isLoading, isRefreshing } = { ...this.state }
         const { paging, items, appTheme, actualTaskViewRep, regularTaskRep, regularTaskViewRep, regularTaskWeekRep } = { ...this.props }
-        const { primary } = { ...appTheme.colors }
+        const { primary, onPrimary } = { ...appTheme.colors }
         const item = ['softRemove', 'remove', 'restore'].includes(mode)
             ? items.find(i => i.id === id)
             : undefined
@@ -198,13 +198,15 @@ class RegularTaskListComponent extends Component<PropsType, StateType> {
             <>
                 <View style={styles.row}>
                     {!!(paging.filter.mode !== 'inTrash') && (
-                        <Button
+                        <IconButton
+                            style={{ margin: 0, marginLeft: 10 }}
+                            iconColor={onPrimary}
+                            containerColor={primary}
                             onPress={() => this.changeMode('edit')}
-                            icon={{ source: 'plus-thick', direction: 'ltr' }}
+                            icon="plus-thick"
                             mode="contained"
-                        >
-                            Add regular task
-                        </Button>
+                            size={20}
+                        ></IconButton>
                     )}
                     <IconButton
                         style={{ margin: 0, marginLeft: 10 }}

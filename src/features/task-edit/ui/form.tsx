@@ -165,22 +165,27 @@ export class TaskEditForm extends PureComponent<Props & FormikProps<Task>> {
 
                 <Divider style={styles.divider1} />
 
-                <View style={sharedStyles.row}>
-                    <Text variant="labelMedium">created at:</Text>
-                    <Text variant="labelMedium">{dateHelper.dbStrDateToFormattedString(values.createdAt, 'DD/MM/YYYY hh:mm:ss')}
-                    </Text>
-                </View>
-                <View style={sharedStyles.row}>
-                    <Text variant='labelMedium'>update at:</Text>
-                    <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(values.updateAt, 'DD/MM/YYYY hh:mm:ss')}
-                    </Text>
-                </View>
-                <View style={sharedStyles.row}>
-                    <Text variant='labelMedium'>deleted at:</Text>
-                    <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(values.deletedAt, 'DD/MM/YYYY hh:mm:ss')}
-                    </Text>
-                </View>
-
+                {!!values.id &&
+                    <View>
+                        <View style={sharedStyles.row}>
+                            <Text variant="labelMedium">created at:</Text>
+                            <Text variant="labelMedium">{dateHelper.dbStrDateToFormattedString(values.createdAt, 'DD/MM/YYYY hh:mm:ss')}
+                            </Text>
+                        </View>
+                        <View style={sharedStyles.row}>
+                            <Text variant='labelMedium'>update at:</Text>
+                            <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(values.updateAt, 'DD/MM/YYYY hh:mm:ss')}
+                            </Text>
+                        </View>
+                        {!!values.deletedAt &&
+                            <View style={sharedStyles.row}>
+                                <Text variant='labelMedium'>deleted at:</Text>
+                                <Text variant='labelMedium'>{dateHelper.dbStrDateToFormattedString(values.deletedAt, 'DD/MM/YYYY hh:mm:ss')}
+                                </Text>
+                            </View>
+                        }
+                    </View>
+                }
                 <View style={sharedStyles.btnRow}>
                     <Button
                         onPress={() => handleSubmit()}

@@ -49,6 +49,7 @@ export default defineConfig([
       'fsd/inconsistent-naming': 'off',
       'fsd/segments-by-purpose': 'off', //This segment's name should describe the purpose of its contents, not what the contents are.
       'fsd/forbidden-imports': 'off', //Forbidden cross-import from slice "actual-tasks".
+      'fsd/repetitive-naming': 'off', //src\entities Repetitive word "tasks" in slice names. fsd/repetitive-naming: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/repetitive-naming
     },
   },
   {
